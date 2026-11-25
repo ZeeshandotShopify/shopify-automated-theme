@@ -1,0 +1,85 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "product",
+      "blocks": {
+        "title": {
+          "type": "title",
+          "settings": {}
+        },
+        "price": {
+          "type": "price",
+          "settings": {}
+        },
+        "variant_selector": {
+          "type": "variant_selector",
+          "settings": {}
+        },
+        "quantity_selector": {
+          "type": "quantity_selector",
+          "settings": {}
+        },
+        "atc": {
+          "type": "atc",
+          "settings": {}
+        }
+      },
+      "block_order": ["title", "price", "variant_selector", "quantity_selector", "atc"],
+      "settings": {
+        "media_layout": "grid",
+        "mobile_media_layout": "grid"
+      }
+    },
+    "product_recommendations_LrpJtL": {
+      "type": "product-recommendations",
+      "blocks": {
+        "product_card_GECikP": {
+          "type": "product_card",
+          "settings": {
+            "aspect_ratio": "1 / 1",
+            "secondary_image_hover_effect": true,
+            "show_discounted_promo": true,
+            "show_rating": true,
+            "show_vendor": false,
+            "show_color_variants": true,
+            "show_size_variants": true,
+            "show_add_to_cart": false
+          }
+        }
+      },
+      "block_order": ["product_card_GECikP"],
+      "name": "t:section.product_recommendations.name",
+      "settings": {
+        "number_of_products_to_show": 4,
+        "intent": "related",
+        "heading_related": "You May Also Like",
+        "heading_complementary": "Pair it with",
+        "heading_font_size": "2rem",
+        "heading_line_height": "140%",
+        "heading_font_weight": "600",
+        "subheading": "",
+        "color_mode": "inherit",
+        "fg_color": "#ffffff",
+        "bg_color": "#222222",
+        "desktop_padding_top": 96,
+        "desktop_padding_bottom": 96,
+        "desktop_padding_left": 64,
+        "desktop_padding_right": 64,
+        "mobile_padding_top": 64,
+        "mobile_padding_bottom": 64,
+        "mobile_padding_left": 16,
+        "mobile_padding_right": 16
+      }
+    }
+  },
+  "order": ["main", "product_recommendations_LrpJtL"]
+}

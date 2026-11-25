@@ -1,0 +1,740 @@
+{% comment %}
+  Judge.me Reviews Section
+  Only displays if product has reviews
+{% endcomment %}
+
+{%- if product -%}
+  <style>
+    .customer-reviews-wrapper {
+      --fg-color: {{ section.settings.fg_color | default: '#ffffff' }};
+      --bg-color: {{ section.settings.bg_color | default: '#222222' }};
+
+      --heading-font-size: {{ section.settings.heading_font_size }};
+      --heading-line-height: {{ section.settings.heading_line_height }};
+      --heading-font-weight: {{ section.settings.heading_font_weight }};
+
+      --mobile-padding-top: {{ section.settings.mobile_padding_top }}px;
+      --mobile-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+      --mobile-padding-left: {{ section.settings.mobile_padding_left }}px;
+      --mobile-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+      --desktop-padding-top: {{ section.settings.desktop_padding_top }}px;
+      --desktop-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+      --desktop-padding-left: {{ section.settings.desktop_padding_left }}px;
+      --desktop-padding-right: {{ section.settings.desktop_padding_right }}px;
+
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+        background: var(--bg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+        background: var(--color-background);
+      {%- endif -%}
+      padding: var(--mobile-padding-top) var(--mobile-padding-right) var(--mobile-padding-bottom) var(--mobile-padding-left);
+    }
+
+    .customer-reviews-heading {
+      font-family: var(--font-heading--family);
+      font-size: var(--heading-font-size);
+      line-height: var(--heading-line-height);
+      font-weight: var(--heading-font-weight);
+      {% comment %} margin-bottom: 2.5rem; {% endcomment %}
+      margin-bottom: 0.5rem;
+    }
+
+    .customer-reviews-widget {
+      {% comment %}
+        White to match the Figma (reviews sit on a white surface). On the previous cream
+        (#f5f5f0) card the #f5f5f5 sort-dropdown border and the #fdf6e3 avatars were
+        invisible (too close in shade). Intentionally overrides the widget_background setting.
+      {% endcomment %}
+      background: #ffffff;
+      border-radius: 0.5rem;
+    }
+
+    {% comment %} JUDGE.ME STYLES {% endcomment %}
+    .jdgm-rev-widg {
+      font-family: var(--font-body--family) !important;
+      padding: 0 !important;
+    }
+
+    .jdgm-rev-widg__title {
+      display: none !important;
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      text-align: left !important;
+      font-size: 1.5rem !important;
+      line-height: 140% !important;
+      margin-bottom: 0.5rem !important;
+    }
+
+    .jdgm-rev-widg__header {
+      width: 100% !important;
+      max-width: 504px !important;
+      {% comment %} 0 so the gap to the sort row = histogram's 3rem only (Figma ~48px, was doubled to 96px) {% endcomment %}
+      margin-bottom: 0 !important;
+    }
+
+    .jdgm-row-stars {
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 0 !important;
+    }
+
+    .jdgm-rev-widg__summary {
+      width: 100% !important;
+      display: block !important;
+      margin-bottom: 1.5rem !important;
+    }
+
+    .jdgm-rev-widg__summary-inner {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+
+    .jdgm-rev-widg__summary-stars {
+      display: flex !important;
+      align-items: center !important;
+      {% comment %} nowrap keeps the average + stars on one line (was wrap-reverse, which dropped the stars to a 2nd line on narrow/mobile widths) {% endcomment %}
+      flex-wrap: nowrap !important;
+    }
+
+    .jdgm-rev-widg__summary .jdgm-star {
+      font-size: 1.5rem !important;
+      height: auto !important;
+    }
+
+    .jdgm-rev-widg__summary-average {
+      display: block;
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      {% comment %} clamp shrinks the average on narrow viewports so the verbose "N.NN out of 5" + stars stay inline (Figma layout); stays 38px on desktop/tablet {% endcomment %}
+      font-size: clamp(1.5rem, 7vw, 2.375rem) !important;
+      line-height: 120% !important;
+      font-weight: 500 !important;
+      margin-right: 0.5rem !important;
+      white-space: nowrap !important;
+    }
+
+    .jdgm-rev-widg__summary-text {
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      font-size: 0.875rem !important;
+      line-height: 140% !important;
+    }
+
+    .jdgm-histogram {
+      width: 100% !important;
+      display: flex;
+      align-items: flex-start !important;
+      border: none !important;
+      gap: 0.5rem !important;
+      margin-bottom: 3rem !important;
+    }
+
+    .jdgm-histogram__row {
+      display: flex !important;
+      gap: 1rem !important;
+      align-items: center !important;
+      width: 100% !important;
+      height: auto !important;
+      margin-bottom: 0 !important;
+    }
+
+    .jdgm-histogram__star {
+      position: relative !important;
+      height: 22.406px !important;
+      {% comment %} 53px (Figma label width) + no shrink, so the "N Stars" text isn't squeezed under the bar {% endcomment %}
+      width: 53px !important;
+      flex-shrink: 0 !important;
+    }
+
+    .jdgm-histogram__star > .jdgm-star {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      visibility: hidden !important;
+    }
+
+    .jdgm-histogram__star[aria-label*="5 star"]::before {
+      content: "5 Stars";
+      position: absolute;
+      left: 0;
+      top: 0;
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      font-size: 1rem;     /* restore readable size */
+      line-height: 140%;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .jdgm-histogram__star[aria-label*="4 star"]::before {
+      content: "4 Stars";
+      position: absolute;
+      left: 0;
+      top: 0;
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      font-size: 1rem;     /* restore readable size */
+      line-height: 140%;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .jdgm-histogram__star[aria-label*="3 star"]::before {
+      content: "3 Stars";
+      position: absolute;
+      left: 0;
+      top: 0;
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      font-size: 1rem;     /* restore readable size */
+      line-height: 140%;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .jdgm-histogram__star[aria-label*="2 star"]::before {
+      content: "2 Stars";
+      position: absolute;
+      left: 0;
+      top: 0;
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      font-size: 1rem;     /* restore readable size */
+      line-height: 140%;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .jdgm-histogram__star[aria-label*="1 star"]::before {
+      content: "1 Stars";
+      position: absolute;
+      left: 0;
+      top: 0;
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      font-size: 1rem;     /* restore readable size */
+      line-height: 140%;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    .jdgm-histogram__bar {
+      margin: 0 !important;
+      height: 5px !important;
+      width: 100% !important;
+      background: #f5f5f5 !important;
+    }
+
+    .jdgm-histogram__bar-content {
+      background: #fcc419 !important;
+    }
+
+    .jdgm-histogram__frequency {
+      {%- if section.settings.color_mode == 'custom' -%}
+        color: var(--fg-color);
+      {%- else -%}
+        color: var(--color-foreground);
+      {%- endif -%}
+      font-size: 1rem !important;
+      line-height: 140% !important;
+      width: auto !important;
+      text-align: left !important;
+    }
+
+    .jdgm-histogram__clear-filter {
+      display: none !important;
+    }
+
+    .jdgm-widget-actions-wrapper {
+      width: fit-content !important;
+      display: flex !important;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
+    }
+
+    .jdgm-write-rev-link {
+      width: auto !important;
+      background: #1a1a1a !important;
+      border: none !important;
+      color: #ffffff !important;
+      padding-block: 0.75rem !important;
+      padding-inline: 1.5rem !important;
+      margin: 0 !important;
+    }
+
+    .jdgm-row-actions {
+      padding: 0 !important;
+      border: none !important;
+      margin-bottom: 2.75rem !important;
+    }
+
+    .jdgm-sort-dropdown-wrapper {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: 1px solid #f5f5f5 !important;
+    }
+
+    .jdgm-sort-dropdown {
+      padding-block: 0.5rem !important;
+      padding-inline: 1rem !important;
+      color: #1a1a1a !important;
+      font-size: 0.875rem !important;
+    }
+
+    .jdgm-sort-dropdown-arrow {
+      display: inline-flex !important;
+      width: 2rem !important;
+      height: 2rem !important;
+      align-items: center !important;
+      justify-content: center !important;
+      right: 0 !important;
+      position: absolute !important;
+      color: #1a1a1a !important;
+    }
+
+    .jdgm-sort-dropdown-arrow:before {
+      width: 1rem !important;
+      height: 1rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .jdgm-rev {
+      border: none !important;
+      margin: 0 !important;
+      padding: 0 !important
+    }
+
+    {% comment %}
+      Figma review header: avatar pinned top-left, with the stars+date row and
+      the author name stacked to its right. padding-left reserves the 48px avatar
+      column + 16px gap; the avatar itself is taken out of flow below.
+    {% endcomment %}
+    .jdgm-rev__header {
+      display: flex !important;
+      flex-direction: column !important;
+      position: relative !important;
+      padding-left: 64px !important;
+      min-height: 48px !important;
+      margin-bottom: 1.25rem !important;
+    }
+
+    .jdgm-row-rating {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      margin: 0 0 8px 0 !important;
+    }
+
+    .jdgm-rev__timestamp {
+      font-size: 1rem !important;
+      line-height: 140% !important;
+    }
+
+    .jdgm-rev__icon {
+      width: 3rem !important;
+      height: 3rem !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 50% !important;
+      background: #fdf6e3 !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      margin: 0 !important;
+    }
+
+    .jdgm-rev__author-wrapper {
+      font-size: 1rem !important;
+      line-height: 140% !important;
+    }
+
+    .jdgm-rev__title {
+      font-size: 1.5rem !important;
+      line-height: 140% !important;
+      font-weight: 400 !important;
+    }
+
+    .jdgm-rev__body {
+      font-family: var(--font-body--family) !important;
+      font-size: 1rem !important;
+      line-height: 140% !important;
+    }
+
+    @media (width >= 64rem) {
+      .customer-reviews-wrapper {
+        padding: var(--desktop-padding-top) var(--desktop-padding-right) var(--desktop-padding-bottom) var(--desktop-padding-left);
+      }
+    }
+
+    .customer-reviews-widget .jdgm-review-widget {
+      width: 100%;
+    }
+
+    .jdgm-rev-widg__summary-stars {
+      flex-direction: row-reverse !important;
+    }
+
+    {% comment %} ---- FIGMA ALIGNMENT (Reviews Overview 29:582 / mobile 29:138) ---- {% endcomment %}
+
+    {% comment %} Rating stars → Figma yellow (was theme amber #DAB066); histogram bars set to #fcc419 above {% endcomment %}
+    .jdgm-star.jdgm--on,
+    .jdgm-star.jdgm--half {
+      color: #fcc419 !important;
+    }
+
+    {% comment %} Write-a-review button: stay solid black on hover/focus (Figma has no hover variant) {% endcomment %}
+    .jdgm-write-rev-link:hover,
+    .jdgm-write-rev-link:focus {
+      background: #1a1a1a !important;
+      color: #ffffff !important;
+      border: none !important;
+    }
+
+    {% comment %} Reviewer name → Figma Body Medium #1a1a1a (was theme link amber) {% endcomment %}
+    .jdgm-rev__author {
+      color: #1a1a1a !important;
+      font-weight: 500 !important;
+      font-size: 1rem !important;
+    }
+
+    {% comment %} Hide the summary "verified" checkmark (Figma shows plain "(N Reviews)") {% endcomment %}
+    .jdgm-verified-checkmark {
+      display: none !important;
+    }
+
+    {% comment %} 64px between reviews (Figma gap-64) {% endcomment %}
+    .jdgm-rev + .jdgm-rev {
+      margin-top: 4rem !important;
+    }
+
+    {% comment %}
+      Avatar → clean cream circle. Judge.me draws a person silhouette (::before) and
+      an amber verified-buyer check (::after), both absent from the Figma, so both are
+      hidden. The Figma initial letter is not present in Judge.me's DOM, so CSS cannot
+      reproduce it — a flat cream circle is the closest match.
+    {% endcomment %}
+    .jdgm-row-profile {
+      margin: 0 !important;
+    }
+    .jdgm-rev__icon::before,
+    .jdgm-rev__icon::after {
+      display: none !important;
+    }
+
+    {% comment %}
+      Sort dropdown + Write button share one row (Figma justify-between).
+      Scoped under .customer-reviews-widget (specificity 0,2,0 → ties Judge.me's own
+      layout rules and wins on source order). Paired with the relocation script below the markup.
+    {% endcomment %}
+    .customer-reviews-widget .jdgm-row-actions {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      width: 100% !important;
+      gap: 1rem !important;
+      margin: 0 0 2.75rem 0 !important;
+      padding: 0 !important;
+    }
+    .customer-reviews-widget .jdgm-rev-widg__sort-wrapper,
+    .customer-reviews-widget .jdgm-widget-actions-wrapper {
+      margin: 0 !important;
+      width: auto !important;
+      flex: 0 0 auto !important;
+    }
+
+    {% comment %} Hide Judge.me blocks not present in the Figma {% endcomment %}
+    .jdgm-row-media,
+    .jdgm-rev__buyer-badge-wrapper,
+    .jdgm-rev__transparency-badge-wrapper,
+    .jdgm-rev__actions,
+    .jdgm-row-extra {
+      display: none !important;
+    }
+  </style>
+
+  <div class="customer-reviews-wrapper">
+    <div class="customer-reviews">
+      <h2 class="customer-reviews-heading">{{ section.settings.heading }}</h2>
+
+      <div class="customer-reviews-widget">
+        {%- comment -%} Render all app blocks added to this section {%- endcomment -%}
+        {% comment %} {% content_for 'blocks' %} {% endcomment %}
+
+        {%- if section.blocks > 0 -%}
+          {% content_for 'blocks' %}
+        {%- else -%}
+          <!-- Start of Judge.me code -->
+          {%- assign has_legacy = false -%}
+          {%- if product.metafields.judgeme.widget.size > 20 -%}
+            {%- assign has_legacy = true -%}
+          {%- endif -%}
+
+          <div style="clear:both"></div>
+          <div
+            id="judgeme_product_reviews"
+            class="jdgm-widget jdgm-review-widget"
+            data-product-title="{{ product.title | escape }}"
+            data-id="{{ product.id }}"
+            data-product-id="{{ product.id }}"
+            data-widget="review"
+            data-auto-install="false"
+            data-shop-reviews-count="{{ shop.metafields.judgeme.shop_reviews_count | default: 0 | escape }}"
+            data-entry-point="review_widget.js"
+            data-entry-key="review-widget/main.js"
+          >
+            {%- if has_legacy -%}
+              <div class="jdgm-legacy-widget-content" style="display: none;">
+                {{- product.metafields.judgeme.widget -}}
+              </div>
+            {%- endif -%}
+          </div>
+
+          {%- if product.metafields.judgeme.review_widget_data -%}
+            <script>
+              jdgm.data ||= {}; jdgm.data.reviewWidget ||= {}; jdgm.data.reviewWidget[{{ product.id }}] = {{ product.metafields.judgeme.review_widget_data }}
+            </script>
+          {%- endif -%}
+          <!-- End of Judge.me code -->
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  {% comment %}
+    Match the Figma layout: place the sort dropdown and the "Write a review" button on one
+    row. Judge.me renders them in separate, stacked containers, so CSS alone can't reach it —
+    this moves the button's wrapper into the sort row. Idempotent + re-runs on Judge.me
+    re-render (sort/filter/paginate) via the observer. Theme-only; no app code is touched.
+  {% endcomment %}
+  <script>
+    (function () {
+      var root = document.querySelector('.customer-reviews-widget');
+      if (!root) return;
+      function relocate() {
+        var btn = root.querySelector('.jdgm-widget-actions-wrapper');
+        var sortRow = root.querySelector('.jdgm-row-actions');
+        if (btn && sortRow && btn.parentElement !== sortRow) {
+          sortRow.appendChild(btn);
+        }
+      }
+      relocate();
+      new MutationObserver(relocate).observe(root, { childList: true, subtree: true });
+    })();
+  </script>
+{%- endif -%}
+{% schema %}
+{
+  "name": "Customer Reviews",
+  "tag": "section",
+  "class": "shopify-page-width shopify-page-padding",
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:heading.label",
+      "default": "What Our Customers Have To Say..."
+    },
+    {
+      "type": "text",
+      "id": "heading_font_size",
+      "label": "t:typography.font_size.label",
+      "placeholder": "px, rem, etc.",
+      "default": "1.25rem"
+    },
+    {
+      "type": "text",
+      "id": "heading_line_height",
+      "label": "Line Height",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "calc(1.75 / 1.25)"
+    },
+    {
+      "type": "select",
+      "id": "heading_font_weight",
+      "label": "t:typography.font_weight.label",
+      "options": [
+        {
+          "value": "400",
+          "label": "t:typography.font_weight.options.regular"
+        },
+        {
+          "value": "500",
+          "label": "t:typography.font_weight.options.medium"
+        },
+        {
+          "value": "600",
+          "label": "t:typography.font_weight.options.semibold"
+        },
+        {
+          "value": "700",
+          "label": "t:typography.font_weight.options.bold"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ]
+    },
+    {
+      "type": "color",
+      "id": "fg_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#ffffff",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#222222",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color_background",
+      "id": "widget_background",
+      "label": "Widget Background Color",
+      "default": "#f5f5f0"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Customer Reviews"
+    }
+  ]
+}
+{% endschema %}

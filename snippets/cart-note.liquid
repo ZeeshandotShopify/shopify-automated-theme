@@ -1,0 +1,75 @@
+{%- stylesheet -%}
+  .cart-note {
+    font-family: var(--font-heading--family);
+    background-color: var(--color-accordion-background);
+    color: var(--color-accordion-foreground);
+    border-top: var(--accordion-border-thickness) solid var(--color-border, #e5e5e5);
+    border-bottom: 0;
+    border-radius: var(--accordion-border-radius);
+  }
+
+  .cart-note textarea {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    text-align: left;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    border: var(--input-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+    border-radius: var(--input-border-radius, 0.5rem);
+    outline: none;
+    padding: 0.625rem;
+  }
+
+  .cart-note textarea:focus {
+    border-color: var(--color-ring);
+  }
+
+  .cart-note textarea::placeholder {
+    display: block !important;
+    color: var(--color-muted-foreground) !important;
+  }
+{%- endstylesheet -%}
+
+<accordion-item icon="plus" class="cart-note">
+  <accordion-trigger>{{ settings.cart_note_title }}</accordion-trigger>
+  <accordion-content>
+    <div class="accordion-content-inner">
+      <textarea
+        id="cart-note"
+        name="note"
+        placeholder="{{ settings.cart_note_placeholder }}"
+        rows="3"
+        form="cart-drawer-checkout-form"
+      >{{ cart.note }}</textarea>
+    </div>
+  </accordion-content>
+</accordion-item>
+
+<script>
+  const noteInput = document.getElementById('cart-note');
+
+  if (noteInput) {
+    // Save note when user clicks away (blur) or finishes typing
+    noteInput.addEventListener('change', function (e) {
+      const newNote = e.target.value;
+
+      fetch('/cart/update.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ note: newNote }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('Note updated successfully');
+        })
+        .catch((error) => {
+          console.error('Error updating note:', error);
+        });
+    });
+  }
+</script>

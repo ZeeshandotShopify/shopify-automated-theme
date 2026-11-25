@@ -1,0 +1,181 @@
+{% comment %}
+  LOGO BLOCK COMPONENT
+
+  PURPOSE:
+  A flexible logo block that renders the logo using the logo snippet.
+  This block handles the settings and passes them to the reusable logo snippet.
+
+  FEATURES:
+  - Uses the logo snippet for rendering
+  - Passes all block settings to the snippet
+  - Maintains the same functionality as before but with better code organization
+{% endcomment %}
+
+<!-- RENDER LOGO SNIPPET WITH BLOCK SETTINGS -->
+{% render 'logo',
+  id: block.id,
+  inverse: block.settings.inverse,
+  size_type: block.settings.size_type,
+  unit_desktop: block.settings.unit_desktop,
+  percent_width_desktop: block.settings.percent_width_desktop,
+  pixel_height_desktop: block.settings.pixel_height_desktop,
+  unit_mobile: block.settings.unit_mobile,
+  percent_width_mobile: block.settings.percent_width_mobile,
+  pixel_height_mobile: block.settings.pixel_height_mobile,
+  font_family: block.settings.font_family,
+  shopify_attributes: block.shopify_attributes
+%}
+
+{% schema %}
+{
+  "name": "t:block.logo.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "inverse",
+      "label": "t:use_inverse_logo.label",
+      "default": false,
+      "visible_if": "{{ settings.logo_inverse }}"
+    },
+    {
+      "type": "select",
+      "id": "font_family",
+      "label": "t:typography.font_family.label",
+      "options": [
+        {
+          "value": "var(--font-body--family)",
+          "label": "t:typography.font_family.options.body"
+        },
+        {
+          "value": "var(--font-heading--family)",
+          "label": "t:typography.font_family.options.heading"
+        }
+      ],
+      "default": "var(--font-heading--family)",
+      "visible_if": "{{ settings.logo == blank and settings.logo_inverse == blank or block.settings.inverse == false }}"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:edit_logo_in_theme_settings.content"
+    },
+    {
+      "type": "select",
+      "id": "size_type",
+      "label": "t:size_type.label",
+      "options": [
+        {
+          "value": "custom",
+          "label": "t:size_type.options.custom"
+        },
+        {
+          "value": "adapt",
+          "label": "t:size_type.options.adapt"
+        }
+      ],
+      "default": "adapt"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content",
+      "visible_if": "{{ block.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "unit_desktop",
+      "label": "t:unit.label",
+      "options": [
+        {
+          "value": "px",
+          "label": "t:unit.options.px"
+        },
+        {
+          "value": "percent",
+          "label": "t:unit.options.percent"
+        }
+      ],
+      "default": "px",
+      "visible_if": "{{ block.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "percent_width_desktop",
+      "label": "t:size.width.label",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100,
+      "visible_if": "{{ block.settings.unit_desktop == 'percent' and block.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "pixel_height_desktop",
+      "label": "t:size.height.label",
+      "min": 16,
+      "max": 320,
+      "step": 8,
+      "unit": "px",
+      "default": 32,
+      "visible_if": "{{ block.settings.unit_desktop == 'px' and block.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content",
+      "visible_if": "{{ block.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "unit_mobile",
+      "label": "t:unit.label",
+      "options": [
+        {
+          "value": "px",
+          "label": "t:unit.options.px"
+        },
+        {
+          "value": "percent",
+          "label": "t:unit.options.percent"
+        }
+      ],
+      "default": "px",
+      "visible_if": "{{ block.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "percent_width_mobile",
+      "label": "t:size.width.label",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100,
+      "visible_if": "{{ block.settings.unit_mobile == 'percent' and block.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "pixel_height_mobile",
+      "label": "t:size.height.label",
+      "min": 16,
+      "max": 320,
+      "step": 8,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ block.settings.unit_mobile == 'px' and block.settings.size_type == 'custom' }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.logo.name",
+      "category": "t:block.logo.category",
+      "settings": {
+        "unit_desktop": "px",
+        "pixel_height_desktop": 32,
+        "unit_mobile": "px",
+        "pixel_height_mobile": 24,
+        "font_family": "var(--font-heading--family)"
+      }
+    }
+  ]
+}
+{% endschema %}

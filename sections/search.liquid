@@ -1,0 +1,470 @@
+{% comment %}
+  This section is used in the search template to render search results for
+  products, articles, and pages.
+
+  https://shopify.dev/docs/storefronts/themes/architecture/templates/search
+{% endcomment %}
+
+{% assign product_results = search.results | where: 'object_type', 'product' %}
+
+{% style %}
+  .search-{{ section.id }} {
+    --search-{{ section.id }}-bg-color: {{ section.settings.bg_color | default: '#ffffff' }};
+
+    /* Grid Layout Variables */
+    --search-{{ section.id }}-mobile-columns: {{ section.settings.mobile_grid_columns }};
+    --search-{{ section.id }}-desktop-columns: {{ section.settings.desktop_grid_columns }};
+
+    /* Padding Variables */
+    --search-{{ section.id }}-mobile-padding-top: {{ section.settings.mobile_padding_top }}px;
+    --search-{{ section.id }}-mobile-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+    --search-{{ section.id }}-mobile-padding-left: {{ section.settings.mobile_padding_left }}px;
+    --search-{{ section.id }}-mobile-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+    --search-{{ section.id }}-desktop-padding-top: {{ section.settings.desktop_padding_top }}px;
+    --search-{{ section.id }}-desktop-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+    --search-{{ section.id }}-desktop-padding-left: {{ section.settings.desktop_padding_left }}px;
+    --search-{{ section.id }}-desktop-padding-right: {{ section.settings.desktop_padding_right }}px;
+  }
+
+  .search-{{ section.id }}.search-bg {
+    {%- if section.settings.bg_color_mode == 'custom' -%}
+      background: var(--search-{{ section.id }}-bg-color);
+    {%- else -%}
+      background: var(--color-background);
+    {%- endif -%}
+  }
+
+  .search-container {
+    padding-top: var(--search-{{ section.id }}-mobile-padding-top);
+    padding-bottom: var(--search-{{ section.id }}-mobile-padding-bottom);
+    padding-left: var(--search-{{ section.id }}-mobile-padding-left);
+    padding-right: var(--search-{{ section.id }}-mobile-padding-right);
+  }
+
+  .search-container-content {
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    gap: 2.25rem;
+    width: 100%;
+  }
+
+  .search-container-content-header {
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .search-container-content .search-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding-inline: 0.625rem;
+  }
+
+  .search-container-content .search-form predictive-search {
+    position: relative;
+    width: 100%;
+  }
+
+  .search-container-content .search-form predictive-search form {
+    width: 100%;
+    max-width: 46.375rem;
+    margin-inline: auto;
+  }
+
+  .search-container-content predictive-search form .search-form-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+  }
+
+  .search-container-content predictive-search form .search-form-container input {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+    min-width: 4.5rem;
+    text-align: left;
+  }
+
+  .search-container-content
+    predictive-search
+    form
+    .search-form-container
+    input[type='search' i]::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .search-container-content predictive-search form .search-form-container button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    width: 1.5rem;
+    height: 1.5rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-results {
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .search-results-container {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .search-result-list {
+    display: grid;
+    grid-template-columns: repeat(var(--search-{{ section.id }}-mobile-columns), minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .search-results-container .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .search-results-container .empty-state .search-term {
+    font-weight: 600;
+    font-style: italic;
+  }
+
+  @media (width >= 64rem) {
+    .search-container {
+      padding-top: var(--search-{{ section.id }}-desktop-padding-top);
+      padding-bottom: var(--search-{{ section.id }}-desktop-padding-bottom);
+      padding-left: var(--search-{{ section.id }}-desktop-padding-left);
+      padding-right: var(--search-{{ section.id }}-desktop-padding-right);
+    }
+
+    .search-result-list {
+      grid-template-columns: repeat(var(--search-{{ section.id }}-desktop-columns), minmax(0, 1fr));
+    }
+  }
+{% endstyle %}
+
+<div class="search-{{ section.id }} search-bg">
+  <div class="shopify-page-width shopify-page-padding">
+    <div class="search-container">
+      <div class="search-container-content">
+        <div class="search-container-content-header">
+          <h2>Search</h2>
+
+          <div class="search-form">
+            <predictive-search>
+              <form action="{{ routes.search_url }}" method="get" role="search">
+                <div class="search-form-container">
+                  <div class="input-container">
+                    <input
+                      id="Search"
+                      type="search"
+                      name="q"
+                      placeholder="Search"
+                      value="{{ search.terms | escape }}"
+                      role="combobox"
+                      aria-expanded="false"
+                      aria-owns="predictive-search-results"
+                      aria-controls="predictive-search-results"
+                      aria-haspopup="listbox"
+                      aria-autocomplete="list"
+                    >
+                    <label for="Search">Search</label>
+                  </div>
+
+                  <button type="submit" aria-label="Search" class="search-button">
+                    {{ 'search.svg' | inline_asset_content }}
+                  </button>
+                </div>
+
+                <input name="options[prefix]" type="hidden" value="last">
+                <div id="predictive-search" tabindex="-1"></div>
+              </form>
+            </predictive-search>
+          </div>
+        </div>
+
+        <div class="search-results-container">
+          {% if product_results.size > 0 %}
+            {%- render 'filters-sort-bar',
+              filter_target_id: 'SearchList',
+              filters: search.filters,
+              sort_options: search.sort_options,
+              sort_by: search.sort_by
+            -%}
+
+            {% paginate search.results by section.settings.products_per_page %}
+              <div id="SearchList" class="search-results">
+                <div class="search-result-list">
+                  {% for product in product_results %}
+                    {% render 'product-card',
+                      product: product,
+                      aspect_ratio: section.settings.aspect_ratio,
+                      secondary_image_hover_effect: section.settings.secondary_image_hover_effect,
+                      show_rating: section.settings.show_rating,
+                      show_discounted_promo: section.settings.show_discounted_promo,
+                      show_color_variants: section.settings.show_color_variants,
+                      show_size_variants: section.settings.show_size_variants,
+                      show_add_to_cart: section.settings.show_add_to_cart,
+                      show_vendor: section.settings.show_vendor,
+                      show_quick_view: section.settings.show_quick_view
+                    %}
+                  {% endfor %}
+                </div>
+
+                {% render 'pagination-nav', paginate: paginate, pagination_nav_target_id: 'SearchList' %}
+              </div>
+            {% endpaginate %}
+          {% else %}
+            <div class="empty-state">
+              <p>
+                No results found for <span class="search-term">“{{ search.terms }}”</span>. Check the spelling or use a
+                different word or phrase.
+              </p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:section.search.name",
+  "tag": "section",
+  "enabled_on": {
+    "templates": ["search"]
+  },
+  "settings": [
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 4,
+      "max": 40,
+      "step": 4,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "desktop_grid_columns",
+      "label": "t:layout.columns.label",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "mobile_grid_columns",
+      "label": "t:layout.columns.label",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "header",
+      "content": "t:product.content"
+    },
+    {
+      "type": "select",
+      "id": "aspect_ratio",
+      "label": "t:aspect_ratio.label",
+      "options": [
+        { "label": "t:aspect_ratio.options.unset", "value": "unset" },
+        { "label": "t:aspect_ratio.options.adapt", "value": "auto" },
+        { "label": "16:9 (Widescreen)", "value": "16 / 9" },
+        { "label": "4:3 (Standard)", "value": "4 / 3" },
+        { "label": "1:1 (Square)", "value": "1 / 1" },
+        { "label": "9:16 (Vertical)", "value": "9 / 16" },
+        { "label": "21:9 (Cinematic)", "value": "21 / 9" }
+      ],
+      "default": "1 / 1"
+    },
+    {
+      "type": "checkbox",
+      "id": "secondary_image_hover_effect",
+      "label": "t:secondary_image_hover_effect.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "t:product_rating.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Vendor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_view",
+      "label": "t:quick_view.label",
+      "info": "t:quick_view.info",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_discounted_promo",
+      "label": "t:discounted_promo.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_color_variants",
+      "label": "t:color_variants.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_size_variants",
+      "label": "Size Variants",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_add_to_cart",
+      "label": "t:add_to_cart.label",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "bg_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#ffffff",
+      "info": "Choose a solid background color",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,72 @@
+<style>
+  #divider-{{ block.id }} {
+    {%- if block.settings.orientation == 'horizontal' -%}
+      width: 100%;
+      height: 1px;
+    {%- else -%}
+      height: 100%;
+      width: 1px;
+    {%- endif -%}
+
+    {%- if block.settings.color_mode == 'custom' -%}
+      background: {{ block.settings.bg_color }};
+    {%- else -%}
+        background: var(--color-border);
+    {%- endif -%}
+  }
+</style>
+
+<div id="divider-{{ block.id }}" {{ block.shopify_attributes }}></div>
+
+{%- schema -%}
+{
+  "name": "t:block.divider.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#222222",
+      "visible_if": "{{ block.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "orientation",
+      "label": "Orientation",
+      "options": [
+        {
+          "value": "horizontal",
+          "label": "t:layout.direction.options.horizontal"
+        },
+        {
+          "value": "vertical",
+          "label": "t:layout.direction.options.vertical"
+        }
+      ],
+      "default": "horizontal"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.divider.name"
+    }
+  ]
+}
+{%- endschema -%}

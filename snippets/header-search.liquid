@@ -1,0 +1,164 @@
+<style>
+  /* Dialog Content Styles */
+  #header-search {
+    padding: 0;
+    top: 6rem;
+    transform: translate(-50%, 0) scale(0.95);
+  }
+
+  #header-search[data-state='open'] {
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  @media (width >= 64rem) {
+    #header-search {
+      padding: 0;
+      top: 6rem;
+      transform: translate(-50%, 0) scale(0.95);
+    }
+  }
+
+  /* Search Modal Input */
+  .search-modal__input-wrapper {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    padding-inline: 1rem;
+  }
+
+  .search-modal__input-wrapper label svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--color-muted-foreground);
+  }
+
+  .search-modal__input-wrapper input {
+    appearance: none;
+    background: #0000;
+    height: 3.5rem;
+    font-size: 1rem;
+    margin-left: 0.75rem;
+    margin-right: 1rem;
+    flex: auto;
+    min-width: 0;
+  }
+
+  .search-modal__input-wrapper input:focus {
+    outline: 0;
+  }
+
+  .search-modal__input-wrapper input[type='search' i]::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .search-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 0.75rem; /* 12px */
+    line-height: 1rem; /* 16px */
+    min-width: 1.25rem;
+    width: fit-content;
+    height: 1.25rem;
+    padding-inline: 0.25rem;
+    background-color: var(--color-muted-background);
+    color: var(--color-muted-foreground);
+    border-radius: 0.125rem;
+    pointer-events: none;
+  }
+
+  .search-modal__loading {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.2s,
+      visibility 0.2s;
+  }
+
+  .search-modal__loading.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .search-modal__spinner {
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+  }
+
+  .search-modal__spinner circle,
+  .search-modal__spinner path {
+    stroke: #3b82f6;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Search Results Container */
+  .search-results {
+    display: none;
+    position: relative;
+  }
+
+  .search-results.is-visible {
+    display: block;
+  }
+</style>
+
+<dialog-menu data-size="lg">
+  <dialog-trigger>
+    <button type="button" class="header__icon-button" aria-label="Search">
+      {%- if custom_search_icon != blank -%}
+        {{- custom_search_icon -}}
+      {%- else -%}
+        {{ 'search.svg' | inline_asset_content }}
+      {%- endif -%}
+
+      {%- if show_icon_labels -%}
+        <span>Search</span>
+      {%- endif -%}
+    </button>
+  </dialog-trigger>
+  <dialog-content id="header-search">
+    <predictive-search>
+      <form action="{{ routes.search_url }}" method="get" role="search">
+        <div class="search-modal__input-wrapper">
+          <label for="search-input">
+            {%- if custom_search_icon != blank -%}
+              {{- custom_search_icon -}}
+            {%- else -%}
+              {{ 'search.svg' | inline_asset_content }}
+            {%- endif -%}
+          </label>
+
+          <input
+            id="search-input"
+            type="search"
+            name="q"
+            placeholder="Search products, articles, and more..."
+            autocomplete="off"
+            class="search-modal__input"
+          >
+
+          <dialog-close>
+            <button class="search-modal__close" aria-label="Esc">Esc</button>
+          </dialog-close>
+        </div>
+      </form>
+      <div id="predictive-search" tabindex="-1"></div>
+    </predictive-search>
+  </dialog-content>
+</dialog-menu>

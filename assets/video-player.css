@@ -1,0 +1,86 @@
+/* Requirement: Direct styling on custom element tags 
+  */
+video-player {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Video Element */
+video-player [data-target="video-source"] {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Shared Styles for Controls 
+    Positioned absolute in the center
+  */
+play-video,
+pause-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition:
+    opacity 0.3s ease,
+    transform 0.2s ease;
+  z-index: 10;
+  /* Use Primary Background with Opacity from settings or fallback */
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Hover Effects */
+play-video:hover,
+pause-video:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Icons inside components */
+play-video svg,
+pause-video svg {
+  width: 24px;
+  height: 24px;
+  fill: #ffffff;
+  pointer-events: none; /* Ensure click hits the custom element */
+}
+
+/* State Logic using data-state attribute on the parent 
+  */
+
+/* Initial State (Paused) or Ended */
+video-player[data-state="paused"] play-video {
+  opacity: 1;
+  pointer-events: auto;
+}
+video-player[data-state="paused"] pause-video {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Playing State */
+video-player[data-state="playing"] play-video {
+  opacity: 0;
+  pointer-events: none;
+}
+video-player[data-state="playing"] pause-video {
+  opacity: 0; /* Hidden by default while watching */
+  pointer-events: none;
+}
+
+/* Show Pause button on Hover when playing */
+video-player[data-state="playing"]:hover pause-video {
+  opacity: 1;
+  pointer-events: auto;
+}

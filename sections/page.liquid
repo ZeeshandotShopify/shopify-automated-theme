@@ -1,0 +1,186 @@
+{% comment %}
+  This section is used in the page template to render store pages like About us
+  or Contact us.
+
+  https://shopify.dev/docs/storefronts/themes/architecture/templates/page
+{% endcomment %}
+
+{% style %}
+  #{{ section.id }} {
+    {%- if section.settings.color_mode == 'custom' -%}
+      --bg-color: {{ section.settings.bg_color }};
+      --fg-color: {{ section.settings.fg_color }};
+    {%- endif -%}
+
+    --mobile-padding-top: {{ section.settings.mobile_padding_top }}px;
+    --mobile-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+    --mobile-padding-left: {{ section.settings.mobile_padding_left }}px;
+    --mobile-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+    --desktop-padding-top: {{ section.settings.desktop_padding_top }}px;
+    --desktop-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+    --desktop-padding-left: {{ section.settings.desktop_padding_left }}px;
+    --desktop-padding-right: {{ section.settings.desktop_padding_right }}px;
+
+    {%- if section.settings.color_mode == 'custom' -%}
+      background: var(--bg-color);
+      color: var(--fg-color)
+    {%- else -%}
+      background: var(--color-article-background);
+      color: var(--color-article-foreground);
+    {%- endif -%}
+  }
+
+  #{{ section.id }} .page-section-container {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 2.25rem;
+    width: 100%;
+    max-width: 56rem;
+    margin-inline: auto;
+    padding-top: var(--mobile-padding-top);
+    padding-bottom: var(--mobile-padding-bottom);
+    padding-inline: 2rem;
+  }
+
+  .page-section-title {
+    font-family: var(--font-heading--family, 'sans-serif');
+    font-weight: 500;
+    font-size: 2.5rem;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    text-align: center;
+  }
+
+  .page-section-content {
+    width: 100%;
+    font-family: var(--font-body--family, 'sans-serif');
+  }
+
+  @media (width >= 48rem) {
+    #{{ section.id }} .page-section-container {
+      padding-top: var(--desktop-padding-top);
+      padding-bottom: var(--desktop-padding-bottom);
+      padding-inline: 0;
+    }
+  }
+{% endstyle %}
+
+<div id="{{ section.id }}">
+  <div
+    {% if section.settings.width == 'default' %}
+      class="shopify-page-width shopify-page-padding"
+    {% endif %}
+  >
+    <div class="page-section-container">
+      <h1 class="page-section-title">{{ page.title }}</h1>
+
+      <div class="page-section-content rte">
+        {{ page.content }}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:section.page.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "t:size.width.label",
+      "options": [
+        {
+          "value": "full",
+          "label": "t:size.options.full"
+        },
+        {
+          "value": "default",
+          "label": "t:size.options.default"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#ffffff",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "fg_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#111111",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    }
+  ]
+}
+{% endschema %}

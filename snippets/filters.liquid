@@ -1,0 +1,104 @@
+{%- liquid
+  assign filter_target_id = filter_target_id
+  assign filters = filters
+-%}
+
+{%- style -%}
+  dynamic-filters {
+    font-family: var(--font-body--family);
+  }
+
+  .filters-dropdown-menu-wrapper {
+    display: none;
+  }
+
+  .filters-sheet-menu-wrapper {
+    display: block;
+  }
+
+  .filters-sheet-menu-wrapper sheet-menu,
+  .filters-sheet-menu-wrapper sheet-trigger {
+    width: 100%;
+  }
+
+  .filters-sheet-content {
+    font-family: var(--font-body--family);
+    gap: 0;
+  }
+
+  .filters-sheet-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .filters-sheet-title {
+    font-size: 1.5rem; /* 24px */
+    line-height: 2rem; /* 32px */
+    font-weight: 400;
+  }
+
+  @media (width >= 64rem) {
+    .filters-dropdown-menu-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .filters-sheet-menu-wrapper {
+      display: none;
+    }
+  }
+{%- endstyle -%}
+
+<form id="FacetFiltersForm">
+  <div id="FiltersDesktop" class="filters-dropdown-menu-wrapper">
+    {%- for filter in filters -%}
+      {%- if filter.type == 'price_range' -%}
+        {% render 'price-range-filter', filter: filter, variant: 'desktop' %}
+      {%- endif -%}
+
+      {%- if filter.type == 'list' -%}
+        {% render 'filter', filter: filter, variant: 'desktop' %}
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+</form>
+
+<div class="filters-sheet-menu-wrapper">
+  <sheet-menu data-direction="left">
+    <sheet-trigger>
+      {% render 'button',
+        label: 'Filters',
+        size: 'sm',
+        icon_mode: 'select',
+        icon_select: 'filter',
+        icon_position: 'right',
+        full_width: true
+      %}
+    </sheet-trigger>
+    <sheet-content class="filters-sheet-content">
+      <sheet-header class="filters-sheet-header">
+        <sheet-title class="filters-sheet-title">Filters</sheet-title>
+
+        <sheet-close class="filters-sheet-close">
+          {{ 'close.svg' | inline_asset_content }}
+        </sheet-close>
+      </sheet-header>
+      <form id="FacetFiltersFormMobile">
+        <div id="FiltersMobile">
+          {%- for filter in filters -%}
+            {%- if filter.type == 'price_range' -%}
+              {% render 'price-range-filter', filter: filter, variant: 'mobile' %}
+            {%- endif -%}
+
+            {%- if filter.type == 'list' -%}
+              {% render 'filter', filter: filter, variant: 'mobile' %}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </form>
+    </sheet-content>
+  </sheet-menu>
+</div>

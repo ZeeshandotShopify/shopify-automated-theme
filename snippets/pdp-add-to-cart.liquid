@@ -1,0 +1,55 @@
+{% doc %}
+  Renders product page add-to-cart controls with optional dynamic checkout.
+
+  @param {object} block - Product section block settings and attributes.
+  @param {product} product - Product object for availability and gift card checks.
+  @param {form} form - Product form object used for dynamic checkout.
+  @param {string} form_id - Product form id used by the add-to-cart button.
+
+  @example
+  {% render 'pdp-add-to-cart', block: block, product: product, form: form, form_id: product_form_id %}
+{% enddoc %}
+
+{%- liquid
+  assign show_dynamic_checkout = false
+  if product != blank
+    if block.settings.show_dynamic_checkout == true and product.gift_card? == false
+      assign show_dynamic_checkout = true
+    endif
+  endif
+-%}
+
+{% style %}
+  .pdp-atc {
+     padding-top: {{ block.settings.padding_top }}px;
+     padding-bottom: {{ block.settings.padding_bottom }}px
+  }
+
+  .pdp-atc add-to-cart button {
+    padding-block: 1rem;
+  }
+
+  .pdp-atc-dynamic-checkout-button {
+    margin-top: 1rem;
+  }
+
+  .pdp-atc-dynamic-checkout-button shopify-accelerated-checkout {
+    /* Button height */
+    --shopify-accelerated-checkout-button-block-size: 48px;
+
+    /* Corner radius, connected to your theme variable */
+    --shopify-accelerated-checkout-button-border-radius: var(--button-border-radius);
+  }
+{% endstyle %}
+
+{%- if product != blank and form_id != blank -%}
+  <div class="pdp-atc" {{ block.shopify_attributes }}>
+    {% render 'add-to-cart', add_to_cart_text: block.settings.label, form_id: form_id, product: product %}
+
+    {%- if show_dynamic_checkout and form != blank -%}
+      <div class="pdp-atc-dynamic-checkout-button">
+        {{ form | payment_button }}
+      </div>
+    {%- endif -%}
+  </div>
+{%- endif -%}

@@ -1,0 +1,69 @@
+{%- liquid
+  assign product_review_count = product.metafields.reviews.rating_count | default: 0 | plus: 0
+-%}
+
+{% style %}
+  .pdp-ratings {
+    --border-thickness: {{ block.settings.border_thickness }}px;
+
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+   padding-top: {{ block.settings.padding_top }}px;
+   padding-bottom: {{ block.settings.padding_bottom }}px
+  }
+
+  .pdp-ratings__badge {
+    font-family: var(--font-body--family);
+    background-color: var(--color-accent-background);
+    color: var(--color-accent-foreground);
+    font-size: 1rem;
+    line-height: 140%;
+    border: solid var(--border-thickness) var(--color-border);
+    border-radius: var(--button-border-radius);
+    padding-inline: 1rem;
+    padding-block: 0.625rem;
+  }
+
+  /* Judge.me Stars Widget Override */
+  .jdgm-prev-badge__text {
+    font-family: var(--font-body--family);
+    margin-left: 0.75rem;
+  }
+
+  .pdp-ratings .jdgm-preview-badge .jdgm-star {
+    color: var(--color-star-rating-foreground);
+  }
+{% endstyle %}
+
+{%- if product_review_count > 0 and product.metafields.judgeme.badge -%}
+  <div class="pdp-ratings" {{ block.shopify_attributes }}>
+    <!-- Start of Judge.me code -->
+    {%- # theme-check-disable ValidScopedCSSClass -%}
+    <div
+      style="{{ jm_style }}"
+      class="jdgm-widget jdgm-preview-badge"
+      data-id="{{ product.id }}"
+      data-auto-install="false"
+    >
+      {%- # theme-check-enable ValidScopedCSSClass -%}
+      {{ product.metafields.judgeme.badge }}
+    </div>
+    <!-- End of Judge.me code -->
+
+    {%- if block.settings.badge != blank -%}
+      <span class="pdp-ratings__badge">
+        {{ block.settings.badge }}
+      </span>
+    {%- endif -%}
+  </div>
+{%- else -%}
+  {%- if block.settings.badge != blank -%}
+    <div class="pdp-ratings">
+      <span class="pdp-ratings__badge">
+        {{ block.settings.badge }}
+      </span>
+    </div>
+  {%- endif -%}
+{%- endif -%}

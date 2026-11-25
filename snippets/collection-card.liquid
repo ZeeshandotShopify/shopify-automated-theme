@@ -1,0 +1,63 @@
+{%- liquid
+  # PLACEHOLDER MODE LOGIC:
+  # Determine if we're in placeholder mode (No Collection Selected in Theme Editor).
+
+  assign placeholder_mode = false
+  if collection == blank
+    assign placeholder_mode = true
+  endif
+
+  # IMAGE SOURCE LOGIC:
+  # If there's no collection image we will use the product's image.
+  assign image_source = image_override
+  if image_source == blank and collection != blank
+    assign image_source = collection.image
+    if image_source == blank
+      assign image_source = collection.products.first.featured_image
+    endif
+  endif
+-%}
+
+{%- stylesheet -%}
+  .collection-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .collection-card__title--wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .collection-card__title {
+    font-family: var(--font-body--family);
+    text-transform: capitalize;
+  }
+{%- endstylesheet -%}
+
+<a
+  {% unless placeholder_mode %}
+    href="{{ collection.url }}"
+  {% endunless %}
+  class="collection-card"
+>
+  {% render 'responsive-image', image: image_source, desktop_aspect_ratio: aspect_ratio %}
+
+  <div class="collection-card__title--wrapper">
+    <span class="collection-card__title">
+      {%- if placeholder_mode -%}
+        Collection Title
+      {%- elsif title_override != blank -%}
+        {{- title_override -}}
+      {%- else -%}
+        {{- collection.title -}}
+      {%- endif -%}
+    </span>
+
+    {%- if icon_mode != 'none' -%}
+      {% render 'icon', id: id, icon_mode: icon_mode, icon_select: icon_select, icon_size: 16, icon_custom: icon %}
+    {%- endif -%}
+  </div>
+</a>

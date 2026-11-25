@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    {% # Inlined CSS Variables %}
+    {% render 'css-variables' %}
+
+    <style>
+      /* GLOBAL SCROLLBAR STYLES */
+
+      /* For Firefox */
+      html {
+        scrollbar-width: thin; /* 'auto' | 'thin' | 'none' */
+        scrollbar-color: var(--color-border) transparent; /* thumb-color track-color */
+      }
+
+      /* You might also apply this to body if html isn't sufficient for some reason */
+      body {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-border) transparent;
+      }
+
+      /* For Webkit-based browsers (Chrome, Safari, Edge, Opera) */
+      /* Apply to the scrollbar itself */
+      ::-webkit-scrollbar {
+        width: 2px; /* Width of the vertical scrollbar */
+        height: 2px; /* Height of the horizontal scrollbar */
+      }
+
+      /* Style the track (the background of the scrollbar) */
+      ::-webkit-scrollbar-track {
+        background: transparent; /* Light gray track */
+        border-radius: 10px; /* Optional: Rounded corners for the track */
+      }
+
+      /* Style the thumb (the draggable part of the scrollbar) */
+      ::-webkit-scrollbar-thumb {
+        background: var(--color-border); /* Darker gray thumb */
+        border-radius: 10px; /* Optional: Rounded corners for the thumb */
+        {% comment %} border: 3px solid #f1f1f1; /* Creates a visual padding/margin around the thumb */ {% endcomment %}
+      }
+
+      /* Style the thumb on hover */
+      ::-webkit-scrollbar-thumb:hover {
+        {% comment %} background: #555; /* Even darker gray on hover */ {% endcomment %}
+         opacity: 0.7;
+      }
+
+      /* Optional: Style the corner where vertical and horizontal scrollbars meet */
+      ::-webkit-scrollbar-corner {
+        {% comment %} background: #f1f1f1; {% endcomment %}
+      }
+
+      @font-face {
+        font-family: 'JudgemeStar';
+        font-display: swap;
+      }
+    </style>
+
+    {% if settings.favicon != blank %}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {% endif %}
+
+    {%- # Load and preload the critical CSS -%}
+    {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
+
+    {%- # Swiper (Carousel) -%}
+    {{ 'swiper-bundle.min.css' | asset_url | stylesheet_tag }}
+
+    {{ 'loader.css' | asset_url | stylesheet_tag }}
+    {{ 'toast.css' | asset_url | stylesheet_tag }}
+    {{ 'scroll-shadow.css' | asset_url | stylesheet_tag }}
+    {{ 'video-player.css' | asset_url | stylesheet_tag }}
+    {{ 'sticky-add-to-cart.css' | asset_url | stylesheet_tag }}
+    {{ 'nav-panel.css' | asset_url | stylesheet_tag }}
+    {{ 'dropdown-menu.css' | asset_url | stylesheet_tag }}
+    {{ 'sheet-menu.css' | asset_url | stylesheet_tag }}
+    {{ 'dialog-menu.css' | asset_url | stylesheet_tag }}
+    {{ 'quick-view.css' | asset_url | stylesheet_tag }}
+    {{ 'input.css' | asset_url | stylesheet_tag }}
+    {{ 'accordion.css' | asset_url | stylesheet_tag }}
+
+    {% # Social, title, etc. %}
+    {% render 'meta-tags' %}
+
+    {%- unless settings.heading_font.system? and settings.body_font.system? -%}
+      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+      <link rel="dns-prefetch" href="https://fonts.shopifycdn.com">
+    {%- endunless -%}
+
+    {{ content_for_header }}
+  </head>
+
+  <body>
+    <a href="#main-content" class="skip-to-content visually-hidden">
+      {{ 'accessibility.skip_to_content' | t | default: 'Skip to content' }}
+    </a>
+
+    {% sections 'header-group' %}
+
+    {% comment %}
+      CRITICAL: This script MUST run BEFORE <main> renders.
+      It sets --header-height so the first section's negative margin is correct on first paint.
+    {% endcomment %}
+    <script>
+      (function () {
+        var header = document.querySelector('header') || document.querySelector('.header-wrapper');
+        if (header) {
+          document.documentElement.style.setProperty('--header-height', header.getBoundingClientRect().height + 'px');
+        }
+      })();
+    </script>
+
+    <main id="main-content" role="main">
+      {{ content_for_layout }}
+    </main>
+
+    {% sections 'footer-group' %}
+
+    <script>
+      function updateHeaderHeight() {
+        var header = document.querySelector('header') || document.querySelector('.header-wrapper');
+        if (header) {
+          document.documentElement.style.setProperty('--header-height', header.getBoundingClientRect().height + 'px');
+        }
+      }
+
+      // Recalculate on DOMContentLoaded in case fonts/images affect height
+      document.addEventListener('DOMContentLoaded', updateHeaderHeight);
+
+      // Calculate whenever the window is resized
+      window.addEventListener('resize', updateHeaderHeight);
+
+      // Update if the DOM changes (e.g., announcement bar closes)
+      var observer = new MutationObserver(updateHeaderHeight);
+      var headerNode = document.querySelector('header') || document.querySelector('.header-wrapper');
+      if (headerNode) observer.observe(headerNode, { attributes: true, childList: true, subtree: true });
+    </script>
+
+    {%- # theme-check-disable AssetSizeJavaScript -%}
+    {%- # Lazysizes (Image Lazyload Blur Effect) -%}
+    <script src="{{ 'lazysizes.min.js' | asset_url }}" async=""></script>
+
+    {%- # Swiper (Carousel) -%}
+    <script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
+
+    <script src="{{ 'scroll-shadow.js' | asset_url }}" defer></script>
+    <script src="{{ 'video-player.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'collection-tabs.js' | asset_url }}" defer></script>
+    <script src="{{ 'product-hotspots.js' | asset_url }}" defer></script>
+    <script src="{{ 'monotone-noise.js' | asset_url }}" defer></script>
+    <script src="{{ 'image-comparison-slider.js' | asset_url }}" defer></script>
+    <script src="{{ 'product-recommendations.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'cart-product-recommendations.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'cart-product-recommendations-desktop.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'product-card-variant-selector.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'variant-selector.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'quantity-selector.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'sticky-add-to-cart.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'nav-panel.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'accordion.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'tabs.js' | asset_url }}" defer="defer"></script>
+    {% comment %}
+      Critical Script Loading Order:
+
+      These scripts (product-filters.js and cart.js) must load first to prevent
+      DOM manipulation timing issues that break functionality.
+
+      Problem: When scripts with 'defer' attribute load, they execute in order after
+      DOM parsing. If product-filters.js loads after other scripts, its connectedCallback
+      method runs too late - after other scripts have already moved DOM elements.
+
+      Example: dropdown-menu.js calls this.dropdownMenuContent.remove() which detaches
+      filter elements from their original DOM position. When product-filters.js finally
+      runs and tries to find these elements with querySelectorAll, they're no longer
+      in the expected location, so event listeners aren't attached.
+
+      Solution: Loading these scripts first ensures event listeners are attached
+      before any DOM manipulation occurs. Even if elements are moved later, the
+      listeners remain functional.
+
+      Note: Pagination works regardless because its elements aren't subject to
+      the same DOM manipulations.
+    {% endcomment %}
+    <script src="{{ 'dialog-menu.js' | asset_url }}" defer></script>
+    <script src="{{ 'filters.js' | asset_url }}" type="module" defer="defer"></script>
+    <script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'tooltip.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'dropdown-menu.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'sheet-menu.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'quick-view.js' | asset_url }}" defer></script>
+    <script src="{{ 'side-panel.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
+    {%- # theme-check-enable AssetSizeJavaScript -%}
+
+    {%- # Add rel="noopener" to external links for security -%}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('a[href^="http"]').forEach(function (a) {
+          var rel = (a.getAttribute('rel') || '').split(/\s+/).filter(Boolean);
+          if (rel.indexOf('noopener') === -1) rel.push('noopener');
+          if (rel.indexOf('noreferrer') === -1) rel.push('noreferrer');
+          a.setAttribute('rel', rel.join(' '));
+        });
+      });
+    </script>
+  </body>
+</html>

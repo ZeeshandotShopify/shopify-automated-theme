@@ -1,0 +1,23 @@
+{% doc %}
+  Renders an empty "mount" container for a third-party app to inject its widget
+  into (e.g. Upload Lift's "Custom" placement targets the container class).
+  The theme only outputs the container + padding; the app supplies the UI.
+
+  @param {object} block - Product section block providing the mount class and padding.
+
+  @example
+  {% render 'pdp-app-embed-mount', block: block %}
+{% enddoc %}
+
+{%- assign mount_class = block.settings.mount_class | strip | default: 'upload-lift' -%}
+
+{%- style -%}
+  #pdp-app-embed-mount-{{ block.id }} {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+  }
+{%- endstyle -%}
+
+<div id="pdp-app-embed-mount-{{ block.id }}" {{ block.shopify_attributes }}>
+  <div class="{{ mount_class | escape }}"></div>
+</div>

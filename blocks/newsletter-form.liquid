@@ -1,0 +1,720 @@
+{% stylesheet %}
+  #newsletter-form {
+    display: inline-flex;
+    width: 100%;
+    max-width: 36rem;
+  }
+
+  #newsletter-form form {
+    width: 100%;
+  }
+
+  .newsletter-form__wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .newsletter-form__wrapper input {
+    font-family: var(--font-body--family);
+    flex: 1 1 0%;
+    width: 100%;
+    color: var(--color-muted-foreground);
+    background-color: var(--color-input);
+    border: var(--input-border-thickness, 1px) solid var(--color-border);
+    border-radius: var(--input-border-radius);
+    /* max-width: 20rem; */
+    min-width: 0;
+    /* height: 52px; */
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    height: 100%;
+    padding: 16px 40px;
+    outline: none;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+  .newsletter-form__wrapper input::placeholder {
+    color: var(--color-muted-foreground);
+  }
+
+  .newsletter-form__wrapper input:focus {
+    border: 3px solid var(--color-ring);
+    box-shadow: 0 0 5px rgba(77, 144, 254, 0.5);
+  }
+
+  /* Inline status message — also the fallback when the toast script is
+     unavailable. It carries its OWN solid surface rather than tinting the
+     one behind it, so it stays legible on a light section and on a dark
+     one alike. Colours come from the global toast statuses, so both
+     surfaces answer to the same setting. */
+  .newsletter-form__message {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--toast-border-radius, 4px);
+    background: var(--newsletter-message-color, #3f9a42);
+    color: #ffffff;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+  }
+
+  .newsletter-form__message[hidden] {
+    display: none;
+  }
+
+  .newsletter-form__message--success {
+    --newsletter-message-color: var(--toast-success-color, #3f9a42);
+  }
+
+  .newsletter-form__message--error {
+    --newsletter-message-color: var(--toast-error-color, #ef4444);
+  }
+
+  .newsletter-form__message-icon {
+    display: flex;
+    flex-shrink: 0;
+  }
+{% endstylesheet %}
+
+{%- liquid
+  assign scope = 'newsletter-form--' | append: block.id
+
+  comment
+    Every override below is gated on the mode switch, so an `inherit` block
+    emits no scoped CSS at all and renders exactly what the stylesheet tag
+    above has always rendered.
+  endcomment
+  assign custom_style = false
+  if block.settings.field_style_mode == 'custom'
+    assign custom_style = true
+  endif
+-%}
+
+{%- if custom_style -%}
+  {%- style -%}
+    {%- comment -%}
+      The base rule is an ID selector, so the override has to carry the ID too
+      or `max-width: 36rem` wins on specificity.
+    {%- endcomment -%}
+    #newsletter-form.{{ scope }} {
+      max-width: {{ block.settings.form_max_width | default: '36rem' }};
+      width: 100%;
+    }
+
+    .{{ scope }} .newsletter-form__wrapper {
+      gap: {{ block.settings.field_gap }}px;
+      height: {{ block.settings.field_height }}px;
+    }
+
+    .{{ scope }} .newsletter-form__wrapper input {
+      background-color: {{ block.settings.input_bg }};
+      color: {{ block.settings.input_text_color }};
+      border: {{ block.settings.input_border_thickness }}px solid {{ block.settings.input_border_color }};
+      border-radius: {{ block.settings.input_border_radius }}px;
+      padding: 0 {{ block.settings.input_padding_x }}px;
+      font-size: {{ block.settings.input_font_size }};
+      height: 100%;
+      box-shadow: none;
+    }
+
+    .{{ scope }} .newsletter-form__wrapper input::placeholder {
+      color: {{ block.settings.input_placeholder_color }};
+    }
+
+    {%- comment -%}
+      The focus ring is the only state Figma never shows, so it keeps the
+      theme's ring colour and only loses the thickness jump that would resize
+      a fixed-height field.
+    {%- endcomment -%}
+    .{{ scope }} .newsletter-form__wrapper input:focus {
+      border: {{ block.settings.input_border_thickness }}px solid var(--color-ring);
+      box-shadow: 0 0 0 1px var(--color-ring);
+    }
+
+    .{{ scope }} .newsletter-form__wrapper .btn {
+      height: 100%;
+      min-width: {{ block.settings.btn_min_width }}px;
+      border-radius: {{ block.settings.btn_border_radius }}px;
+      font-size: {{ block.settings.btn_font_size }};
+      font-family: {{ block.settings.btn_font_family }};
+      padding-inline: {{ block.settings.btn_padding_x }}px;
+      flex-shrink: 0;
+    }
+  {%- endstyle -%}
+{%- endif -%}
+
+<div id="newsletter-form" class="{{ scope }}" {{ block.shopify_attributes }}>
+  {% form 'customer' %}
+    <div class="newsletter-form__wrapper">
+      <label for="newsletter-email-{{ block.id }}" class="visually-hidden">Email address</label>
+      <input
+        type="email"
+        name="contact[email]"
+        id="newsletter-email-{{ block.id }}"
+        placeholder="{{ block.settings.input_placeholder }}"
+        required
+      >
+
+      {% render 'button',
+        label: block.settings.btn_label,
+        variant: block.settings.variant,
+        size: block.settings.size,
+        icon_mode: block.settings.icon_mode,
+        icon_select: block.settings.icon_select,
+        icon_custom: block.settings.icon,
+        icon_position: block.settings.icon_position,
+        full_width: block.settings.full_width,
+        type: 'submit'
+      %}
+    </div>
+
+    {%- liquid
+      comment
+        The customer form round-trips through a page load, so the outcome is
+        only ever known here, in Liquid. One status is resolved and handed to
+        whichever surface the merchant picked.
+      endcomment
+      assign status = ''
+      assign status_message = ''
+
+      if form.posted_successfully?
+        assign status = 'success'
+        assign status_message = block.settings.success_message
+      elsif form.errors
+        assign status = 'error'
+        assign status_message = block.settings.error_message
+        if block.settings.show_error_detail
+          assign error_detail = form.errors | default_errors | strip_html | strip
+          if error_detail != blank
+            assign status_message = status_message | append: ' ' | append: error_detail
+          endif
+        endif
+      endif
+    -%}
+
+    {%- if status != blank and status_message != blank -%}
+      {%- liquid
+        assign is_toast = false
+        if block.settings.message_display == 'toast'
+          assign is_toast = true
+        endif
+
+        if status == 'error'
+          assign status_role = 'alert'
+        else
+          assign status_role = 'status'
+        endif
+      -%}
+
+      {%- comment -%}
+        In toast mode this block is the FALLBACK: it ships hidden and is only
+        revealed when showToast is missing (assets/cart.js failed or is not on
+        the page), so the message can never be swallowed silently.
+      {%- endcomment -%}
+      <div
+        class="newsletter-form__message newsletter-form__message--{{ status }}"
+        id="newsletter-message-{{ block.id }}"
+        role="{{ status_role }}"
+        {% if is_toast %}
+          hidden
+        {% endif %}
+      >
+        <span class="newsletter-form__message-icon" aria-hidden="true">
+          {%- if status == 'success' -%}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle><polyline points="8.5 12.5 11 15 15.5 9.5"></polyline>
+            </svg>
+          {%- else -%}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          {%- endif -%}
+        </span>
+        <span>{{ status_message }}</span>
+      </div>
+
+      {%- if is_toast -%}
+        <script>
+          (function () {
+            var node = document.getElementById('newsletter-message-{{ block.id }}');
+            if (!node) return;
+
+            function announce() {
+              if (typeof showToast === 'function') {
+                showToast({{ status_message | json }}, {{ status | json }});
+              } else {
+                node.hidden = false;
+              }
+            }
+
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', announce);
+            } else {
+              announce();
+            }
+          })();
+        </script>
+      {%- endif -%}
+    {%- endif -%}
+  {% endform %}
+</div>
+
+{% schema %}
+{
+  "name": "t:block.newsletter_form.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "label": "t:placement.label",
+      "id": "input_placeholder",
+      "default": "Email address"
+    },
+    {
+      "type": "text",
+      "label": "Button Label",
+      "id": "btn_label",
+      "default": "Subscribe"
+    },
+    {
+      "type": "header",
+      "content": "Status Messages"
+    },
+    {
+      "type": "select",
+      "id": "message_display",
+      "label": "Show Message As",
+      "info": "Toast uses the theme-wide notification styled in Theme settings › Toast Notifications.",
+      "default": "toast",
+      "options": [
+        { "value": "toast", "label": "Toast" },
+        { "value": "inline", "label": "Inline Under The Form" }
+      ]
+    },
+    {
+      "type": "textarea",
+      "label": "Success Message",
+      "id": "success_message",
+      "default": "Thank you for subscribing! We’ll get back to you shortly."
+    },
+    {
+      "type": "textarea",
+      "label": "Error Message",
+      "id": "error_message",
+      "default": "We couldn’t sign you up. Please check your email address and try again."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_error_detail",
+      "label": "Append Shopify's Error Detail",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:style.content"
+    },
+    {
+      "type": "select",
+      "id": "variant",
+      "label": "t:variant.label",
+      "default": "default",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:variant.options.default"
+        },
+        {
+          "value": "secondary",
+          "label": "t:variant.options.secondary"
+        },
+        {
+          "value": "destructive",
+          "label": "t:variant.options.destructive"
+        },
+        {
+          "value": "outline",
+          "label": "t:variant.options.outline"
+        },
+        {
+          "value": "ghost",
+          "label": "t:variant.options.ghost"
+        },
+        {
+          "value": "link",
+          "label": "t:variant.options.link"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "t:size.label",
+      "default": "default",
+      "options": [
+        {
+          "value": "sm",
+          "label": "t:size.options.sm"
+        },
+        {
+          "value": "default",
+          "label": "t:size.options.default"
+        },
+        {
+          "value": "lg",
+          "label": "t:size.options.lg"
+        },
+        {
+          "value": "icon",
+          "label": "t:size.options.icon"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:icon.content"
+    },
+    {
+      "type": "select",
+      "id": "icon_mode",
+      "label": "t:icon_mode.label",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:icon_mode.options.none"
+        },
+        {
+          "value": "select",
+          "label": "t:icon_mode.options.select"
+        },
+        {
+          "value": "custom",
+          "label": "t:icon_mode.options.custom"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "icon_select",
+      "label": "t:icon.label",
+      "options": [
+        {
+          "value": "arrow-left",
+          "label": "Arrow Left"
+        },
+        {
+          "value": "arrow-right",
+          "label": "Arrow Right"
+        },
+        {
+          "value": "arrow-up",
+          "label": "Arrow Up"
+        },
+        {
+          "value": "arrow-down",
+          "label": "Arrow Down"
+        },
+        {
+          "value": "plus",
+          "label": "Plus"
+        },
+        {
+          "value": "minus",
+          "label": "Minus"
+        },
+        {
+          "value": "check",
+          "label": "Check"
+        },
+        {
+          "value": "close",
+          "label": "Close"
+        },
+        {
+          "value": "menu",
+          "label": "Menu"
+        },
+        {
+          "value": "search",
+          "label": "Search"
+        },
+        {
+          "value": "copy",
+          "label": "Copy"
+        },
+        {
+          "value": "download",
+          "label": "Download"
+        },
+        {
+          "value": "upload",
+          "label": "Upload"
+        },
+        {
+          "value": "share",
+          "label": "Share"
+        },
+        {
+          "value": "gear",
+          "label": "Gear"
+        },
+        {
+          "value": "filter",
+          "label": "Filter"
+        },
+        {
+          "value": "edit",
+          "label": "Edit"
+        },
+        {
+          "value": "trash",
+          "label": "Trash"
+        },
+        {
+          "value": "cart",
+          "label": "Cart"
+        },
+        {
+          "value": "bag",
+          "label": "Bag"
+        },
+        {
+          "value": "lock",
+          "label": "Lock"
+        }
+      ],
+      "visible_if": "{{ block.settings.icon_mode == 'select' }}"
+    },
+    {
+      "type": "html",
+      "id": "icon",
+      "label": "t:icon.label",
+      "info": "Paste SVG code here",
+      "visible_if": "{{ block.settings.icon_mode == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "icon_position",
+      "label": "t:layout.alignment.label",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:layout.alignment.options.left"
+        },
+        {
+          "value": "right",
+          "label": "t:layout.alignment.options.right"
+        }
+      ],
+      "visible_if": "{{ block.settings.icon_mode == 'custom' and block.settings.icon_mode == 'select' and block.settings.size != 'icon' }}"
+    },
+    {
+      "type": "header",
+      "content": "Field Style"
+    },
+    {
+      "type": "select",
+      "id": "field_style_mode",
+      "label": "t:color_mode.label",
+      "info": "Inherit uses the global input and button settings. Custom styles this form only.",
+      "default": "inherit",
+      "options": [
+        { "value": "inherit", "label": "t:color_mode.options.inherit" },
+        { "value": "custom", "label": "t:color_mode.options.custom" }
+      ]
+    },
+    {
+      "type": "color",
+      "id": "input_bg",
+      "label": "Field Background",
+      "default": "#f4f6f7",
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "input_text_color",
+      "label": "Field Text Color",
+      "default": "#111111",
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "input_placeholder_color",
+      "label": "Placeholder Color",
+      "default": "#c7c5c1",
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "input_border_color",
+      "label": "Field Border Color",
+      "default": "#d9d9d9",
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "input_border_thickness",
+      "label": "Field Border Thickness",
+      "min": 0,
+      "max": 8,
+      "step": 1,
+      "unit": "px",
+      "default": 1,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "input_border_radius",
+      "label": "Field Corner Radius",
+      "min": 0,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "default": 0,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "field_height",
+      "label": "Field Height",
+      "min": 32,
+      "max": 96,
+      "step": 2,
+      "unit": "px",
+      "default": 52,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "input_padding_x",
+      "label": "Field Horizontal Padding",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "text",
+      "id": "input_font_size",
+      "label": "Field Font Size",
+      "default": "1rem",
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "field_gap",
+      "label": "Gap Between Field And Button",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "text",
+      "id": "form_max_width",
+      "label": "Form Max Width",
+      "info": "Any CSS length, e.g. 584px or 36rem.",
+      "default": "36rem",
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "btn_min_width",
+      "label": "Button Minimum Width",
+      "min": 0,
+      "max": 200,
+      "step": 2,
+      "unit": "px",
+      "default": 0,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "btn_border_radius",
+      "label": "Button Corner Radius",
+      "min": 0,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "default": 4,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "text",
+      "id": "btn_font_size",
+      "label": "Button Font Size",
+      "default": "0.875rem",
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "btn_padding_x",
+      "label": "Button Horizontal Padding",
+      "min": 0,
+      "max": 96,
+      "step": 2,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "btn_font_family",
+      "label": "Button Font",
+      "default": "var(--button-font-family)",
+      "options": [
+        { "value": "var(--button-font-family)", "label": "t:color_mode.options.inherit" },
+        { "value": "var(--font-body--family)", "label": "t:typography.font_family.options.body" },
+        { "value": "var(--font-heading--family)", "label": "t:typography.font_family.options.heading" }
+      ],
+      "visible_if": "{{ block.settings.field_style_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:options.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:full_width.label",
+      "default": false,
+      "visible_if": "{{ block.settings.size != 'icon' and block.settings.btn_label != blank }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.newsletter_form.name"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,6 @@
+pnpm exec lint-staged                      # 1) format staged files, re-stage
+if command -v shopify >/dev/null 2>&1; then # 2) whole-theme lint (slow; needs full root)
+  shopify theme check --fail-level=info
+else
+  echo "⚠  Shopify CLI not found (npm i -g @shopify/cli). Gap guards + Prettier ran; Theme Check skipped."
+fi

@@ -1,0 +1,457 @@
+<style>
+  /* =========================================
+     1. BASE NAVIGATION STYLES
+     ========================================= */
+  .header__nav {
+    position: static;
+  }
+
+  .header__nav-list {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: static;
+  }
+
+  .header__nav-item {
+    position: static !important;
+    display: flex;
+    align-items: center;
+  }
+
+  .header__nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .header__nav-link::after,
+  .header__nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .header__nav-link::before {
+    background: var(--color-header-foreground);
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    z-index: 2;
+    will-change: transform;
+  }
+
+  .header__nav-item:hover .header__nav-link::before,
+  .header__nav-item:focus .header__nav-link::before,
+  .header__nav-item.is-open .header__nav-link::before {
+    transform: scaleX(1);
+  }
+
+  /* Arrow Icon */
+  .header__nav-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    transition: transform 0.3s ease;
+  }
+
+  .header__nav-arrow svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+
+  /* Rotate arrow on hover or open state */
+  .header__nav-item:hover > .header__nav-link .header__nav-arrow,
+  .header__nav-item.is-open > .header__nav-link .header__nav-arrow {
+    transform: rotate(180deg);
+  }
+
+  /* =========================================
+     2. MEGA MENU STYLES
+     ========================================= */
+  /* Transition Delay Strategy */
+  .header__mega-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    display: flex;
+    background-color: var(--color-popover-background);
+    color: var(--color-popover-foreground);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+    opacity: 0;
+    visibility: hidden;
+    /*
+      Wait 0.2s before hiding visibility to allow cursor to cross the gap.
+      Opacity transitions out over 0.2s.
+    */
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+    z-index: 100;
+    max-height: 80vh;
+    {% comment %} overflow-y: auto; {% endcomment %}
+    pointer-events: none;
+  }
+
+  /* Upward Bridge: Extends interaction area from menu up to nav item */
+  .header__mega-menu::before {
+    content: '';
+    position: absolute;
+    bottom: 100%; /* Extend upwards to cover the gap between nav item and menu */
+    left: 0;
+    width: 100%;
+    height: calc((var(--header-height) / 2) - 0.5rem); /* Match the bottom 100% value */
+    background: transparent;
+    z-index: 10;
+  }
+
+  /* Reveal on hover OR when .is-open class is present */
+  .header__nav-item:hover .header__mega-menu,
+  .header__nav-item.is-open .header__mega-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    /* Cancel the delay when hovering so it opens instantly */
+    transition-delay: 0s;
+  }
+
+  /* Grid Layout */
+  .header__mega-menu-grid {
+    flex: 1;
+    display: grid;
+    {% comment %} grid-template-columns: repeat(auto-fill, minmax(144px, 1fr)); {% endcomment %}
+    grid-template-columns: repeat(auto-fit, minmax(144px, 1fr));
+    gap: 3rem;
+    padding-block: 3rem;
+    padding-inline: 4rem;
+    overflow-y: auto;
+  }
+
+  /* Links */
+  .header__mega-menu-column-title {
+    position: relative;
+    font-weight: 700;
+    color: inherit;
+  }
+
+  .header__mega-menu-column-title::after,
+  .header__mega-menu-column-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .header__mega-menu-column-title::before {
+    background: var(--color-header-foreground);
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    z-index: 2;
+    will-change: transform;
+  }
+
+  .header__mega-menu-column-title:hover::before,
+  .header__mega-menu-column-title:focus::before {
+    transform: scaleX(1);
+  }
+
+  .header__mega-menu-sublist {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .header__mega-menu-sublink {
+    position: relative;
+    color: inherit;
+    opacity: 0.75;
+    transition-property: opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+  .header__mega-menu-sublink:hover {
+    opacity: 1;
+  }
+
+  .header__mega-menu-sublink::after,
+  .header__mega-menu-sublink::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  .header__mega-menu-sublink::before {
+    background: var(--color-header-foreground);
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    z-index: 2;
+    will-change: transform;
+  }
+
+  .header__mega-menu-sublink:hover::before,
+  .header__mega-menu-sublink:focus::before {
+    transform: scaleX(1);
+  }
+
+  .header__mega-menu-grid--accordion-with-promotion {
+    align-content: flex-start;
+    column-gap: 8rem;
+    row-gap: 1rem;
+  }
+
+  /* MEGA MENU ACCORDION OVERRIDES */
+  .mega-menu-accordion-item accordion-trigger {
+    padding: 0;
+  }
+
+  .header__mega-menu-accordion-trigger {
+    color: inherit;
+    font-size: 1rem;
+    line-height: 140%;
+    font-weight: 500;
+  }
+
+  .mega-menu-accordion-item accordion-content > * {
+    padding-bottom: 0;
+  }
+
+  .mega-menu-accordion-item .accordion-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  .header__mega-menu-grid--accordion .header__mega-menu-column-title {
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 140%;
+  }
+</style>
+
+<nav class="header__nav">
+  <ul class="header__nav-list">
+    {%- for link in linklists[block.settings.menu].links -%}
+      {%- assign use_accordion = false -%}
+      {%- if block.settings.mega_menu_sublink_style == 'accordion' -%}
+        {%- if block.settings.mega_menu_accordion_menus == blank -%}
+          {%- assign use_accordion = true -%}
+        {%- else -%}
+          {%- assign accordion_targets = block.settings.mega_menu_accordion_menus | split: ',' -%}
+          {%- for target_name in accordion_targets -%}
+            {%- assign normalized_target = target_name | strip | downcase -%}
+            {%- assign normalized_title = link.title | strip | downcase -%}
+            {%- if normalized_target == normalized_title -%}
+              {%- assign use_accordion = true -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      <li class="header__nav-item {% if link.links != blank %}has-dropdown{% endif %}">
+        <a href="{{ link.url }}" class="header__nav-link">
+          {{- link.title -}}
+          {%- if link.links != blank -%}
+            <span class="header__nav-arrow">
+              {{ 'arrow-down.svg' | inline_asset_content }}
+            </span>
+          {%- endif -%}
+        </a>
+
+        {%- comment -%} Mega Menu Wrapper {%- endcomment -%}
+        {%- if link.links != blank -%}
+          <div class="header__mega-menu">
+            {%- assign has_promotion = false -%}
+            {%- for i in (1..4) -%}
+              {%- capture target_link_key -%}promotion_{{ i }}_target_link{%- endcapture -%}
+              {%- assign target = block.settings[target_link_key] -%}
+              {%- assign normalized_target = target | strip | downcase -%}
+              {%- assign normalized_title = link.title | strip | downcase -%}
+              {%- if target != blank and normalized_target == normalized_title -%}
+                {%- assign has_promotion = true -%}
+              {%- endif -%}
+            {%- endfor -%}
+            <ul class="header__mega-menu-grid{% if use_accordion %} header__mega-menu-grid--accordion{% endif %}{% if use_accordion and has_promotion %} header__mega-menu-grid--accordion-with-promotion{% endif %}">
+              {%- for child_link in link.links -%}
+                <li class="header__mega-menu-column">
+                  {%- if use_accordion and child_link.links != blank -%}
+                    <accordion-item icon="chevron" class="mega-menu-accordion-item">
+                      <accordion-trigger class="header__mega-menu-accordion-trigger">
+                        {{- child_link.title -}}
+                      </accordion-trigger>
+                      <accordion-content>
+                        <ul class="header__mega-menu-sublist">
+                          {%- for grandchild_link in child_link.links -%}
+                            <li>
+                              <a href="{{ grandchild_link.url }}" class="header__mega-menu-sublink">
+                                {{- grandchild_link.title -}}
+                              </a>
+                            </li>
+                          {%- endfor -%}
+                        </ul>
+                      </accordion-content>
+                    </accordion-item>
+                  {%- else -%}
+                    <a href="{{ child_link.url }}" class="header__mega-menu-column-title">
+                      {{- child_link.title -}}
+                    </a>
+
+                    {%- if child_link.links != blank -%}
+                      <ul class="header__mega-menu-sublist">
+                        {%- for grandchild_link in child_link.links -%}
+                          <li>
+                            <a href="{{ grandchild_link.url }}" class="header__mega-menu-sublink">
+                              {{- grandchild_link.title -}}
+                            </a>
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                    {%- endif -%}
+                  {%- endif -%}
+                </li>
+              {%- endfor -%}
+            </ul>
+
+            {%- for i in (1..4) -%}
+              {%- capture target_link_key -%}promotion_{{ i }}_target_link{%- endcapture -%}
+              {%- capture image_key -%}promotion_{{ i }}_image{%- endcapture -%}
+              {%- capture heading_key -%}promotion_{{ i }}_heading{%- endcapture -%}
+              {%- capture button_label_key -%}promotion_{{ i }}_button_label{%- endcapture -%}
+              {%- capture button_link_key -%}promotion_{{ i }}_button_link{%- endcapture -%}
+              {%- capture object_fit_key -%}promotion_{{ i }}_object_fit{%- endcapture -%}
+              {%- capture desktop_aspect_ratio_key -%}promotion_{{ i }}_desktop_aspect_ratio{%- endcapture -%}
+              {%- capture desktop_enable_custom_dimension_key -%}promotion_{{ i }}_desktop_enable_custom_dimension{%- endcapture -%}
+              {%- capture desktop_custom_width_key -%}promotion_{{ i }}_desktop_custom_width{%- endcapture -%}
+              {%- capture desktop_custom_height_key -%}promotion_{{ i }}_desktop_custom_height{%- endcapture -%}
+
+              {%- assign target = block.settings[target_link_key] -%}
+              {%- assign image = block.settings[image_key] -%}
+              {%- assign heading = block.settings[heading_key] -%}
+              {%- assign button_label = block.settings[button_label_key] -%}
+              {%- assign button_link = block.settings[button_link_key] -%}
+              {%- assign object_fit = block.settings[object_fit_key] -%}
+              {%- assign desktop_aspect_ratio = block.settings[desktop_aspect_ratio_key] -%}
+              {%- assign desktop_enable_custom_dimension = block.settings[desktop_enable_custom_dimension_key] -%}
+              {%- assign desktop_custom_width = block.settings[desktop_custom_width_key] -%}
+              {%- assign desktop_custom_height = block.settings[desktop_custom_height_key] -%}
+
+              {% comment %} Normalize and compare link titles {% endcomment %}
+              {%- assign normalized_target = target | strip | downcase -%}
+              {%- assign normalized_title = link.title | strip | downcase -%}
+
+              {%- if normalized_target == normalized_title -%}
+                {%- if target != blank -%}
+                  {% render 'header-menu-promotion',
+                    image: image,
+                    heading: heading,
+                    button_label: button_label,
+                    button_link: button_link,
+                    content_position: block.settings.promotion_content_position,
+                    object_fit: object_fit,
+                    desktop_aspect_ratio: desktop_aspect_ratio,
+                    desktop_enable_custom_dimension: desktop_enable_custom_dimension,
+                    desktop_custom_width: desktop_custom_width,
+                    desktop_custom_height: desktop_custom_height,
+                    overlay_color: block.settings.promotion_overlay_color,
+                    overlay_opacity: block.settings.promotion_overlay_opacity
+                  %}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+  </ul>
+</nav>
+
+{%- comment -%}
+  JavaScript for mega menu hover with delay to prevent accidental closes
+{%- endcomment -%}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const navItems = document.querySelectorAll('.header__nav-item.has-dropdown');
+    const CLOSE_DELAY = 150;
+
+    navItems.forEach((item) => {
+      let closeTimeout = null;
+      const megaMenu = item.querySelector('.header__mega-menu');
+
+      const openMenu = () => {
+        if (closeTimeout) {
+          clearTimeout(closeTimeout);
+          closeTimeout = null;
+        }
+        navItems.forEach((otherItem) => {
+          if (otherItem !== item) {
+            otherItem.classList.remove('is-open');
+          }
+        });
+        item.classList.add('is-open');
+      };
+
+      const closeMenu = () => {
+        closeTimeout = setTimeout(() => {
+          item.classList.remove('is-open');
+        }, CLOSE_DELAY);
+      };
+
+      item.addEventListener('mouseenter', openMenu);
+      item.addEventListener('mouseleave', closeMenu);
+
+      if (megaMenu) {
+        megaMenu.addEventListener('mouseenter', openMenu);
+        megaMenu.addEventListener('mouseleave', closeMenu);
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        navItems.forEach((item) => item.classList.remove('is-open'));
+        if (document.activeElement) {
+          document.activeElement.blur();
+        }
+      }
+    });
+
+    navItems.forEach((item) => {
+      const link = item.querySelector('.header__nav-link');
+
+      link.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          const firstMenuLink = item.querySelector('.header__mega-menu-column-title');
+          if (firstMenuLink) {
+            item.classList.add('is-open');
+            firstMenuLink.focus();
+          }
+        }
+      });
+    });
+  });
+</script>

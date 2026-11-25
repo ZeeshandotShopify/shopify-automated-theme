@@ -1,0 +1,890 @@
+{%- liquid
+  assign product_form_id = 'product-form-' | append: product.id | append: section.id
+
+  assign aspect_ratio = aspect_ratio | default: '1 / 1'
+  assign secondary_image_hover_effect = secondary_image_hover_effect
+
+  assign show_discounted_promo = show_discounted_promo
+  assign show_rating = show_rating
+  assign show_color_variants = show_color_variants
+  assign show_size_variants = show_size_variants
+  assign show_add_to_cart = show_add_to_cart
+  assign show_vendor = show_vendor
+  assign show_quick_view = show_quick_view
+
+  comment
+    Presentation of the add-to-cart control. Defaults to 'button' — the full-width
+    labelled button below the details — so the call sites that don't pass this
+    parameter keep the behaviour they already had. 'icon' renders a compact round
+    icon button overlaid on the product image instead.
+  endcomment
+  assign add_to_cart_style = add_to_cart_style | default: 'button'
+  if add_to_cart_style != 'icon'
+    assign add_to_cart_style = 'button'
+  endif
+
+  assign current_variant = product.selected_or_first_available_variant
+
+  assign swatch_shape = swatch_shape | default: settings.swatch_shape | default: 'rounded'
+  if swatch_shape != 'rounded' and swatch_shape != 'square'
+    assign swatch_shape = 'rounded'
+  endif
+
+  assign product_card_class = 'product-card product-card--swatch-' | append: swatch_shape
+  if show_add_to_cart
+    assign product_card_class = product_card_class | append: ' product-card--atc-' | append: add_to_cart_style
+  endif
+  if show_quick_view
+    assign product_card_class = product_card_class | append: ' product-card--has-quick-view'
+  endif
+
+  comment
+    The quick-view trigger is a sibling of the image anchor, so it needs the
+    image's own ratio to know where the image ends. Published as a custom
+    property on the card root rather than read back from the image.
+  endcomment
+  assign card_root_style = '--card-image-aspect: ' | append: aspect_ratio | append: ';'
+
+  # PLACEHOLDER MODE LOGIC:
+  assign placeholder_mode = false
+  if product == blank
+    assign placeholder_mode = true
+  endif
+
+  assign product_review_count = 0
+  if placeholder_mode == false
+    assign product_review_count = product.metafields.reviews.rating_count | default: 0 | plus: 0
+  endif
+
+  # COLOR SWATCH LOGIC:
+  assign color_option = null
+  assign color_option_position = null
+
+  if show_color_variants == true and product.has_only_default_variant == false and placeholder_mode == false
+    for option in product.options_with_values
+      assign option_name_downcase = option.name | downcase
+      if option_name_downcase contains 'color' or option_name_downcase contains 'colour'
+        assign color_option = option
+        assign color_option_position = option.position
+        break
+      endif
+    endfor
+  endif
+
+  # SIZE SELECTOR LOGIC:
+  assign size_option = null
+  assign size_option_position = null
+
+  if show_size_variants == true and product.has_only_default_variant == false and placeholder_mode == false
+    for option in product.options_with_values
+      assign option_name_downcase = option.name | downcase
+      if option_name_downcase == 'size'
+        assign size_option = option
+        assign size_option_position = option.position
+        break
+      endif
+    endfor
+  endif
+
+  # Determine if we need variant data (for either color or size)
+  assign needs_variant_data = false
+  if color_option != null or size_option != null
+    assign needs_variant_data = true
+  endif
+-%}
+
+{%- comment -%} Build variant JSON for variant switching {%- endcomment -%}
+{%- if needs_variant_data -%}
+  {%- capture variant_json -%}
+  [
+    {%- for variant in product.variants -%}
+      {
+        "id": {{ variant.id }},
+        "available": {{ variant.available }},
+        "option1": {{ variant.option1 | json }},
+        "option2": {{ variant.option2 | json }},
+        "option3": {{ variant.option3 | json }},
+        "price_formatted": {{ variant.price | money | json }},
+        "compare_at_price_formatted": {% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price | money | json }}{% else %}null{% endif %},
+        "discount_percentage": {% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price | minus: variant.price | times: 100 | divided_by: variant.compare_at_price }}{% else %}0{% endif %},
+        "featured_image": {% if variant.featured_image %}{
+          "src": {{ variant.featured_image | image_url: width: 20 | json }},
+          "data_src": {{ variant.featured_image | image_url: width: 1200 | json }},
+          "srcset": "{{ variant.featured_image | image_url: width: 400 }} 400w, {{ variant.featured_image | image_url: width: 800 }} 800w, {{ variant.featured_image | image_url: width: 1200 }} 1200w, {{ variant.featured_image | image_url: width: 1600 }} 1600w",
+          "alt": {{ variant.featured_image.alt | default: product.title | escape | json }},
+          "width": {{ variant.featured_image.width }},
+          "height": {{ variant.featured_image.height }}
+        }{% else %}null{% endif %}
+      }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ]
+  {%- endcapture -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .product-card {
+    --swatch-input--border-radius: 50%;
+
+    height: 100%;
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    gap: 1rem;
+    font-family: var(--font-body--family);
+    overflow: hidden;
+  }
+
+  .product-card--swatch-rounded {
+    --swatch-input--border-radius: 50%;
+  }
+
+  .product-card--swatch-square {
+    --swatch-input--border-radius: 0;
+  }
+
+  .product-image-container {
+    position: relative;
+    overflow: hidden;
+    border: var(--image-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+    border-radius: var(--image-border-radius, 0.375rem);
+  }
+
+  .secondary-image-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .product-card:hover .secondary-image-container {
+    opacity: 1;
+  }
+
+  .product-sold-out-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-muted-background);
+    opacity: 0.7;
+    z-index: 1;
+  }
+
+  .product-badge-sold-out {
+    position: absolute;
+    top: 0.625rem;
+    left: 0.625rem;
+    background: var(--color-destructive-background);
+    color: var(--color-destructive-foreground);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+  }
+
+  .product-details-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 1rem;
+  }
+
+  .product-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .product-title {
+    font-size: 1rem;
+    line-height: 140%;
+    font-weight: 500;
+    text-wrap: pretty;
+  }
+
+  .product-vendor {
+    font-size: 1rem;
+    line-height: 140%;
+    color: var(--color-primary-background);
+  }
+
+  .product-price-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .product-price-container-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-price {
+    font-size: 1rem;
+    line-height: 140%;
+    color: var(--color-foreground);
+    font-weight: 500;
+  }
+
+  .compare-at-price {
+    font-size: 0.875rem;
+    line-height: 140%;
+  }
+
+  .product-discounted-promo {
+    align-self: start;
+    background-color: var(--color-price-foreground);
+    color: var(--color-price-background);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 700;
+    padding-inline: 0.75rem;
+    border-radius: 0.25rem;
+  }
+
+  product-card-variant-selector {
+    display: block;
+  }
+
+  .product-swatches {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    z-index: 10;
+  }
+
+  .product-swatch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--swatch-input--border-radius);
+    width: 1.25rem;
+    height: 1.25rem;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300;
+    forced-color-adjust: none;
+  }
+
+  .product-swatch:hover {
+    border: 1px solid rgba(var(--color-foreground-rgb), 0.4);
+  }
+
+  .product-swatch--active {
+    border: 1px solid var(--color-foreground);
+  }
+
+  .product-swatch div {
+    background: var(--swatch-value);
+    background-size: cover;
+    background-position: center;
+    border: 0.1rem solid rgba(var(--color-foreground-rgb), 0.15);
+    border-radius: var(--swatch-input--border-radius);
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .product-swatch--active div {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .product-swatch:hover div {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .product-card .jdgm-prev-badge {
+    display: flex !important;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+
+  .product-card .jdgm-preview-badge .jdgm-prev-badge__stars {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .product-card .jdgm-preview-badge .jdgm-star.jdgm-star {
+    display: inline-block !important;
+    color: var(--color-star-rating-foreground);
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .product-card .jdgm-star.jdgm--on:before {
+    font-size: 0.75rem;
+  }
+
+  .product-card-placeholder-card .product-image-container {
+    background: var(--color-muted-background);
+  }
+
+  .product-card-placeholder-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .product-card-placeholder-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-star-rating-foreground);
+  }
+
+  .product-card-placeholder-star {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .product-card-add-to-cart {
+    z-index: 2;
+    margin-top: auto;
+  }
+
+  /* Round icon add-to-cart, overlaid on the product image.
+     Rendered as a sibling of the image link rather than inside it — a button
+     nested in an anchor is invalid markup and would navigate on click. The card
+     is already position: relative, and the image sits at its top-left, so
+     insetting from the card equals insetting from the image.
+
+     These rules are deliberately self-contained: when this style is chosen,
+     snippets/add-to-cart.liquid is never rendered, so its own scoped stylesheet
+     is not on the page and nothing here may rely on it. */
+  .product-card-add-to-cart--icon {
+    position: absolute;
+    top: var(--card-atc-icon-inset, 0.5rem);
+    left: var(--card-atc-icon-inset, 0.5rem);
+    z-index: 3;
+    margin-top: 0;
+    line-height: 0;
+  }
+
+  .product-card-add-to-cart--icon add-to-cart {
+    display: block;
+  }
+
+  .product-card-add-to-cart--icon add-to-cart button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--card-atc-icon-size, 2rem);
+    height: var(--card-atc-icon-size, 2rem);
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--card-atc-icon-background, #ffffff);
+    color: var(--card-atc-icon-foreground, var(--color-foreground));
+    cursor: pointer;
+    transition:
+      opacity 0.15s ease-in-out,
+      background-color 0.15s ease-in-out;
+  }
+
+  .product-card-add-to-cart--icon add-to-cart button:hover:not(:disabled) {
+    background: var(--card-atc-icon-hover-background, #ffffff);
+    color: var(--card-atc-icon-hover-foreground, var(--color-foreground));
+  }
+
+  .product-card-add-to-cart--icon add-to-cart button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .product-card-add-to-cart--icon add-to-cart button.loading {
+    opacity: 0.5;
+  }
+
+  .product-card-add-to-cart--icon svg {
+    display: block;
+    width: var(--card-atc-icon-glyph-size, 1rem);
+    height: var(--card-atc-icon-glyph-size, 1rem);
+    flex-shrink: 0;
+  }
+
+  .product-size-selector {
+    background: var(--color-muted-background);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    z-index: 3;
+    padding: 0.75rem;
+    gap: 0.5rem;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    .product-card .product-size-selector {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(0.25rem);
+    }
+
+    .product-card:hover .product-size-selector,
+    .product-card:focus-within .product-size-selector {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .product-size-selector {
+      transition: none;
+      transform: none;
+    }
+  }
+
+  .product-size-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: var(--color-foreground);
+    border: none;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: var(--font-body--family);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+    line-height: 1;
+  }
+
+  .product-size-btn:hover {
+    background: var(--color-muted-background, #f0f0f0);
+  }
+
+  .product-size-btn--active {
+    background: var(--color-primary-background, var(--color-foreground));
+    color: var(--color-primary-foreground, var(--color-background));
+  }
+
+  .product-size-btn--active:hover {
+    background: var(--color-primary-hover-background, var(--color-foreground));
+    color: var(--color-primary-hover-foreground, var(--color-background));
+  }
+
+  @media (width < 64rem) {
+    .product-size-selector,
+    /* The icon variant is deliberately exempt: it is overlaid on the image and is
+       meant to be reachable on touch, where there is no hover to reveal it. */
+    .product-card-add-to-cart:not(.product-card-add-to-cart--icon) {
+      display: none;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .product-title {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+
+  /* --- Quick view trigger -------------------------------------------------
+     A sibling of the image anchor, positioned against the card root and given
+     the image's own aspect-ratio box to sit inside — that is what lets the
+     desktop pill hang off the BOTTOM of the image without knowing its pixel
+     height. `--card-image-aspect` is published per card from the section's
+     aspect_ratio setting. Every colour here is a theme token. */
+  .product-card__quick-view {
+    position: absolute;
+    top: 0;
+    inset-inline: 0;
+    aspect-ratio: var(--card-image-aspect, 1 / 1);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0.5rem;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .product-card__quick-view-button {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--button-font-family, var(--font-body--family));
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .product-card__quick-view-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .product-card__quick-view-icon {
+    display: block;
+    line-height: 0;
+  }
+
+  .product-card__quick-view-icon svg {
+    width: 1rem;
+    height: 1rem;
+    display: block;
+  }
+
+  /* Desktop turns the chip into a labelled pill across the foot of the image. */
+  @media (width >= 64rem) {
+    .product-card__quick-view {
+      align-items: flex-end;
+      justify-content: stretch;
+      padding: 0.75rem 0.75rem 0.875rem;
+    }
+
+    .product-card__quick-view-button {
+      width: 100%;
+      height: 3.125rem;
+      padding: 0.9375rem 1.875rem;
+      border-radius: var(--button-border-radius);
+      background: var(--color-add-to-cart-background);
+      color: var(--color-add-to-cart-foreground);
+      font-size: 0.875rem;
+      font-weight: var(--button-font-weight, 600);
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+
+    .product-card__quick-view-button:hover {
+      background: var(--color-add-to-cart-hover-background);
+      color: var(--color-add-to-cart-hover-foreground);
+    }
+
+    .product-card__quick-view-label {
+      position: static;
+      width: auto;
+      height: auto;
+      clip: auto;
+      overflow: visible;
+    }
+
+    .product-card__quick-view-icon {
+      display: none;
+    }
+  }
+
+  /* The pill reveals bottom-to-top: at rest it is parked just under the
+     image's bottom edge and hover walks it up into place. The wrapper spans
+     exactly the image box, so `overflow: hidden` on it is the clip that hides
+     the parked pill — `.product-image-container`'s own clip cannot do the job,
+     the trigger being a sibling of the image anchor rather than a child.
+
+     Moved with a transform, never `visibility: hidden`: a visibility-hidden
+     element cannot take focus, so `:focus-within` would never fire and the
+     control would be unreachable by keyboard. Parked it is clipped but still
+     focusable, and focus brings it up. Gated on a real pointer, because on
+     touch `:hover` sticks after a tap and the pill would never hide again. */
+  @media (hover: hover) and (width >= 64rem) {
+    .product-card__quick-view {
+      overflow: hidden;
+    }
+
+    /* Its own height plus the wrapper's bottom padding — the distance from
+       resting place to fully below the image's bottom edge. */
+    .product-card__quick-view-button {
+      transform: translateY(calc(100% + 0.875rem));
+      transition: transform 0.25s ease-out;
+    }
+
+    .product-card:hover .product-card__quick-view-button,
+    .product-card:focus-within .product-card__quick-view-button {
+      transform: translateY(0);
+    }
+  }
+
+  /* Both controls claim the image's top-left corner. When the merchant has the
+     icon add-to-cart on as well, quick view keeps its position and the cart
+     icon moves to the opposite corner. */
+  @media (width < 64rem) {
+    .product-card--has-quick-view.product-card--atc-icon .product-card-add-to-cart--icon {
+      left: auto;
+      right: var(--card-atc-icon-inset, 0.5rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .product-card__quick-view-button {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{%- if placeholder_mode -%}
+  {%- comment -%} PLACEHOLDER MODE: Render without form tag {%- endcomment -%}
+  <div class="{{ product_card_class }} product-card-placeholder-card">
+    <div>
+      <div class="product-image-container" style="aspect-ratio: {{ aspect_ratio }};">
+        {{ 'product-1' | placeholder_svg_tag: 'product-card-placeholder-image' }}
+      </div>
+    </div>
+    <div class="product-details-wrapper">
+      <div class="product-details">
+        <h3 class="product-title">
+          <span>Placeholder Product</span>
+        </h3>
+        {% if show_vendor %}
+          <span class="product-vendor">Vendor</span>
+        {% endif %}
+        <div class="product-price-container">
+          <div class="product-price-container-content">
+            <span class="product-price">$19.99</span>
+          </div>
+        </div>
+        <div class="product-card-placeholder-rating" role="img" aria-label="5 out of 5 stars">
+          {%- for star in (1..5) -%}
+            <svg class="product-card-placeholder-star" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" fill="currentColor"></path>
+            </svg>
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- else -%}
+  {%- comment -%} NORMAL MODE: Render with form tag {%- endcomment -%}
+  {% form 'product', product, id: product_form_id, class: product_card_class, style: card_root_style %}
+    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+    <input type="hidden" name="quantity" value="1">
+
+    <a
+      href="{{ product.url }}{% if needs_variant_data %}?variant={{ current_variant.id }}{% endif %}"
+      class="product-card__image-link"
+      data-base-url="{{ product.url }}"
+    >
+      <div class="product-image-container">
+        <div
+          class="product-sold-out-overlay"
+          data-sold-out-overlay
+          {% if current_variant.available %}
+            style="display:none"
+          {% endif %}
+        ></div>
+        <span
+          class="product-badge-sold-out"
+          data-sold-out-badge
+          {% if current_variant.available %}
+            style="display:none"
+          {% endif %}
+          >Sold Out</span
+        >
+
+        {% render 'responsive-image', image: product.featured_image, desktop_aspect_ratio: aspect_ratio %}
+
+        {% if secondary_image_hover_effect and product.images.size > 1 %}
+          {% assign secondary_image = product.images[1] %}
+          <div class="secondary-image-container">
+            {% render 'responsive-image', image: secondary_image, desktop_aspect_ratio: aspect_ratio %}
+          </div>
+        {% endif %}
+
+        {% if size_option != null %}
+          <div class="product-size-selector" data-size-selector data-size-option-position="{{ size_option_position }}">
+            {%- for value in size_option.values -%}
+              <button
+                type="button"
+                class="product-size-btn{% if forloop.first %} product-size-btn--active{% endif %}"
+                data-size-value="{{ value | escape }}"
+                aria-label="Size {{ value | escape }}"
+                title="{{ value | escape }}"
+              >
+                {{ value }}
+              </button>
+            {%- endfor -%}
+          </div>
+        {% endif %}
+      </div>
+    </a>
+
+    {%- comment -%}
+      Quick view trigger. A SIBLING of the image anchor, never a child: a button
+      inside an anchor navigates instead of firing. `type="button"` keeps it out
+      of the product form it sits inside.
+    {%- endcomment -%}
+    {%- if show_quick_view == true -%}
+      <quick-view-trigger
+        class="product-card__quick-view"
+        data-product-url="{{ product.url }}"
+        data-loading-label="{{ 'product.quick_view_loading' | t | escape }}"
+      >
+        <button
+          type="button"
+          class="product-card__quick-view-button"
+          aria-label="{{ 'product.quick_view_open' | t: title: product.title | escape }}"
+        >
+          <span class="product-card__quick-view-label">{{ 'product.quick_view' | t }}</span>
+          <span class="product-card__quick-view-icon">
+            {{- 'icon-bag-add.svg' | inline_asset_content -}}
+          </span>
+        </button>
+      </quick-view-trigger>
+    {%- endif -%}
+
+    {%- if show_add_to_cart == true and add_to_cart_style == 'icon' -%}
+      {%- liquid
+        assign atc_icon_available = false
+        if current_variant != blank and current_variant.available
+          assign atc_icon_available = true
+        endif
+      -%}
+      <div class="product-card-add-to-cart product-card-add-to-cart--icon">
+        <add-to-cart>
+          <button
+            type="submit"
+            form="{{ product_form_id }}"
+            {% if atc_icon_available %}
+              aria-label="Add {{ product.title | escape }} to cart"
+              title="Add to cart"
+            {% else %}
+              aria-label="{{ product.title | escape }} is sold out"
+              title="Sold out"
+              disabled
+            {% endif %}
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M9.33322 3.33333C9.33322 2.97971 9.19274 2.64057 8.9427 2.39052C8.69265 2.14048 8.35351 2 7.99989 2C7.64626 2 7.30713 2.14048 7.05708 2.39052C6.80703 2.64057 6.66655 2.97971 6.66655 3.33333M5.99455 10H7.99455M7.99455 10H9.99455M7.99455 10V8M7.99455 10V12M12.8399 6.464L13.7632 12.464C13.7924 12.6539 13.7802 12.8479 13.7275 13.0326C13.6748 13.2174 13.5827 13.3886 13.4577 13.5344C13.3326 13.6803 13.1776 13.7974 13.003 13.8778C12.8285 13.9581 12.6387 13.9998 12.4466 14H3.55322C3.36097 14 3.171 13.9585 2.99631 13.8782C2.82163 13.7979 2.66637 13.6808 2.54118 13.5349C2.41599 13.389 2.32383 13.2178 2.27102 13.0329C2.21821 12.8481 2.206 12.654 2.23522 12.464L3.15855 6.464C3.20699 6.14906 3.36661 5.86188 3.6085 5.65447C3.8504 5.44706 4.15858 5.33314 4.47722 5.33333H11.5226C11.8411 5.3333 12.1491 5.44729 12.3909 5.65469C12.6326 5.86208 12.7915 6.14917 12.8399 6.464Z"></path>
+            </svg>
+          </button>
+        </add-to-cart>
+      </div>
+    {%- endif -%}
+
+    <div class="product-details-wrapper">
+      <div class="product-details">
+        <h3 class="product-title">
+          <a
+            href="{{ product.url }}{% if needs_variant_data %}?variant={{ current_variant.id }}{% endif %}"
+            class="product-card__title-link"
+          >
+            {{- product.title -}}
+          </a>
+        </h3>
+
+        {% if show_vendor %}
+          <span class="product-vendor">{{ product.vendor }}</span>
+        {% endif %}
+
+        <div class="product-price-container" data-price-container data-show-promo="{{ show_discounted_promo }}">
+          <div class="product-price-container-content">
+            {% if current_variant.compare_at_price > current_variant.price %}
+              <div class="product-compare-at-price-wrapper">
+                <span class="product-price" style="color: var(--color-price-foreground);">
+                  {{- current_variant.price | money -}}
+                </span>
+                <s class="compare-at-price">{{ current_variant.compare_at_price | money }}</s>
+              </div>
+            {% else %}
+              <span class="product-price">{{ current_variant.price | money }}</span>
+            {% endif %}
+          </div>
+
+          {% if show_discounted_promo == true %}
+            {% if current_variant.compare_at_price > current_variant.price %}
+              <div class="product-discounted-promo">
+                {% assign savings = current_variant.compare_at_price | minus: current_variant.price %}
+                {% assign percentage = savings | times: 100 | divided_by: current_variant.compare_at_price %}
+                <span>{{ percentage }}% off</span>
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        {% if needs_variant_data %}
+          <product-card-variant-selector>
+            {% if color_option != null %}
+              <div class="product-swatches" data-option-position="{{ color_option_position }}">
+                {%- for value in color_option.values -%}
+                  {%- liquid
+                    assign swatch_bg = null
+                    if value.swatch.image
+                      assign swatch_image_url = value.swatch.image | image_url: width: 50
+                      assign swatch_bg = 'url(' | append: swatch_image_url | append: ')'
+                    elsif value.swatch.color
+                      assign swatch_bg = 'rgb(' | append: value.swatch.color.rgb | append: ')'
+                    endif
+                  -%}
+
+                  <button
+                    type="button"
+                    class="product-swatch{% if value.selected %} product-swatch--active{% endif %}"
+                    data-color-value="{{ value | escape }}"
+                    aria-label="{{ value | escape }}"
+                    title="{{ value | escape }}"
+                  >
+                    <div
+                      {% if swatch_bg %}
+                        style="--swatch-value: {{ swatch_bg }}"
+                      {% endif %}
+                    ></div>
+                  </button>
+                {%- endfor -%}
+              </div>
+            {% endif %}
+
+            <script type="application/json" class="product-card-variants">
+              {{ variant_json }}
+            </script>
+          </product-card-variant-selector>
+        {% endif %}
+
+        {% if show_rating == true and product_review_count > 0 and product.metafields.judgeme.badge %}
+          <div
+            style="{{ jm_style }}"
+            class="jdgm-widget jdgm-preview-badge"
+            data-id="{{ product.id }}"
+            data-auto-install="false"
+          >
+            {{ product.metafields.judgeme.badge }}
+          </div>
+        {% endif %}
+      </div>
+
+      {% if show_add_to_cart == true and add_to_cart_style == 'button' %}
+        <div class="product-card-add-to-cart">
+          {% render 'add-to-cart', product: product, form_id: product_form_id %}
+        </div>
+      {% endif %}
+    </div>
+  {% endform %}
+{%- endif -%}

@@ -1,0 +1,211 @@
+{% doc %}
+  Renders a contact link block with an optional icon.
+  Supports email (mailto:) and phone (tel:) link types.
+  The label falls back to the raw value when left blank.
+
+  @example
+  {% content_for 'block', type: 'contact-link', id: 'static-contact' %}
+{% enddoc %}
+
+{%- liquid
+  assign block_id = block.id
+  assign contact_type = block.settings.contact_type
+  assign value = block.settings.value
+  assign display_label = block.settings.label | default: value
+  assign icon = block.settings.icon
+
+  if contact_type == 'phone'
+    assign href = 'tel:' | append: value
+  else
+    assign href = 'mailto:' | append: value
+  endif
+-%}
+
+{%- style -%}
+  #contact-link-{{ block_id }} {
+    --cl-color:     {{ block.settings.foreground_color }};
+    --cl-size:      {{ block.settings.font_size }};
+    --cl-lh:        {{ block.settings.line_height }};
+    --cl-weight:    {{ block.settings.font_weight }};
+    --cl-transform: {{ block.settings.text_transform }};
+
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #contact-link-{{ block_id }} .contact-link__icon {
+    flex-shrink: 0;
+    width: 53px;
+    height: 53px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cl-color);
+  }
+
+  #contact-link-{{ block_id }} .contact-link__icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #contact-link-{{ block_id }} .contact-link__text {
+    flex: 1 0 0;
+    min-width: 1px;
+    color: var(--cl-color);
+    font-size: var(--cl-size);
+    line-height: var(--cl-lh);
+    font-weight: var(--cl-weight);
+    text-transform: var(--cl-transform);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  #contact-link-{{ block_id }} .contact-link__text:hover {
+    opacity: 0.8;
+  }
+{%- endstyle -%}
+
+<div
+  id="contact-link-{{ block_id }}"
+  class="contact-link"
+  {{ block.shopify_attributes }}
+>
+  {%- if icon != blank -%}
+    <span class="contact-link__icon" aria-hidden="true">{{ icon }}</span>
+  {%- endif -%}
+
+  {%- if value != blank -%}
+    <a href="{{ href }}" class="contact-link__text">{{ display_label }}</a>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Contact Link",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Contact"
+    },
+    {
+      "type": "select",
+      "id": "contact_type",
+      "label": "Type",
+      "options": [
+        { "value": "email", "label": "Email" },
+        { "value": "phone", "label": "Phone" }
+      ],
+      "default": "email"
+    },
+    {
+      "type": "text",
+      "id": "value",
+      "label": "Email or phone number",
+      "placeholder": "e.g. info@mail.com or 1 250 247 9817"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Label (optional)",
+      "info": "Overrides the link text. Leave blank to show the email or phone number."
+    },
+    {
+      "type": "header",
+      "content": "Icon"
+    },
+    {
+      "type": "html",
+      "id": "icon",
+      "label": "Icon SVG",
+      "info": "Paste SVG code here"
+    },
+    {
+      "type": "header",
+      "content": "t:colors.name"
+    },
+    {
+      "type": "color",
+      "id": "foreground_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#1c1c1c"
+    },
+    {
+      "type": "header",
+      "content": "t:typography.name"
+    },
+    {
+      "type": "text",
+      "id": "font_size",
+      "label": "t:typography.font_size.label",
+      "placeholder": "px, rem, etc.",
+      "default": "1rem"
+    },
+    {
+      "type": "text",
+      "id": "line_height",
+      "label": "t:typography.line_height.label",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "1.4"
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "t:typography.font_weight.label",
+      "options": [
+        { "value": "100", "label": "t:typography.font_weight.options.thin" },
+        {
+          "value": "200",
+          "label": "t:typography.font_weight.options.extra_light"
+        },
+        { "value": "300", "label": "t:typography.font_weight.options.light" },
+        { "value": "400", "label": "t:typography.font_weight.options.regular" },
+        { "value": "500", "label": "t:typography.font_weight.options.medium" },
+        {
+          "value": "600",
+          "label": "t:typography.font_weight.options.semibold"
+        },
+        { "value": "700", "label": "t:typography.font_weight.options.bold" },
+        {
+          "value": "800",
+          "label": "t:typography.font_weight.options.extra_bold"
+        },
+        { "value": "900", "label": "t:typography.font_weight.options.black" }
+      ],
+      "default": "300"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "t:typography.text_transform.label",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:typography.text_transform.options.normal"
+        },
+        {
+          "value": "lowercase",
+          "label": "t:typography.text_transform.options.lowercase"
+        },
+        {
+          "value": "uppercase",
+          "label": "t:typography.text_transform.options.uppercase"
+        },
+        {
+          "value": "capitalize",
+          "label": "t:typography.text_transform.options.capitalize"
+        }
+      ],
+      "default": "none"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.contact_link.name",
+      "category": "t:block.contact_link.category"
+    }
+  ]
+}
+{% endschema %}

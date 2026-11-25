@@ -1,0 +1,28 @@
+{%- capture shop_pay_terms_markup -%}
+  {{ form | payment_terms }}
+{%- endcapture -%}
+
+{%- assign shop_pay_terms_markup = shop_pay_terms_markup | strip -%}
+
+<div class="pdp-shop-pay-installments-wrapper" {{ block.shopify_attributes }}>
+  {%- if shop_pay_terms_markup contains '<shopify-payment-terms' -%}
+    {%- style -%}
+      .pdp-shop-pay-installments-wrapper {
+        padding-top: {{ block.settings.padding_top }}px; padding-bottom: {{ block.settings.padding_bottom }}px;
+      }
+
+      .pdp-shop-pay-installments {
+        text-align: center;
+        background: #F5F2FF;
+        border: 1px solid #CBC2F2;
+        border-radius: 0.5rem;
+        padding-inline: 2rem;
+        padding-block: 0.25rem;
+      }
+    {%- endstyle -%}
+
+    <div class="pdp-shop-pay-installments">
+      {{ shop_pay_terms_markup }}
+    </div>
+  {%- endif -%}
+</div>

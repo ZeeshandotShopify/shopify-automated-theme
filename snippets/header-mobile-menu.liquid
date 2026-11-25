@@ -1,0 +1,197 @@
+{% style %}
+  .mobile-nav-sheet-content {
+    font-family: var(--font-body--family);
+    gap: 0;
+  }
+
+  .mobile-nav-sheet-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-nav-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    isolation: isolate;
+  }
+
+  .mobile-nav-content > *:not(nav-panel) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .mobile-nav-collections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+  }
+
+  .mobile-nav-collection {
+    background-color: var(--color-header-background);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+  }
+
+  .mobile-nav-collection-image {
+    flex-shrink: 0;
+  }
+
+  .mobile-nav-collection-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-nav-collection-details-title {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-nav-collection-details-description {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+    max-width: 12rem;
+  }
+
+  .mobile-nav .header__mobile-menu--search-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1rem;
+  }
+
+  .mobile-nav .header__mobile-menu--search {
+    margin-top: auto;
+  }
+
+  .mobile-nav-sheet-footer {
+    padding: 0;
+  }
+
+  .mobile-nav-localization {
+    padding-block: 1rem;
+    {%- if block.settings.rows != 0 -%}
+      border-top: 1px solid var(--color-border);
+    {%- endif -%}
+  }
+{% endstyle %}
+
+<sheet-menu data-direction="left" class="mobile-nav-sheet-menu">
+  <sheet-trigger>
+    <button
+      class="header__icon-button"
+      aria-label="Open menu"
+    >
+      {%- if custom_menu_icon != blank -%}
+        {{- custom_menu_icon -}}
+      {%- else -%}
+        {{ 'menu.svg' | inline_asset_content }}
+      {%- endif -%}
+
+      {%- if show_icon_labels -%}
+        <span>Menu</span>
+      {%- endif -%}
+    </button>
+  </sheet-trigger>
+  <sheet-content class="mobile-nav-sheet-content">
+    <sheet-header class="mobile-nav-sheet-header">
+      <a href="{{ routes.root_url }}">
+        {% render 'logo',
+          id: block.id,
+          size_type: size_type,
+          unit_desktop: unit_desktop,
+          percent_width_desktop: percent_width_desktop,
+          pixel_height_desktop: pixel_height_desktop,
+          unit_mobile: unit_mobile,
+          percent_width_mobile: percent_width_mobile,
+          pixel_height_mobile: pixel_height_mobile,
+          font_family: font_family,
+          shopify_attributes: block.shopify_attributes
+        %}
+      </a>
+
+      <sheet-close>
+        {{ 'close.svg' | inline_asset_content }}
+      </sheet-close>
+    </sheet-header>
+
+    <div class="mobile-nav-content">
+      {%- if block.settings.menu_type == 'accordion' -%}
+        {% render 'header-mobile-menu-accordion', block: block %}
+      {%- else -%}
+        {% render 'header-mobile-menu-nav-panel', block: block %}
+      {%- endif -%}
+
+      {%- if block.settings.product_list != blank -%}
+        {% render 'header-mobile-menu-product-list', block: block %}
+      {%- endif -%}
+
+      {% render 'header-menu-promotion',
+        image: block.settings.promotion_image,
+        heading: block.settings.promotion_heading,
+        button_label: block.settings.promotion_button_label,
+        button_link: block.settings.promotion_button_link,
+        content_position: block.settings.promotion_content_position,
+        object_fit: block.settings.promotion_object_fit,
+        enable_mobile_size: true,
+        mobile_aspect_ratio: block.settings.promotion_mobile_aspect_ratio,
+        mobile_enable_custom_dimension: block.settings.promotion_mobile_enable_custom_dimension,
+        mobile_custom_width: block.settings.promotion_mobile_custom_width,
+        mobile_custom_height: block.settings.promotion_mobile_custom_height,
+        overlay_color: block.settings.promotion_overlay_color,
+        overlay_opacity: block.settings.promotion_overlay_opacity
+      %}
+
+      {%- if block.settings.secondary_menu -%}
+        {% render 'header-mobile-secondary-menu', block: block %}
+      {%- endif -%}
+
+      {%- if localization_block and localization_block.settings.show_localization != false -%}
+        {%- assign show_country_flag = localization_block.settings.show_country_flag -%}
+        {%- assign show_country_name = localization_block.settings.show_country_name -%}
+      {%- elsif localization_block == null -%}
+        {%- assign show_country_flag = true -%}
+        {%- assign show_country_name = true -%}
+      {%- endif -%}
+
+      {%- liquid
+        assign show_mobile_localization = false
+        unless settings.hide_mobile_localization
+          if localization.available_countries.size > 1
+            if localization_block
+              if localization_block.settings.show_localization != false
+                assign show_mobile_localization = true
+              endif
+            endif
+          endif
+        endunless
+      -%}
+
+      {%- if block.settings.rows != 0 or show_mobile_localization -%}
+        <sheet-footer class="mobile-nav-sheet-footer">
+          {%- if block.settings.rows != 0 -%}
+            {% render 'header-mobile-menu-why-list', block: block %}
+          {%- endif -%}
+
+          {%- if show_mobile_localization -%}
+            <div class="mobile-nav-localization">
+              {% render 'localization-selector',
+                show_country_flag: show_country_flag,
+                show_country_name: show_country_name
+              %}
+            </div>
+          {%- endif -%}
+        </sheet-footer>
+      {%- endif -%}
+    </div>
+  </sheet-content>
+</sheet-menu>

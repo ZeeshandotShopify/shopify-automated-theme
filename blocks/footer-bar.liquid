@@ -1,0 +1,304 @@
+{%- liquid
+  assign block_id = block.id
+  assign copyright_text = block.settings.copyright_text
+  assign current_year = 'now' | date: '%Y'
+
+  assign show_refund = block.settings.show_refund_policy
+  assign refund_url = block.settings.refund_policy_url
+  assign show_privacy = block.settings.show_privacy_policy
+  assign privacy_url = block.settings.privacy_policy_url
+  assign show_terms = block.settings.show_terms_of_service
+  assign terms_url = block.settings.terms_of_service_url
+-%}
+
+{%- style -%}
+  #footer-bar-{{ block_id }} {
+    --footer-bar-font-family: {{ block.settings.font_family }};
+    --footer-bar-font-weight: {{ block.settings.font_weight }};
+    --footer-bar-text-transform: {{ block.settings.text_transform }};
+    --footer-bar-font-size: {{ block.settings.mobile_font_size }};
+    --footer-bar-line-height: {{ block.settings.mobile_line_height }};
+    --footer-bar-text-align: {{ block.settings.mobile_text_align }};
+
+    {%- if block.settings.text_color_mode == 'custom' -%}
+      --footer-bar-color: {{ block.settings.text_color }};
+    {%- else -%}
+      --footer-bar-color: inherit;
+    {%- endif -%}
+
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.5rem;
+    row-gap: 0.125rem;
+    font-family: var(--footer-bar-font-family);
+    font-weight: var(--footer-bar-font-weight);
+    text-transform: var(--footer-bar-text-transform);
+    font-size: var(--footer-bar-font-size);
+    line-height: var(--footer-bar-line-height);
+    text-align: var(--footer-bar-text-align);
+    color: var(--footer-bar-color);
+  }
+
+  #footer-bar-{{ block_id }} .footer-bar__item + .footer-bar__item::before {
+    content: '·';
+    margin-right: 0.5rem;
+    opacity: 0.6;
+  }
+
+  #footer-bar-{{ block_id }} .footer-bar__item a {
+    position: relative;
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  #footer-bar-{{ block_id }} .footer-bar__item a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-foreground);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 360ms cubic-bezier(.2, .9, .2, 1);
+  }
+
+  #footer-bar-{{ block_id }} .footer-bar__item a:hover::before {
+    transform: scaleX(1);
+  }
+
+  @media (width >= 64rem) {
+    #footer-bar-{{ block_id }} {
+      --footer-bar-font-size: {{ block.settings.desktop_font_size }};
+      --footer-bar-line-height: {{ block.settings.desktop_line_height }};
+      --footer-bar-text-align: {{ block.settings.desktop_text_align }};
+    }
+  }
+{%- endstyle -%}
+
+<div id="footer-bar-{{ block_id }}" {{ block.shopify_attributes }}>
+  {% if copyright_text != blank %}
+    <span class="footer-bar__item">&copy; {{ current_year }}, {{ copyright_text }}</span>
+  {% endif %}
+  {% if show_refund and refund_url != blank %}
+    <span class="footer-bar__item"
+      ><a href="{{ refund_url }}">{{ block.settings.refund_policy_label | default: 'Refund Policy' }}</a></span
+    >
+  {% endif %}
+  {% if show_privacy and privacy_url != blank %}
+    <span class="footer-bar__item"
+      ><a href="{{ privacy_url }}">{{ block.settings.privacy_policy_label | default: 'Privacy Policy' }}</a></span
+    >
+  {% endif %}
+  {% if show_terms and terms_url != blank %}
+    <span class="footer-bar__item"
+      ><a href="{{ terms_url }}">{{ block.settings.terms_of_service_label | default: 'Terms of Service' }}</a></span
+    >
+  {% endif %}
+</div>
+
+{% schema %}
+{
+  "name": "t:block.footer_bar.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Copyright"
+    },
+    {
+      "type": "text",
+      "id": "copyright_text",
+      "label": "Copyright Text",
+      "default": "Gurum Pillow. All rights reserved"
+    },
+    {
+      "type": "header",
+      "content": "Policy Links"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_refund_policy",
+      "label": "Show Refund Policy",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "refund_policy_label",
+      "label": "Refund Policy Label",
+      "default": "Refund Policy",
+      "visible_if": "{{ block.settings.show_refund_policy == true }}"
+    },
+    {
+      "type": "url",
+      "id": "refund_policy_url",
+      "label": "Refund Policy URL",
+      "visible_if": "{{ block.settings.show_refund_policy == true }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_privacy_policy",
+      "label": "Show Privacy Policy",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "privacy_policy_label",
+      "label": "Privacy Policy Label",
+      "default": "Privacy Policy",
+      "visible_if": "{{ block.settings.show_privacy_policy == true }}"
+    },
+    {
+      "type": "url",
+      "id": "privacy_policy_url",
+      "label": "Privacy Policy URL",
+      "visible_if": "{{ block.settings.show_privacy_policy == true }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_terms_of_service",
+      "label": "Show Terms of Service",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "terms_of_service_label",
+      "label": "Terms of Service Label",
+      "default": "Terms of Service",
+      "visible_if": "{{ block.settings.show_terms_of_service == true }}"
+    },
+    {
+      "type": "url",
+      "id": "terms_of_service_url",
+      "label": "Terms of Service URL",
+      "visible_if": "{{ block.settings.show_terms_of_service == true }}"
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "text_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        { "value": "inherit", "label": "t:color_mode.options.inherit" },
+        { "value": "custom", "label": "t:color_mode.options.custom" }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#111111",
+      "visible_if": "{{ block.settings.text_color_mode == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "font_family",
+      "label": "t:typography.font_family.label",
+      "options": [
+        { "value": "var(--font-body--family)", "label": "t:typography.font_family.options.body" },
+        { "value": "var(--font-heading--family)", "label": "t:typography.font_family.options.heading" }
+      ],
+      "default": "var(--font-body--family)"
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "t:typography.font_weight.label",
+      "options": [
+        { "value": "100", "label": "t:typography.font_weight.options.thin" },
+        { "value": "200", "label": "t:typography.font_weight.options.extra_light" },
+        { "value": "300", "label": "t:typography.font_weight.options.light" },
+        { "value": "400", "label": "t:typography.font_weight.options.regular" },
+        { "value": "500", "label": "t:typography.font_weight.options.medium" },
+        { "value": "600", "label": "t:typography.font_weight.options.semibold" },
+        { "value": "700", "label": "t:typography.font_weight.options.bold" },
+        { "value": "800", "label": "t:typography.font_weight.options.extra_bold" },
+        { "value": "900", "label": "t:typography.font_weight.options.black" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "t:typography.text_transform.label",
+      "options": [
+        { "value": "none", "label": "t:typography.text_transform.options.normal" },
+        { "value": "lowercase", "label": "t:typography.text_transform.options.lowercase" },
+        { "value": "uppercase", "label": "t:typography.text_transform.options.uppercase" },
+        { "value": "capitalize", "label": "t:typography.text_transform.options.capitalize" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content"
+    },
+    {
+      "type": "text",
+      "id": "desktop_font_size",
+      "label": "t:typography.font_size.desktop.label",
+      "placeholder": "px, rem, etc.",
+      "default": "0.875rem"
+    },
+    {
+      "type": "text",
+      "id": "desktop_line_height",
+      "label": "t:typography.line_height.desktop.label",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "calc(1.25 / 0.875)"
+    },
+    {
+      "type": "select",
+      "id": "desktop_text_align",
+      "label": "t:layout.alignment.label",
+      "options": [
+        { "value": "left", "label": "t:layout.alignment.options.left" },
+        { "value": "center", "label": "t:layout.alignment.options.center" },
+        { "value": "right", "label": "t:layout.alignment.options.right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content"
+    },
+    {
+      "type": "text",
+      "id": "mobile_font_size",
+      "label": "t:typography.font_size.mobile.label",
+      "placeholder": "px, rem, etc.",
+      "default": "0.75rem"
+    },
+    {
+      "type": "text",
+      "id": "mobile_line_height",
+      "label": "t:typography.line_height.mobile.label",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "calc(1.125 / 0.75)"
+    },
+    {
+      "type": "select",
+      "id": "mobile_text_align",
+      "label": "t:layout.alignment.label",
+      "options": [
+        { "value": "left", "label": "t:layout.alignment.options.left" },
+        { "value": "center", "label": "t:layout.alignment.options.center" },
+        { "value": "right", "label": "t:layout.alignment.options.right" }
+      ],
+      "default": "left"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.footer_bar.name",
+      "category": "t:block.footer_bar.category"
+    }
+  ]
+}
+{% endschema %}

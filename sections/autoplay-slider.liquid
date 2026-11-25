@@ -1,0 +1,847 @@
+{%- liquid
+  # Background image detection
+  assign has_bg_image = false
+  if section.settings.bg_type == 'image' and section.settings.bg_image != blank
+    assign has_bg_image = true
+  endif
+
+  # Background video detection
+  assign has_bg_video = false
+  if section.settings.bg_type == 'video' and section.settings.bg_video != blank
+    assign has_bg_video = true
+  endif
+
+  assign show_overlay_image = false
+  if section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'image' and has_bg_image and section.settings.overlay_color != blank and section.settings.overlay_opacity > 0
+    assign show_overlay_image = true
+  endif
+
+  assign show_overlay_video = false
+  if section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'video' and has_bg_video and section.settings.overlay_color != blank and section.settings.overlay_opacity > 0
+    assign show_overlay_video = true
+  endif
+
+  # Separator between slides (desktop)
+  assign has_separator = false
+  if section.settings.separator_style == 'select'
+    assign has_separator = true
+  elsif section.settings.separator_style == 'image' and section.settings.separator_image != blank
+    assign has_separator = true
+  elsif section.settings.separator_style == 'custom' and section.settings.separator_custom != blank
+    assign has_separator = true
+  endif
+-%}
+
+{%- capture separator_after -%}
+        content: '';
+        flex: none;
+        align-self: center;
+        margin-left: {{ section.settings.desktop_gap }}px;
+        {%- case section.settings.separator_style -%}
+          {%- when 'select' -%}
+            {%- if section.settings.separator_select == 'line' -%}
+              align-self: stretch;
+              width: 1px;
+              background: #F1D27A;
+            {%- else -%}
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              background: #D4A017;
+            {%- endif -%}
+          {%- when 'image' -%}
+            width: 32px;
+            height: 32px;
+            background-image: url('{{ section.settings.separator_image | image_url: width: 96 }}');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+          {%- when 'custom' -%}
+            width: 32px;
+            height: 32px;
+            background-image: url('data:image/svg+xml,{{ section.settings.separator_custom | url_encode | replace: '+', '%20' }}');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        {%- endcase -%}
+{%- endcapture -%}
+
+{%- style -%}
+  #{{ section.id }} {
+    --bg-color: {{ section.settings.bg_color | default: '#ffffff' }};
+    --overlay-color: {{ section.settings.overlay_color | default: '#000000' }};
+    --overlay-opacity: {{ section.settings.overlay_opacity | default: 30 | divided_by: 100.0 }};
+
+    --padding-top: {{ section.settings.mobile_padding_top }}px;
+    --padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+    --padding-left: {{ section.settings.mobile_padding_left }}px;
+    --padding-right: {{ section.settings.mobile_padding_right }}px;
+
+    position: relative;
+    {%- if section.settings.bg_color_mode == 'custom' -%}
+      {%- case section.settings.bg_type -%}
+        {%- when 'color' -%}
+          background: var(--bg-color);
+        {%- when 'image' -%}
+          background-image: url('{{ section.settings.bg_image | image_url: width: 3840 }}');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        {%- when 'video' -%}
+          background: var(--bg-color);
+      {%- endcase -%}
+    {%- else -%}
+      background: var(--color-background);
+    {%- endif -%}
+  }
+
+  #{{ section.id }} .section-bg__video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  #{{ section.id }} .section-bg__overlay {
+    position: absolute;
+    inset: 0;
+    background-color: var(--overlay-color);
+    opacity: var(--overlay-opacity);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  #{{ section.id }} .autoplay-slider {
+    position: relative;
+    z-index: 1;
+    padding: var(--padding-top) var(--padding-right) var(--padding-bottom) var(--padding-left);
+  }
+
+  #{{ section.id }} .autoplay-slider__viewport {
+    /* clip, not hidden: hidden still makes a scroll container the user can pan */
+    overflow: hidden;
+    overflow: clip;
+  }
+
+  #{{ section.id }} .autoplay-slider__track {
+    display: flex;
+    transition: transform 0.5s ease;
+  }
+
+  #{{ section.id }} .autoplay-slider__track > :not(style) {
+    min-width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  #{{ section.id }} .autoplay-slider__arrows {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  #{{ section.id }} .autoplay-slider__arrow {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Marquee mode */
+  #{{ section.id }} .autoplay-slider__track.is-marquee {
+    align-items: center; /* keep short items (separator dots) on the text baseline row */
+    width: max-content;
+    gap: 0;
+    transition: none;
+    animation: marquee-{{ section.id }} {{ section.settings.marquee_speed | default: 30 }}s linear infinite;
+  }
+
+  #{{ section.id }} .autoplay-slider__track.is-marquee > :not(style) {
+    min-width: auto;
+    flex-shrink: 0;
+    margin-right: {{ section.settings.desktop_gap }}px;
+  }
+
+  #{{ section.id }} .autoplay-slider.is-marquee .autoplay-slider__viewport {
+    overflow: hidden;
+    overflow: clip;
+  }
+
+  #{{ section.id }} .autoplay-slider.is-marquee:hover .autoplay-slider__track.is-marquee {
+    animation-play-state: paused;
+  }
+
+  @keyframes marquee-{{ section.id }} {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  {%- if has_separator -%}
+    #{{ section.id }} .autoplay-slider__track.is-marquee > :not(style)::after {
+      {{ separator_after }}
+    }
+  {%- endif -%}
+
+  @media (width >= 64rem) {
+    #{{ section.id }} {
+      --padding-top: {{ section.settings.desktop_padding_top }}px;
+      --padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+      --padding-left: {{ section.settings.desktop_padding_left }}px;
+      --padding-right: {{ section.settings.desktop_padding_right }}px;
+    }
+
+    #{{ section.id }} .autoplay-slider__viewport {
+      overflow: visible;
+    }
+
+    #{{ section.id }} .autoplay-slider__track:not(.is-marquee) {
+      justify-content: center;
+      gap: {{ section.settings.desktop_gap }}px;
+      transition: none;
+      transform: none !important;
+    }
+
+    #{{ section.id }} .autoplay-slider__track:not(.is-marquee) > :not(style) {
+      min-width: auto;
+      flex-shrink: 1;
+    }
+
+    #{{ section.id }} .autoplay-slider__arrows {
+      display: none;
+    }
+
+    {%- if has_separator -%}
+      #{{ section.id }} .autoplay-slider__track > :not(style):not(:last-child)::after {
+        {{ separator_after }}
+      }
+    {%- endif -%}
+  }
+{%- endstyle -%}
+
+<div id="{{ section.id }}">
+  {% if show_overlay_video or show_overlay_image %}
+    <div class="section-bg__overlay"></div>
+  {% endif %}
+
+  {%- if section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'video' and has_bg_video -%}
+    {{
+      section.settings.bg_video
+      | video_tag:
+        image_size: '3840x',
+        alt: section.settings.video.alt,
+        class: 'section-bg__video',
+        autoplay: true,
+        muted: true,
+        loop: true
+    }}
+  {%- endif -%}
+
+  {% if section.settings.enabled_noise %}
+    <monotone-noise
+      size="{{ section.settings.noise_size | divided_by: 10.0 }}"
+      opacity="{{ section.settings.noise_opacity | divided_by: 100.0 }}"
+      density="{{ section.settings.noise_density | divided_by: 100.0 }}"
+      color="{{ section.settings.noise_color }}"
+    >
+    </monotone-noise>
+  {% endif %}
+
+  <div class="shopify-page-width shopify-page-padding">
+    <div class="autoplay-slider">
+      <div class="autoplay-slider__viewport">
+        <div
+          class="autoplay-slider__track"
+          data-autoplay-slider="{{ section.id }}"
+          data-autoplay-delay="{{ section.settings.autoplay_delay }}"
+          data-slider-mode="{{ section.settings.slider_mode }}"
+          data-marquee-scope="{{ section.settings.marquee_scope }}"
+        >
+          {% content_for 'blocks' %}
+        </div>
+      </div>
+
+      {% if section.settings.show_arrows %}
+        <div class="autoplay-slider__arrows">
+          <button class="autoplay-slider__arrow" data-autoplay-prev aria-label="Previous slide">
+            <svg width="14" height="22" viewBox="0 0 14 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M13.3334 1.60236L3.48271 10.6667L13.3334 19.7309L11.592 21.3333L4.14954e-05 10.6667L11.592 -7.61172e-08L13.3334 1.60236Z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="autoplay-slider__arrow" data-autoplay-next aria-label="Next slide">
+            <svg width="14" height="22" viewBox="0 0 14 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M-7.00414e-08 19.731L9.85066 10.6667L-8.62466e-07 1.60244L1.74136 4.18856e-05L13.3333 10.6667L1.74136 21.3334L-7.00414e-08 19.731Z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  class AutoplaySlider {
+    constructor(element) {
+      this.track = element;
+      this.slides = [...element.children].filter((el) => el.tagName !== 'STYLE');
+      this.currentIndex = 0;
+      this.autoplayDelay = parseInt(element.dataset.autoplayDelay) || 3000;
+      this.autoplayInterval = null;
+      this.sliderMode = element.dataset.sliderMode || 'slide';
+      this.marqueeScope = element.dataset.marqueeScope || 'mobile';
+      this.container = element.closest('.autoplay-slider');
+      this.cloned = false;
+      this.clones = [];
+      this.isDesktop = window.matchMedia('(min-width: 64rem)').matches;
+
+      this.init();
+    }
+
+    init() {
+      if (this.sliderMode === 'marquee' && this.slides.length > 0) {
+        this.applyMarquee();
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => this.applyMarquee());
+        }
+        window.addEventListener('resize', () => {
+          clearTimeout(this._resizeTimer);
+          this._resizeTimer = setTimeout(() => {
+            this.isDesktop = window.matchMedia('(min-width: 64rem)').matches;
+            this.applyMarquee();
+          }, 150);
+        });
+        return;
+      }
+
+      if (this.isDesktop || this.slides.length <= 1) {
+        this.showAll();
+        return;
+      }
+
+      this.goTo(0);
+      this.startAutoplay();
+      this.bindArrows();
+      this.bindHoverPause();
+      this.bindTouchPause();
+
+      window.addEventListener('resize', () => {
+        const wasDesktop = this.isDesktop;
+        this.isDesktop = window.matchMedia('(min-width: 64rem)').matches;
+
+        if (this.isDesktop !== wasDesktop) {
+          if (this.isDesktop) {
+            this.stopAutoplay();
+            this.showAll();
+          } else {
+            this.goTo(this.currentIndex);
+            this.startAutoplay();
+          }
+        }
+      });
+    }
+
+    marqueeActive() {
+      if (this.sliderMode !== 'marquee') return false;
+      if (this.marqueeScope === 'both') return true;
+      return !this.isDesktop;
+    }
+
+    applyMarquee() {
+      // Reset to a clean, un-cloned, non-marquee state for an accurate measurement.
+      if (this.cloned) {
+        this.clones.forEach((clone) => clone.remove());
+        this.clones = [];
+        this.cloned = false;
+      }
+      this.track.style.transform = '';
+      this.track.classList.remove('is-marquee');
+      if (this.container) this.container.classList.remove('is-marquee');
+
+      if (!this.marqueeActive()) return;
+      // On desktop, only scroll when the items actually overflow the viewport.
+      if (this.isDesktop && !this.contentOverflows()) return;
+
+      this.clones = this.slides.map((slide) => {
+        const clone = slide.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        this.track.appendChild(clone);
+        return clone;
+      });
+      this.cloned = true;
+      this.track.classList.add('is-marquee');
+      if (this.container) this.container.classList.add('is-marquee');
+    }
+
+    contentOverflows() {
+      const viewport = this.track.parentElement;
+      if (!viewport) return true;
+      // Lay items out at natural width (no clones present), then compare to the viewport.
+      this.track.classList.add('is-marquee');
+      // The last item's margin-right is loop spacing, not real content — exclude it.
+      const last = this.track.lastElementChild;
+      const trailing = last ? parseFloat(getComputedStyle(last).marginRight) || 0 : 0;
+      const contentWidth = viewport.scrollWidth - trailing;
+      this.track.classList.remove('is-marquee');
+      return contentWidth > viewport.clientWidth + 1;
+    }
+
+    goTo(index) {
+      this.currentIndex = index;
+      this.track.style.transform = `translateX(${-index * 100}%)`;
+    }
+
+    showAll() {
+      this.track.style.transform = 'translateX(0%)';
+    }
+
+    nextSlide() {
+      this.goTo((this.currentIndex + 1) % this.slides.length);
+    }
+
+    prevSlide() {
+      this.goTo((this.currentIndex - 1 + this.slides.length) % this.slides.length);
+    }
+
+    startAutoplay() {
+      if (this.autoplayInterval) return;
+      this.autoplayInterval = setInterval(() => this.nextSlide(), this.autoplayDelay);
+    }
+
+    stopAutoplay() {
+      if (this.autoplayInterval) {
+        clearInterval(this.autoplayInterval);
+        this.autoplayInterval = null;
+      }
+    }
+
+    restartAutoplay() {
+      this.stopAutoplay();
+      this.startAutoplay();
+    }
+
+    bindArrows() {
+      const container = this.track.closest('.autoplay-slider');
+      if (!container) return;
+
+      const prevBtn = container.querySelector('[data-autoplay-prev]');
+      const nextBtn = container.querySelector('[data-autoplay-next]');
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          this.prevSlide();
+          this.restartAutoplay();
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          this.nextSlide();
+          this.restartAutoplay();
+        });
+      }
+    }
+
+    bindHoverPause() {
+      const container = this.track.closest('.autoplay-slider');
+      if (!container) return;
+
+      container.addEventListener('mouseenter', () => this.stopAutoplay());
+      container.addEventListener('mouseleave', () => {
+        if (!this.isDesktop) this.startAutoplay();
+      });
+    }
+
+    bindTouchPause() {
+      this.track.addEventListener('touchstart', () => this.stopAutoplay(), { passive: true });
+      this.track.addEventListener(
+        'touchend',
+        () => {
+          if (!this.isDesktop) this.startAutoplay();
+        },
+        { passive: true },
+      );
+    }
+  }
+
+  const initAutoplaySlider = (el) => {
+    if (!el || el.dataset.autoplaySliderInit === '1') return;
+    el.dataset.autoplaySliderInit = '1';
+    new AutoplaySlider(el);
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-autoplay-slider]').forEach(initAutoplaySlider);
+  });
+
+  if (window.Shopify && window.Shopify.designMode) {
+    document.addEventListener('shopify:section:load', (event) => {
+      initAutoplaySlider(event.target.querySelector('[data-autoplay-slider]'));
+    });
+  }
+</script>
+
+{% schema %}
+{
+  "name": "t:section.autoplay_slider.name",
+  "tag": "section",
+  "blocks": [
+    { "type": "text" },
+    { "type": "icon" },
+    { "type": "media" },
+    { "type": "link" },
+    { "type": "contact-link" },
+    { "type": "button" },
+    { "type": "divider" },
+    { "type": "group" },
+    { "type": "highlight-text" },
+    { "type": "downloadable-attachment" }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "bg_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        { "value": "inherit", "label": "t:color_mode.options.inherit" },
+        { "value": "custom", "label": "t:color_mode.options.custom" }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "select",
+      "id": "bg_type",
+      "label": "t:background_type.label",
+      "options": [
+        { "value": "color", "label": "t:background_type.options.color" },
+        { "value": "image", "label": "t:background_type.options.image" },
+        { "value": "video", "label": "t:background_type.options.video" }
+      ],
+      "default": "color",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' }}"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#ffffff",
+      "info": "Choose a solid background color",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'color' }}"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "t:image.label",
+      "info": "Choose a background image",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'image' }}"
+    },
+    {
+      "type": "video",
+      "id": "bg_video",
+      "label": "t:video.label",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'video' }}"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "t:colors.overlay_color.label",
+      "default": "#000000",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'image' or section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'video' }}"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "t:opacity.label",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 50,
+      "unit": "%",
+      "info": "Opacity of the overlay color (0% = transparent, 100% = solid)",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'image' or section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'video' }}"
+    },
+    {
+      "type": "header",
+      "content": "Noise"
+    },
+    {
+      "type": "checkbox",
+      "id": "enabled_noise",
+      "label": "Enable Noise",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "noise_size",
+      "label": "Grain Size",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "default": 8,
+      "info": "Controls the size of noise grains. Lower = finer grain, Higher = coarser grain. Value is divided by 10 (8 = 0.8)",
+      "visible_if": "{{ section.settings.enabled_noise == true }}"
+    },
+    {
+      "type": "range",
+      "id": "noise_density",
+      "label": "Density",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 90,
+      "unit": "%",
+      "info": "Percentage of noise coverage",
+      "visible_if": "{{ section.settings.enabled_noise == true }}"
+    },
+    {
+      "type": "range",
+      "id": "noise_opacity",
+      "label": "Opacity",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 5,
+      "unit": "%",
+      "info": "Overall opacity of the noise effect",
+      "visible_if": "{{ section.settings.enabled_noise == true }}"
+    },
+    {
+      "type": "color",
+      "id": "noise_color",
+      "label": "Noise Color",
+      "default": "#000000",
+      "visible_if": "{{ section.settings.enabled_noise == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Slider Settings"
+    },
+    {
+      "type": "select",
+      "id": "slider_mode",
+      "label": "Slider mode",
+      "options": [
+        { "value": "slide", "label": "Slide per item" },
+        { "value": "marquee", "label": "Marquee" }
+      ],
+      "default": "slide",
+      "info": "Slide = one item at a time (mobile). Marquee = continuous scroll."
+    },
+    {
+      "type": "select",
+      "id": "marquee_scope",
+      "label": "Marquee on",
+      "options": [
+        { "value": "mobile", "label": "Mobile only" },
+        { "value": "both", "label": "Desktop & mobile" }
+      ],
+      "default": "mobile",
+      "visible_if": "{{ section.settings.slider_mode == 'marquee' }}"
+    },
+    {
+      "type": "range",
+      "id": "marquee_speed",
+      "label": "Marquee speed",
+      "min": 10,
+      "max": 120,
+      "step": 5,
+      "unit": "s",
+      "default": 30,
+      "info": "Seconds for one full loop (lower = faster)",
+      "visible_if": "{{ section.settings.slider_mode == 'marquee' }}"
+    },
+    {
+      "type": "range",
+      "id": "autoplay_delay",
+      "min": 1000,
+      "max": 5000,
+      "step": 500,
+      "unit": "ms",
+      "label": "Autoplay Delay",
+      "default": 3000,
+      "info": "Time between slides on mobile (in milliseconds)",
+      "visible_if": "{{ section.settings.slider_mode == 'slide' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Show Arrows",
+      "default": true,
+      "info": "Display prev/next arrows on mobile",
+      "visible_if": "{{ section.settings.slider_mode == 'slide' }}"
+    },
+    {
+      "type": "header",
+      "content": "Separator"
+    },
+    {
+      "type": "select",
+      "id": "separator_style",
+      "label": "Separator style",
+      "options": [
+        { "value": "select", "label": "Preset" },
+        { "value": "image", "label": "Image" },
+        { "value": "custom", "label": "Custom SVG" }
+      ],
+      "default": "select",
+      "info": "Shown between items on desktop"
+    },
+    {
+      "type": "select",
+      "id": "separator_select",
+      "label": "Preset separator",
+      "options": [
+        { "value": "dots", "label": "Dots" },
+        { "value": "line", "label": "Vertical line" }
+      ],
+      "default": "dots",
+      "visible_if": "{{ section.settings.separator_style == 'select' }}"
+    },
+    {
+      "type": "image_picker",
+      "id": "separator_image",
+      "label": "Separator image",
+      "visible_if": "{{ section.settings.separator_style == 'image' }}"
+    },
+    {
+      "type": "html",
+      "id": "separator_custom",
+      "label": "Separator SVG",
+      "info": "Paste SVG code",
+      "visible_if": "{{ section.settings.separator_style == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_gap",
+      "label": "Gap Between Items",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 120,
+      "unit": "px",
+      "info": "Spacing between items on desktop"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:section.autoplay_slider.name",
+      "blocks": [
+        {
+          "type": "text",
+          "settings": {
+            "text": "100% Organic Fruiting Bodies"
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "text": "Proudly Made in Canada"
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "text": "Free CAD Shipping Over $100"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

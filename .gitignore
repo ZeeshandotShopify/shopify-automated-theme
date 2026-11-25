@@ -1,0 +1,35 @@
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+node_modules/
+
+# Shopify CLI files
+.shopify/
+
+## Release files
+release
+*.zip
+
+videos
+README-WITH-OPTION-B.md
+
+# temporary
+.scratch
+.out-of-scope
+CONTEXT.md
+docs/adr
+docs/agents
+docs/research
+plans
+
+# Python bytecode from docs/build-docx.py
+__pycache__/
+
+# Local dev-server config
+.claude/launch.json

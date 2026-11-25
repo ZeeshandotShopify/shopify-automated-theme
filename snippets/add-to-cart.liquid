@@ -1,0 +1,109 @@
+{% doc %}
+  Renders a submit button tied to a product form.
+
+  @param {product} product - Product object used to resolve variant availability.
+  @param {string} [form_id] - Product form id targeted by the button form attribute.
+  @param {string} [add_to_cart_text] - Label for available variants.
+  @param {string} [sold_out_text] - Label for unavailable variants.
+  @param {string} [label_case] - `upcase` (default) renders the label uppercased, as every existing call site expects. `none` renders it exactly as authored, for designs whose button label is title-cased.
+{% enddoc %}
+
+{%- liquid
+  assign add_to_cart_text = add_to_cart_text | default: 'Add To Cart'
+  assign sold_out_text = sold_out_text | default: 'Sold Out'
+  assign label_case = label_case | default: 'upcase'
+  assign label = sold_out_text
+  assign disabled = true
+  assign selected_variant = null
+
+  if product != blank
+    assign selected_variant = product.selected_or_first_available_variant
+  endif
+
+  if selected_variant != blank and selected_variant.available
+    assign label = add_to_cart_text
+    assign disabled = false
+  endif
+
+  comment
+    assets/cart.js swaps the label between the two data- attributes as the
+    variant changes, so BOTH have to follow the same casing rule as the
+    initially rendered span or the button changes case on first interaction.
+  endcomment
+  if label_case == 'none'
+    assign display_label = label
+    assign add_label_attr = add_to_cart_text
+    assign sold_out_label_attr = sold_out_text
+  else
+    assign display_label = label | upcase
+    assign add_label_attr = add_to_cart_text | upcase
+    assign sold_out_label_attr = sold_out_text | upcase
+  endif
+-%}
+
+{%- stylesheet -%}
+  add-to-cart button {
+    position: relative;
+    width: 100%;
+    background: var(--color-add-to-cart-background);
+    color: var(--color-add-to-cart-foreground);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 140%;
+    font-weight: var(--button-font-weight);
+    border-radius: var(--button-border-radius);
+    padding: 0.625rem;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    cursor: pointer; /* ✅ CRITICAL FIX FOR HOVER HAND ICON */
+  }
+
+  /* Explicit disabled state cursor (overrides :hover) */
+  add-to-cart button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6; /* Optional: visual disabled cue */
+  }
+
+  add-to-cart button:hover:not(:disabled) {
+    background: var(--color-add-to-cart-hover-background);
+    color: var(--color-add-to-cart-hover-foreground);
+  }
+
+  /* Rest of your existing styles... */
+  add-to-cart .atc-button__loader {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  add-to-cart button.loading .atc-button__text {
+    visibility: hidden;
+  }
+
+  add-to-cart button.loading .atc-button__loader {
+    display: block;
+  }
+{%- endstylesheet -%}
+
+<add-to-cart>
+  <button
+    type="submit"
+    {% if form_id != blank %}
+      form="{{ form_id }}"
+    {% endif %}
+    aria-label="{{ label | default: 'Add to cart' }}"
+    data-add-label="{{ add_label_attr }}"
+    data-sold-out-label="{{ sold_out_label_attr }}"
+    {% if disabled %}
+      disabled
+    {% endif %}
+  >
+    <span class="atc-button__text">{{- display_label -}}</span>
+    <span class="atc-button__loader"><div class="loader"></div></span>
+  </button>
+</add-to-cart>

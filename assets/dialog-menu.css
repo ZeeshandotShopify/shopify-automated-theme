@@ -1,0 +1,225 @@
+/* Dialog Styles - shadcn/ui inspired */
+body[data-dialog-scroll-locked] {
+  overflow: hidden !important;
+  overscroll-behavior: contain;
+  position: relative !important;
+  padding-left: 0;
+  padding-top: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-top: 0;
+  margin-right: 0 !important;
+}
+
+dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--dialog-overlay-bg, hsl(0 0% 0% / 0.8));
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* when the dialog is open, fade the overlay in */
+dialog-overlay[data-state="open"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+dialog-menu {
+  display: inline-flex;
+}
+
+dialog-content {
+  position: relative;
+  width: var(--dialog-width, 32rem);
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  display: grid;
+  gap: 1rem;
+  z-index: 9999;
+  background-color: var(--color-popover-background, hsl(0 0% 100%));
+  color: var(--color-popover-foreground, hsl(222.2 84% 4.9%));
+  border: var(--dialog-border-thickness, 1px) solid
+    var(--color-border, hsl(214.3 31.8% 91.4%));
+  border-radius: var(--dialog-border-radius, 0.5rem);
+  box-shadow:
+    0 10px 15px -3px hsl(0 0% 0% / 0.1),
+    0 4px 6px -4px hsl(0 0% 0% / 0.1);
+  padding: 1.5rem;
+
+  /* shadcn/ui style animations - clean scale and fade */
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+
+  /* Smooth transitions matching shadcn/ui */
+  transition:
+    opacity 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  overflow-y: auto;
+
+  /* Position dialog in center */
+  position: fixed;
+  left: 50%;
+  top: 50%;
+}
+
+dialog-content[data-state="open"] {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+dialog-content[data-state="closed"] {
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Size variants - shadcn/ui responsive approach */
+dialog-content[data-size="sm"] {
+  width: var(--dialog-width, 24rem);
+}
+
+dialog-content[data-size="lg"] {
+  width: var(--dialog-width, 42rem);
+}
+
+dialog-content[data-size="xl"] {
+  width: var(--dialog-width, 48rem);
+}
+
+dialog-content[data-size="full"] {
+  width: calc(100vw - 2rem);
+  height: calc(100vh - 2rem);
+  max-width: none;
+  max-height: none;
+}
+
+dialog-trigger {
+  display: inline-flex;
+}
+
+dialog-trigger button {
+  display: inline-flex;
+}
+
+/* Dialog close button styling */
+dialog-close {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--dialog-border-radius, 0.375rem);
+  padding: 0.5rem;
+  transition:
+    background-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.7;
+}
+
+dialog-close:hover {
+  opacity: 1;
+}
+
+dialog-close:focus-visible {
+  outline: 2px solid var(--color-ring, hsl(222.2 84% 4.9%));
+  outline-offset: 2px;
+}
+
+/* Dialog header and footer styling for better hierarchy */
+dialog-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  text-align: center;
+}
+
+dialog-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+dialog-description {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground, hsl(215.4 16.3% 46.9%));
+  line-height: 1.5;
+}
+
+dialog-footer {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+}
+
+/* Responsive behavior matching shadcn/ui principles */
+@media (max-width: 640px) {
+  dialog-content {
+    width: calc(100vw - 2rem);
+    margin: 0;
+    padding: 1rem;
+    border-radius: var(--dialog-border-radius, 0.375rem);
+  }
+
+  dialog-overlay {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  dialog-content {
+    width: calc(100vw - 1rem);
+    padding: 0.75rem;
+  }
+
+  dialog-overlay {
+    padding: 0.25rem;
+  }
+}
+
+@media (min-width: 640px) {
+  dialog-header {
+    text-align: left;
+  }
+
+  dialog-footer {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+/* Focus management for accessibility */
+dialog-content:focus {
+  outline: none;
+}
+
+/* Animation improvements for better UX */
+@media (prefers-reduced-motion: reduce) {
+  dialog-overlay,
+  dialog-content {
+    transition: none;
+  }
+
+  dialog-content {
+    transform: translate(-50%, -50%);
+  }
+
+  dialog-content[data-state="open"] {
+    transform: translate(-50%, -50%);
+  }
+
+  dialog-content[data-state="closed"] {
+    transform: translate(-50%, -50%);
+  }
+}

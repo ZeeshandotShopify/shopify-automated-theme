@@ -1,0 +1,427 @@
+{% doc %}
+  Renders the breadcrumb trail for the current template, plus its
+  BreadcrumbList JSON-LD.
+
+  Everything about how it looks — whether it renders at all, the separator, the
+  colours, the mobile behaviour — comes from the GLOBAL Breadcrumbs theme
+  settings, so every trail in the theme matches.
+
+  @param {string} [class] - Extra class on the `<nav>`
+  @param {boolean} [omit_current] - Drop the LAST crumb, leaving the trail at its parent. Honoured on the `article` template only, where the article title is already the page's h1 and repeating it in the trail is noise. The JSON-LD keeps the full trail either way, because that is the trail Google should see.
+
+  @example
+  {% render 'breadcrumbs' %}
+  {% render 'breadcrumbs', class: 'article-hero__breadcrumbs', omit_current: true %}
+{% enddoc %}
+
+{%- unless settings.enable_breadcrumbs == false -%}
+  {%- style -%}
+    .breadcrumbs {
+      font-family: var(--font-body--family);
+      font-size: 1rem;
+      line-height: 140%;
+      margin-bottom: 28px;
+      text-transform: capitalize;
+      color: {{ settings.breadcrumb_color | default: '#111111' }};
+      font-weight: 600;
+    }
+
+    .breadcrumbs__list {
+      padding: 0;
+      margin: 0;
+      display: flex;
+      /* flex-wrap: wrap; */
+      align-items: center;
+    }
+
+    .breadcrumbs__item {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .breadcrumbs__link {
+      color: inherit;
+      text-decoration: underline;
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+
+    .breadcrumbs__link:hover {
+      color: {{ settings.breadcrumb_hover_color | default: '#555555' }};
+    }
+
+    .breadcrumbs__link[aria-current="page"] {
+      text-decoration: none;
+      font-weight: normal;
+      cursor: default;
+    }
+
+    .breadcrumbs__link[aria-current="page"]:hover {
+      color: inherit;
+    }
+
+    .breadcrumbs__separator {
+      margin-inline: 12px;
+    }
+
+    /* Mobile Responsiveness */
+    {%- if settings.breadcrumb_mobile == 'hide' -%}
+      @media screen and (max-width: 749px) {
+        .breadcrumbs {
+          display: none;
+        }
+      }
+    {%- elsif settings.breadcrumb_mobile == 'scroll' -%}
+      @media screen and (max-width: 749px) {
+        .breadcrumbs__list {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          white-space: nowrap;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 5px; /* Space for scrollbar if visible */
+          scrollbar-width: none; /* Firefox */
+        }
+        .breadcrumbs__list::-webkit-scrollbar {
+          display: none; /* Chrome/Safari */
+        }
+      }
+    {%- endif -%}
+  {%- endstyle -%}
+
+  <scroll-shadow>
+    <nav
+      class="breadcrumbs {{ class }}"
+      role="navigation"
+      aria-label="breadcrumbs"
+    >
+      <ol class="breadcrumbs__list">
+        <li class="breadcrumbs__item">
+          <a class="breadcrumbs__link" href="{{ routes.root_url }}">Home</a>
+        </li>
+
+        {%- assign separator = settings.breadcrumb_separator | default: '/' -%}
+
+        {%- case template.name -%}
+          {%- when 'product' -%}
+            {%- if collection.url -%}
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <a class="breadcrumbs__link" href="{{ collection.url }}">
+                  {{- collection.title -}}
+                </a>
+              </li>
+            {%- endif -%}
+            <li class="breadcrumbs__item">
+              <span class="breadcrumbs__separator" aria-hidden="true">
+                {{- separator -}}
+              </span>
+              <a
+                class="breadcrumbs__link"
+                href="{{ product.url }}"
+                aria-current="page"
+              >
+                {{- product.title -}}
+              </a>
+            </li>
+
+          {%- when 'collection' -%}
+            {%- if current_tags -%}
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <a class="breadcrumbs__link" href="{{ collection.url }}">
+                  {{- collection.title -}}
+                </a>
+              </li>
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <span class="breadcrumbs__link" aria-current="page">
+                  {{- current_tags | join: ' + ' -}}
+                </span>
+              </li>
+            {%- else -%}
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <a
+                  class="breadcrumbs__link"
+                  href="{{ collection.url }}"
+                  aria-current="page"
+                >
+                  {{- collection.title -}}
+                </a>
+              </li>
+            {%- endif -%}
+
+          {%- when 'blog' -%}
+            {%- if current_tags -%}
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <a class="breadcrumbs__link" href="{{ blog.url }}">
+                  {{- blog.title -}}
+                </a>
+              </li>
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <span class="breadcrumbs__link" aria-current="page">
+                  {{- current_tags | join: ' + ' -}}
+                </span>
+              </li>
+            {%- else -%}
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <a
+                  class="breadcrumbs__link"
+                  href="{{ blog.url }}"
+                  aria-current="page"
+                >
+                  {{- blog.title -}}
+                </a>
+              </li>
+            {%- endif -%}
+
+          {%- when 'article' -%}
+            <li class="breadcrumbs__item">
+              <span class="breadcrumbs__separator" aria-hidden="true">
+                {{- separator -}}
+              </span>
+              <a
+                class="breadcrumbs__link"
+                href="{{ blog.url }}"
+                {% if omit_current %}
+                  aria-current="page"
+                {% endif %}
+              >
+                {{- blog.title -}}
+              </a>
+            </li>
+            {%- unless omit_current -%}
+              <li class="breadcrumbs__item">
+                <span class="breadcrumbs__separator" aria-hidden="true">
+                  {{- separator -}}
+                </span>
+                <a
+                  class="breadcrumbs__link"
+                  href="{{ article.url }}"
+                  aria-current="page"
+                >
+                  {{- article.title -}}
+                </a>
+              </li>
+            {%- endunless -%}
+
+          {%- when 'page' -%}
+            <li class="breadcrumbs__item">
+              <span class="breadcrumbs__separator" aria-hidden="true">
+                {{- separator -}}
+              </span>
+              <a
+                class="breadcrumbs__link"
+                href="{{ page.url }}"
+                aria-current="page"
+              >
+                {{- page.title -}}
+              </a>
+            </li>
+
+          {%- when 'search' -%}
+            <li class="breadcrumbs__item">
+              <span class="breadcrumbs__separator" aria-hidden="true">
+                {{- separator -}}
+              </span>
+              <span class="breadcrumbs__link" aria-current="page">Search: {{ search.terms -}}</span>
+            </li>
+
+          {%- when 'cart' -%}
+            <li class="breadcrumbs__item">
+              <span class="breadcrumbs__separator" aria-hidden="true">
+                {{- separator -}}
+              </span>
+              <a
+                class="breadcrumbs__link"
+                href="{{ routes.cart_url }}"
+                aria-current="page"
+                >Cart</a
+              >
+            </li>
+
+          {%- when '404' -%}
+            <li class="breadcrumbs__item">
+              <span class="breadcrumbs__separator" aria-hidden="true">
+                {{- separator -}}
+              </span>
+              <span class="breadcrumbs__link" aria-current="page">404</span>
+            </li>
+        {%- endcase -%}
+      </ol>
+    </nav>
+  </scroll-shadow>
+
+  <script>
+    (function() {
+      try {
+        const templateName = {{ template.name | json }};
+        const storageKeyTitle = 'breadcrumb_last_collection_title';
+        const storageKeyUrl = 'breadcrumb_last_collection_url';
+        const storageKeyProductUrl = 'breadcrumb_current_product_url';
+        const currentUrl = window.location.pathname;
+
+        if (templateName === 'collection') {
+          const colTitle = {{ collection.title | json }};
+          const colUrl = {{ collection.url | json }};
+
+          if (colTitle && colUrl) {
+            localStorage.setItem(storageKeyTitle, colTitle);
+            localStorage.setItem(storageKeyUrl, colUrl);
+          }
+          // Clear product URL when on collection page
+          localStorage.removeItem(storageKeyProductUrl);
+
+        } else if (templateName === 'product') {
+          const hasLiquidCollection = {{ collection.url | default: false | json }};
+
+          if (!hasLiquidCollection) {
+            const prevTitle = localStorage.getItem(storageKeyTitle);
+            const prevUrl = localStorage.getItem(storageKeyUrl);
+            const storedProductUrl = localStorage.getItem(storageKeyProductUrl);
+            const referrer = document.referrer;
+
+            // Check if we came from collection OR if we're reloading the same product page that came from collection
+            const cameFromCollection = referrer && referrer.includes(prevUrl);
+            const isReloadingFromCollection = storedProductUrl === currentUrl;
+
+            if (prevTitle && prevUrl && (cameFromCollection || isReloadingFromCollection)) {
+              // Store current product URL to track it came from collection
+              localStorage.setItem(storageKeyProductUrl, currentUrl);
+
+              const list = document.querySelector('.breadcrumbs__list');
+              const productItem = list?.lastElementChild;
+
+              if (list && productItem) {
+                const newItem = document.createElement('li');
+                newItem.className = 'breadcrumbs__item';
+
+                const sepSpan = document.createElement('span');
+                sepSpan.className = 'breadcrumbs__separator';
+                sepSpan.setAttribute('aria-hidden', 'true');
+                sepSpan.innerHTML = {{ separator | json }};
+
+                const link = document.createElement('a');
+                link.className = 'breadcrumbs__link';
+                link.href = prevUrl;
+                link.textContent = prevTitle;
+
+                newItem.appendChild(sepSpan);
+                newItem.appendChild(link);
+                list.insertBefore(newItem, productItem);
+              }
+            } else {
+              // Clear if not from collection
+              localStorage.removeItem(storageKeyProductUrl);
+            }
+          }
+        } else {
+          // Clear product URL when on other pages
+          localStorage.removeItem(storageKeyProductUrl);
+        }
+      } catch(e) {
+        console.error('Breadcrumb error:', e);
+      }
+    })();
+  </script>
+
+  {%- comment -%}
+    Schema.org JSON-LD for Breadcrumbs
+  {%- endcomment -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "{{ shop.url }}"
+        }
+        {%- assign position = 1 -%}
+
+        {%- case template.name -%}
+          {%- when 'product' -%}
+            {%- if collection.url -%}
+              {%- assign position = position | plus: 1 -%}
+              ,{
+                "@type": "ListItem",
+                "position": {{ position }},
+                "name": {{ collection.title | json }},
+                "item": "{{ shop.url }}{{ collection.url }}"
+              }
+            {%- endif -%}
+            {%- assign position = position | plus: 1 -%}
+            ,{
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": {{ product.title | json }},
+              "item": "{{ shop.url }}{{ product.url }}"
+            }
+
+          {%- when 'collection' -%}
+            {%- assign position = position | plus: 1 -%}
+            ,{
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": {{ collection.title | json }},
+              "item": "{{ shop.url }}{{ collection.url }}"
+            }
+
+          {%- when 'blog' -%}
+            {%- assign position = position | plus: 1 -%}
+            ,{
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": {{ blog.title | json }},
+              "item": "{{ shop.url }}{{ blog.url }}"
+            }
+
+          {%- when 'article' -%}
+            {%- assign position = position | plus: 1 -%}
+            ,{
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": {{ blog.title | json }},
+              "item": "{{ shop.url }}{{ blog.url }}"
+            }
+            {%- assign position = position | plus: 1 -%}
+            ,{
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": {{ article.title | json }},
+              "item": "{{ shop.url }}{{ article.url }}"
+            }
+
+          {%- when 'page' -%}
+            {%- assign position = position | plus: 1 -%}
+            ,{
+              "@type": "ListItem",
+              "position": {{ position }},
+              "name": {{ page.title | json }},
+              "item": "{{ shop.url }}{{ page.url }}"
+            }
+        {%- endcase -%}
+      ]
+    }
+  </script>
+{%- endunless -%}

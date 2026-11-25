@@ -1,0 +1,287 @@
+{%- comment -%}
+  Quick view panel — fetched on demand by assets/quick-view.js through the
+  Section Rendering API:
+
+    /products/<handle>?section_id=quick-view
+
+  It is never placed in a template and carries no preset: the shell that hosts
+  it is created in the document body by quick-view.js, and the trigger lives in
+  snippets/product-card.liquid behind the card's `show_quick_view` setting.
+
+  One markup tree serves both breakpoints. CSS grid areas in
+  assets/quick-view.css rearrange it: a two-column dialog at >= 64rem and a
+  bottom drawer below it.
+
+  THEME MARKUP ONLY. If a build needs a Shopify app block inside this panel — a
+  subscription widget, a bundle builder, anything `shopify://apps/…` — this
+  route cannot carry it: `@app` blocks do not render in statically-reachable
+  sections. That build needs an alternate product template and a full-page
+  fetch; see
+  docs/custom-features/recharge-widget-quick-view-quick-add/README.md.
+{%- endcomment -%}
+
+{%- liquid
+  assign product_form_id = 'quick-view-form-' | append: product.id
+
+  assign review_count = product.metafields.reviews.rating_count | default: 0 | plus: 0
+
+  assign current_variant = product.selected_or_first_available_variant
+
+  assign has_options = true
+  if product.has_only_default_variant
+    assign has_options = false
+  endif
+
+  assign swatch_shape = settings.swatch_shape | default: 'rounded'
+  if swatch_shape != 'rounded' and swatch_shape != 'square'
+    assign swatch_shape = 'rounded'
+  endif
+
+  assign option_shape = settings.option_shape | default: 'rounded'
+  if option_shape != 'rounded' and option_shape != 'square'
+    assign option_shape = 'rounded'
+  endif
+
+  comment
+    The gallery shows the product's own media, in the order the merchant has
+    arranged it on the product — the first N of them, N being theirs to set.
+    Shape is theirs too, and feeds the tile's aspect-ratio token.
+  endcomment
+  assign media_limit = settings.quick_view_media_count | default: 4
+
+  case settings.quick_view_media_shape
+    when 'portrait'
+      assign media_ratio = '4 / 5'
+    when 'landscape'
+      assign media_ratio = '5 / 4'
+    else
+      assign media_ratio = '1 / 1'
+  endcase
+-%}
+
+{%- capture variant_json -%}
+[
+  {%- for variant in product.variants -%}
+    {
+      "id": {{ variant.id }},
+      "available": {{ variant.available }},
+      "options": {{ variant.options | json }},
+      "price": {{ variant.price | money | json }},
+      "compare_at_price": {% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price | money | json }}{% else %}null{% endif %},
+      "media_id": {% if variant.featured_media %}{{ variant.featured_media.id }}{% else %}null{% endif %}
+    }{% unless forloop.last %},{% endunless %}
+  {%- endfor -%}
+]
+{%- endcapture -%}
+
+<quick-view-panel
+  class="qv"
+  style="--quick-view-media-ratio: {{ media_ratio }};"
+  data-product-url="{{ product.url }}"
+  {% if has_options == false %}
+    data-no-options
+  {% endif %}
+>
+  {% form 'product', product, id: product_form_id, class: 'qv__form' %}
+    <input type="hidden" name="id" value="{{ current_variant.id }}" data-qv-variant-id>
+
+    <div class="qv__header">
+      <span class="qv__eyebrow">{{ 'product.select_options' | t }}</span>
+
+      <button
+        type="button"
+        class="qv__close"
+        data-qv-close
+        aria-label="{{ 'accessibility.close' | t }}"
+      >
+        <span class="qv__close-icon">{{- 'close.svg' | inline_asset_content -}}</span>
+      </button>
+    </div>
+
+    <div class="qv__media">
+      {%- if product.media.size > 0 -%}
+        {%- for media in product.media limit: media_limit -%}
+          <div class="qv__media-item" data-qv-media-id="{{ media.id }}">
+            {%- comment -%}
+              The panel is visible the instant it is injected, so the first
+              image is never below the fold — a lazy one would open blank.
+            {%- endcomment -%}
+            {{
+              media.preview_image
+              | image_url: width: 800
+              | image_tag: loading: 'eager', sizes: '(min-width: 64rem) 380px, 122px', widths: '244, 380, 480, 760, 800'
+            }}
+          </div>
+        {%- endfor -%}
+      {%- else -%}
+        <div class="qv__media-item qv__media-item--empty">
+          {{ 'product-1' | placeholder_svg_tag: 'qv__media-placeholder' }}
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%}
+      The scrolling half of the drawer. The gallery is deliberately NOT in
+      here: on desktop the stylesheet takes it out of the flow and positions
+      it against the panel, which it can only do from outside this box.
+    {%- endcomment -%}
+    <div class="qv__body">
+      <div class="qv__info">
+        {%- if product.vendor != blank -%}
+          <span class="qv__vendor">{{ product.vendor }}</span>
+        {%- endif -%}
+
+        <h2 class="qv__title">
+          <a href="{{ product.url }}" class="qv__title-link">{{ product.title }}</a>
+        </h2>
+
+        <div class="qv__price" data-qv-price>
+          {%- if current_variant.compare_at_price > current_variant.price -%}
+            <span class="qv__price-current">{{ current_variant.price | money }}</span>
+            <s class="qv__price-compare">{{ current_variant.compare_at_price | money }}</s>
+          {%- else -%}
+            <span class="qv__price-current">{{ current_variant.price | money }}</span>
+          {%- endif -%}
+        </div>
+
+        {%- if review_count > 0 and product.metafields.judgeme.badge -%}
+          {% # theme-check-disable ValidScopedCSSClass %}
+          <div class="qv__rating">
+            <div
+              class="jdgm-widget jdgm-preview-badge"
+              data-id="{{ product.id }}"
+              data-auto-install="false"
+            >
+              {{ product.metafields.judgeme.badge }}
+            </div>
+          </div>
+          {% # theme-check-enable ValidScopedCSSClass %}
+        {%- endif -%}
+      </div>
+
+      {%- if product.description != blank -%}
+        <div class="qv__description">{{ product.description | strip_html | truncatewords: 60 }}</div>
+      {%- endif -%}
+
+      {%- if has_options -%}
+        <div class="qv__options">
+          {%- for option in product.options_with_values -%}
+            {%- liquid
+              assign option_name_downcase = option.name | downcase
+
+              assign is_color_option = false
+              if option_name_downcase contains 'color' or option_name_downcase contains 'colour'
+                assign is_color_option = true
+              endif
+
+              comment
+                Same branch the product page's picker uses, so colour renders as
+                swatches and every other option as pills or a dropdown, exactly as
+                the store's globals are set. This is what makes the panel cover
+                size and custom options, not just colour.
+              endcomment
+              if is_color_option
+                assign current_picker = settings.swatch_picker_type | default: 'swatch'
+                assign current_shape = swatch_shape
+              else
+                assign current_picker = settings.picker_type | default: 'button'
+                assign current_shape = option_shape
+              endif
+            -%}
+
+            <div
+              class="qv__option qv__option--{{ current_picker }}"
+              data-qv-option
+              data-option-position="{{ option.position }}"
+            >
+              <div class="qv__option-label">
+                <span class="qv__option-name">{{ option.name }}:</span>
+                <span class="qv__option-value" data-qv-option-value>{{ option.selected_value }}</span>
+              </div>
+
+              {%- if current_picker == 'dropdown' -%}
+                <div class="dropdown-select variant-shape--{{ current_shape }}">
+                  <select
+                    id="QuickViewOption-{{ product.id }}-{{ forloop.index0 }}"
+                    class="dropdown-select__select"
+                    name="options[{{ option.name | escape }}]"
+                    form="{{ product_form_id }}"
+                  >
+                    {% render 'product-variant-options',
+                      option: option,
+                      picker_type: 'dropdown',
+                      product_form_id: product_form_id
+                    %}
+                  </select>
+                  <span class="svg-wrapper">{{- 'arrow-down.svg' | inline_asset_content -}}</span>
+                </div>
+              {%- else -%}
+                <div class="qv__option-values product-form__input--variants variant-shape--{{ current_shape }}">
+                  {% render 'product-variant-options',
+                    option: option,
+                    picker_type: current_picker,
+                    product_form_id: product_form_id
+                  %}
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      <div class="qv__actions">
+        {%- comment -%}
+          Rendered here rather than through snippets/pdp-quantity-selector.liquid:
+          <quantity-selector> syncs into
+          `document.querySelector("form[action*='/cart/add']")`, which on a
+          collection grid is the FIRST product card's form, not this one. The
+          input below is this form's only `quantity` field, and quick-view.js
+          drives the two buttons against it.
+        {%- endcomment -%}
+        <div class="qv__quantity">
+          <button
+            type="button"
+            class="qv__quantity-button"
+            data-qv-quantity-minus
+            aria-label="{{ 'product.quantity_decrease' | t }}"
+          >
+            {{- 'subtract.svg' | inline_asset_content -}}
+          </button>
+          <input
+            id="QuickViewQuantity-{{ product.id }}"
+            name="quantity"
+            type="number"
+            min="1"
+            value="1"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            class="qv__quantity-input"
+            aria-label="{{ 'product.quantity' | t }}"
+          >
+          <button
+            type="button"
+            class="qv__quantity-button"
+            data-qv-quantity-plus
+            aria-label="{{ 'product.quantity_increase' | t }}"
+          >
+            {{- 'add.svg' | inline_asset_content -}}
+          </button>
+        </div>
+
+        {% render 'add-to-cart', product: product, form_id: product_form_id %}
+      </div>
+    </div>
+
+    <script type="application/json" data-qv-variants>
+      {{ variant_json }}
+    </script>
+  {% endform %}
+</quick-view-panel>
+
+{% schema %}
+{
+  "name": "Quick view",
+  "tag": "div",
+  "settings": []
+}
+{% endschema %}

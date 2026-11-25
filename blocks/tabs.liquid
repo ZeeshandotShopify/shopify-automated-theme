@@ -1,0 +1,484 @@
+{%- style -%}
+  /* Base container */
+  tabs-container {
+    display: block;
+    width: 100%;
+  }
+
+  #tabs-{{ block.id }} {
+    --layout-gap: {{ block.settings.mobile_gap }};
+    --tabs-active-fg: {{ block.settings.active_foreground_color }};
+    --tabs-active-bg: {{ block.settings.active_background_color }};
+    --tabs-indicator: {{ block.settings.indicator_color }};
+    --tabs-inactive-opacity: 0.3;
+    --tabs-gap: {{ block.settings.mobile_tabs_gap }}px;
+  }
+
+  .tabs {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  /* Nav container (heading + triggers) */
+  .tabs__nav {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Heading */
+  .tabs__heading {
+    font-family: var(--font-heading--family);
+    font-size: 1.25rem;
+    line-height: 120%;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Inner container handles orientation */
+  .tabs__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+    width: 100%;
+  }
+
+  /* Triggers container */
+  .tabs__triggers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--tabs-gap);
+  }
+
+  /* Trigger button base */
+  .tabs__trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    color: var(--tabs-active-fg);
+    opacity: var(--tabs-inactive-opacity);
+    text-decoration: none;
+  }
+
+  .tabs__trigger:focus-visible {
+    outline: 2px solid var(--tabs-active-fg);
+    outline-offset: 2px;
+  }
+
+  .tabs__trigger.is-active {
+    opacity: 1;
+  }
+
+  /* Style: Underline (text decoration) */
+  .tabs--style-underline .tabs__trigger {
+    padding: 0;
+    text-underline-offset: 4px;
+  }
+
+  .tabs--style-underline .tabs__trigger.is-active {
+    text-decoration: underline;
+  }
+
+  /* Style: Background + Foreground */
+  .tabs--style-background-foreground .tabs__trigger {
+    border-radius: var(--button-border-radius);
+  }
+
+  .tabs--style-background-foreground .tabs__trigger.is-active {
+    background-color: var(--tabs-active-bg);
+  }
+
+  /* Style: Indicator bar */
+  .tabs--style-indicator .tabs__trigger {
+    padding-inline: 0;
+    padding-top: 0;
+    padding-bottom: 1.5rem;
+  }
+
+  .tabs--style-indicator .tabs__trigger-indicator {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--tabs-indicator);
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+  }
+
+  .tabs--style-indicator .tabs__trigger.is-active .tabs__trigger-indicator {
+    transform: scaleX(1);
+  }
+
+  /* Panels */
+  .tabs__panels {
+    width: 100%;
+  }
+
+  tab-panel {
+    display: none;
+  }
+
+  tab-panel.is-active {
+    display: block;
+  }
+
+  /* Mobile rules */
+  @media (width < 64rem) {
+    .tabs__inner[data-mobile-position="bottom"] {
+      flex-direction: column-reverse;
+    }
+
+    .tabs__inner[data-mobile-orientation="vertical"] .tabs__triggers {
+      flex-direction: column;
+      flex-wrap: nowrap;
+    }
+
+    /* Horizontal scrollable tabs on mobile */
+    .tabs__inner[data-mobile-orientation="horizontal"] .tabs__triggers {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+
+    .tabs__inner[data-mobile-orientation="horizontal"] .tabs__triggers::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+
+    .tabs__inner[data-mobile-orientation="horizontal"] .tabs__trigger {
+      flex-shrink: 0;
+    }
+  }
+
+  /* Desktop overrides */
+  @media (width >= 64rem) {
+    #tabs-{{ block.id }} {
+      --layout-gap: {{ block.settings.desktop_gap }};
+      --tabs-gap: {{ block.settings.desktop_tabs_gap }}px;
+    }
+
+    /* Heading */
+    .tabs__heading {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Reset mobile styles first */
+    .tabs__inner {
+      flex-direction: column;
+    }
+
+    .tabs__inner .tabs__triggers {
+      flex-direction: row;
+    }
+
+    /* Desktop: Horizontal positions */
+    .tabs__inner[data-desktop-orientation="horizontal"][data-desktop-position="bottom"] {
+      flex-direction: column-reverse;
+    }
+
+    /* Desktop: Vertical positions */
+    .tabs__inner[data-desktop-orientation="vertical"][data-desktop-position="left"] {
+      flex-direction: row;
+    }
+
+    .tabs__inner[data-desktop-orientation="vertical"][data-desktop-position="right"] {
+      flex-direction: row-reverse;
+    }
+
+    .tabs__inner[data-desktop-orientation="vertical"][data-desktop-position="bottom"] {
+      flex-direction: column-reverse;
+    }
+
+    .tabs__inner[data-desktop-orientation="vertical"][data-desktop-position="left"] .tabs__nav,
+    .tabs__inner[data-desktop-orientation="vertical"][data-desktop-position="right"] .tabs__nav {
+      flex-shrink: 0;
+    }
+
+    .tabs__inner[data-desktop-orientation="vertical"] .tabs__triggers {
+      flex-direction: column;
+      flex-wrap: nowrap;
+    }
+  }
+{%- endstyle -%}
+
+<tabs-container
+  id="tabs-{{ block.id }}"
+  class="tabs tabs--style-{{ block.settings.trigger_style }}"
+  data-trigger-style="{{ block.settings.trigger_style }}"
+  {{ block.shopify_attributes }}
+>
+  <div
+    class="tabs__inner"
+    data-desktop-orientation="{{ block.settings.desktop_orientation }}"
+    data-desktop-position="{% if block.settings.desktop_orientation == 'horizontal' %}{{ block.settings.desktop_horizontal_position }}{% else %}{{ block.settings.desktop_vertical_position }}{% endif %}"
+    data-mobile-orientation="{{ block.settings.mobile_orientation }}"
+    data-mobile-position="{% if block.settings.mobile_orientation == 'horizontal' %}{{ block.settings.mobile_horizontal_position }}{% else %}{{ block.settings.mobile_vertical_position }}{% endif %}"
+  >
+    <div class="tabs__nav">
+      {% if block.settings.heading != blank %}
+        <div class="tabs__heading">{{ block.settings.heading }}</div>
+      {% endif %}
+      <div class="tabs__triggers" role="tablist">
+        <!-- Triggers generated by JS from tab-panel data-label attributes -->
+      </div>
+    </div>
+
+    <div class="tabs__panels">
+      {% content_for 'blocks' %}
+    </div>
+  </div>
+</tabs-container>
+
+{% schema %}
+{
+  "name": "t:block.tabs.name",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "tab"
+    }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:heading.label"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "select",
+      "id": "desktop_orientation",
+      "label": "Orientation",
+      "options": [
+        { "value": "horizontal", "label": "Horizontal" },
+        { "value": "vertical", "label": "Vertical" }
+      ],
+      "default": "horizontal"
+    },
+    {
+      "type": "select",
+      "id": "desktop_horizontal_position",
+      "label": "Position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "top",
+      "visible_if": "{{ block.settings.desktop_orientation == 'horizontal' }}"
+    },
+    {
+      "type": "select",
+      "id": "desktop_vertical_position",
+      "label": "Position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "bottom", "label": "Bottom" },
+        { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left",
+      "visible_if": "{{ block.settings.desktop_orientation == 'vertical' }}"
+    },
+    {
+      "type": "select",
+      "id": "desktop_gap",
+      "label": "t:size.gap.label",
+      "options": [
+        { "value": "0rem", "label": "t:size.options.gap.0" },
+        { "value": "1px", "label": "t:size.options.gap.1" },
+        { "value": "0.125rem", "label": "t:size.options.gap.2" },
+        { "value": "0.25rem", "label": "t:size.options.gap.4" },
+        { "value": "0.375rem", "label": "t:size.options.gap.6" },
+        { "value": "0.5rem", "label": "t:size.options.gap.8" },
+        { "value": "0.625rem", "label": "t:size.options.gap.10" },
+        { "value": "0.75rem", "label": "t:size.options.gap.12" },
+        { "value": "0.875rem", "label": "t:size.options.gap.14" },
+        { "value": "1rem", "label": "t:size.options.gap.16" },
+        { "value": "1.25rem", "label": "t:size.options.gap.20" },
+        { "value": "1.5rem", "label": "t:size.options.gap.24" },
+        { "value": "1.75rem", "label": "t:size.options.gap.28" },
+        { "value": "2rem", "label": "t:size.options.gap.32" },
+        { "value": "2.25rem", "label": "t:size.options.gap.36" },
+        { "value": "2.375rem", "label": "t:size.options.gap.38" },
+        { "value": "2.5rem", "label": "t:size.options.gap.40" },
+        { "value": "2.75rem", "label": "t:size.options.gap.44" },
+        { "value": "3rem", "label": "t:size.options.gap.48" },
+        { "value": "3.5rem", "label": "t:size.options.gap.56" },
+        { "value": "4rem", "label": "t:size.options.gap.64" },
+        { "value": "5rem", "label": "t:size.options.gap.80" },
+        { "value": "6rem", "label": "t:size.options.gap.96" },
+        { "value": "7rem", "label": "t:size.options.gap.112" },
+        { "value": "8rem", "label": "t:size.options.gap.128" },
+        { "value": "9rem", "label": "t:size.options.gap.144" },
+        { "value": "10rem", "label": "t:size.options.gap.160" },
+        { "value": "11rem", "label": "t:size.options.gap.176" },
+        { "value": "12rem", "label": "t:size.options.gap.192" },
+        { "value": "13rem", "label": "t:size.options.gap.208" },
+        { "value": "14rem", "label": "t:size.options.gap.224" },
+        { "value": "15rem", "label": "t:size.options.gap.240" },
+        { "value": "16rem", "label": "t:size.options.gap.256" },
+        { "value": "18rem", "label": "t:size.options.gap.288" },
+        { "value": "20rem", "label": "t:size.options.gap.320" },
+        { "value": "24rem", "label": "t:size.options.gap.384" }
+      ],
+      "default": "5rem"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "select",
+      "id": "mobile_orientation",
+      "label": "Orientation",
+      "options": [
+        { "value": "horizontal", "label": "Horizontal" },
+        { "value": "vertical", "label": "Vertical" }
+      ],
+      "default": "horizontal"
+    },
+    {
+      "type": "select",
+      "id": "mobile_horizontal_position",
+      "label": "Position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "top",
+      "visible_if": "{{ block.settings.mobile_orientation == 'horizontal' }}"
+    },
+    {
+      "type": "select",
+      "id": "mobile_vertical_position",
+      "label": "Position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "top",
+      "visible_if": "{{ block.settings.mobile_orientation == 'vertical' }}"
+    },
+    {
+      "type": "select",
+      "id": "mobile_gap",
+      "label": "t:size.gap.label",
+      "options": [
+        { "value": "0rem", "label": "t:size.options.gap.0" },
+        { "value": "1px", "label": "t:size.options.gap.1" },
+        { "value": "0.125rem", "label": "t:size.options.gap.2" },
+        { "value": "0.25rem", "label": "t:size.options.gap.4" },
+        { "value": "0.375rem", "label": "t:size.options.gap.6" },
+        { "value": "0.5rem", "label": "t:size.options.gap.8" },
+        { "value": "0.625rem", "label": "t:size.options.gap.10" },
+        { "value": "0.75rem", "label": "t:size.options.gap.12" },
+        { "value": "0.875rem", "label": "t:size.options.gap.14" },
+        { "value": "1rem", "label": "t:size.options.gap.16" },
+        { "value": "1.25rem", "label": "t:size.options.gap.20" },
+        { "value": "1.5rem", "label": "t:size.options.gap.24" },
+        { "value": "1.75rem", "label": "t:size.options.gap.28" },
+        { "value": "2rem", "label": "t:size.options.gap.32" },
+        { "value": "2.25rem", "label": "t:size.options.gap.36" },
+        { "value": "2.375rem", "label": "t:size.options.gap.38" },
+        { "value": "2.5rem", "label": "t:size.options.gap.40" },
+        { "value": "2.75rem", "label": "t:size.options.gap.44" },
+        { "value": "3rem", "label": "t:size.options.gap.48" },
+        { "value": "3.5rem", "label": "t:size.options.gap.56" },
+        { "value": "4rem", "label": "t:size.options.gap.64" },
+        { "value": "5rem", "label": "t:size.options.gap.80" },
+        { "value": "6rem", "label": "t:size.options.gap.96" },
+        { "value": "7rem", "label": "t:size.options.gap.112" },
+        { "value": "8rem", "label": "t:size.options.gap.128" },
+        { "value": "9rem", "label": "t:size.options.gap.144" },
+        { "value": "10rem", "label": "t:size.options.gap.160" },
+        { "value": "11rem", "label": "t:size.options.gap.176" },
+        { "value": "12rem", "label": "t:size.options.gap.192" },
+        { "value": "13rem", "label": "t:size.options.gap.208" },
+        { "value": "14rem", "label": "t:size.options.gap.224" },
+        { "value": "15rem", "label": "t:size.options.gap.240" },
+        { "value": "16rem", "label": "t:size.options.gap.256" },
+        { "value": "18rem", "label": "t:size.options.gap.288" },
+        { "value": "20rem", "label": "t:size.options.gap.320" },
+        { "value": "24rem", "label": "t:size.options.gap.384" }
+      ],
+      "default": "3rem"
+    },
+    {
+      "type": "header",
+      "content": "Tabs Style"
+    },
+    {
+      "type": "select",
+      "id": "trigger_style",
+      "label": "Trigger Style",
+      "options": [
+        { "value": "foreground", "label": "Foreground" },
+        { "value": "underline", "label": "Underline" },
+        { "value": "background-foreground", "label": "Background + Foreground" },
+        { "value": "indicator", "label": "Indicator" }
+      ],
+      "default": "foreground"
+    },
+    {
+      "type": "color",
+      "id": "active_foreground_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#111111"
+    },
+    {
+      "type": "color",
+      "id": "active_background_color",
+      "label": "t:colors.background_color.label",
+      "default": "#f3f4f6",
+      "visible_if": "{{ block.settings.trigger_style == 'background-foreground' }}"
+    },
+    {
+      "type": "color",
+      "id": "indicator_color",
+      "label": "Indicator Color",
+      "default": "#111111",
+      "visible_if": "{{ block.settings.trigger_style == 'indicator' }}"
+    },
+    {
+      "type": "range",
+      "id": "desktop_tabs_gap",
+      "label": "Desktop Gap",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "mobile_tabs_gap",
+      "label": "Mobile Gap",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.tabs.presets.tabs",
+      "category": "t:block.tabs.category"
+    }
+  ]
+}
+{% endschema %}

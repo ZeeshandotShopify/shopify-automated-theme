@@ -1,0 +1,145 @@
+{%- style -%}
+  .cart-icon {
+    position: relative;
+    cursor: pointer;
+    display: inline-flex;
+  }
+
+  .cart-icon .cart-count-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--color-accent-background);
+    color: var(--color-accent-foreground);
+    border-radius: 50%;
+    min-width: clamp(18px, 4vw, 22px);
+    height: clamp(18px, 4vw, 22px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(10px, 2.5vw, 12px);
+    font-weight: 700;
+    padding: 0 4px;
+    box-shadow: 0 2px 8px {{ settings.accent_background_color | color_modify: 'alpha', 0.4 }};
+    white-space: nowrap;
+    transition: border-radius 0.2s ease;
+    z-index: 10;
+  }
+
+  /* Pill shape for 99+ */
+  .cart-icon .cart-count-badge--pill {
+    border-radius: 12px;
+    min-width: clamp(24px, 6vw, 32px);
+    padding: 0 clamp(5px, 1.5vw, 7px);
+    font-size: clamp(9px, 2.3vw, 11px);
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign item_count = cart.item_count
+  assign display_count = item_count
+  assign is_pill = false
+
+  if item_count >= 100
+    assign display_count = '99+'
+    assign is_pill = true
+  endif
+-%}
+
+<div class="cart-icon">
+  {% if item_count > 0 %}
+    <span
+      class="cart-count-badge{% if is_pill %} cart-count-badge--pill{% endif %}"
+      data-cart-count-bubble
+      data-cart-count="{{ item_count }}"
+    >
+      {{- display_count -}}
+    </span>
+  {% endif %}
+  <div class="header__icon-button">
+    {%- if custom_cart_icon != blank -%}
+      {{- custom_cart_icon -}}
+    {%- else -%}
+      {{ 'cart.svg' | inline_asset_content }}
+    {%- endif -%}
+
+    {%- if show_icon_labels -%}
+      <span>Cart</span>
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+  // Optional: Update badge dynamically when cart changes via AJAX
+  document.addEventListener('DOMContentLoaded', function () {
+    const cartBadge = document.querySelector('[data-cart-count-bubble]');
+
+    if (cartBadge) {
+      // Listen for cart updates (adjust event name based on your theme)
+      document.addEventListener('cart:updated', function (e) {
+        const count = e.detail?.itemCount || 0;
+
+        if (count === 0) {
+          cartBadge.style.display = 'none';
+        } else {
+          cartBadge.style.display = 'flex';
+
+          if (count >= 100) {
+            cartBadge.textContent = '99+';
+            cartBadge.classList.add('cart-count-badge--pill');
+          } else {
+            cartBadge.textContent = count;
+            cartBadge.classList.remove('cart-count-badge--pill');
+          }
+
+          cartBadge.setAttribute('data-cart-count', count);
+        }
+      });
+    }
+  });
+</script>
+
+{% comment %}
+  {%- style -%}
+    .cart-icon {
+      position: relative;
+      cursor: pointer;
+      display: inline-flex;
+    }
+
+    .cart-icon .cart-count-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: var(--color-accent-background);
+      color: var(--color-accent-foreground);
+      border-radius: 50%;
+      min-width: clamp(18px, 4vw, 22px);
+      height: clamp(18px, 4vw, 22px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(10px, 2.5vw, 12px);
+      font-weight: 700;
+      padding: 0 4px;
+      box-shadow: 0 2px 8px {{ settings.accent_background_color | color_modify: 'alpha', 0.4 }};
+    }
+  {%- endstyle -%}
+
+  <div class="cart-icon">
+    {% if cart.item_count > 0 %}
+      <span class="cart-count-badge" data-cart-count-bubble>{{- cart.item_count -}}</span>
+    {% endif %}
+    <div class="header__icon-button">
+      {%- if custom_cart_icon != blank -%}
+        {{- custom_cart_icon -}}
+      {%- else -%}
+        {{ 'cart.svg' | inline_asset_content }}
+      {%- endif -%}
+
+      {%- if show_icon_labels -%}
+        <span>Cart</span>
+      {%- endif -%}
+    </div>
+  </div>
+{% endcomment %}

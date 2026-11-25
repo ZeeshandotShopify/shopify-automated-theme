@@ -1,0 +1,25 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "quick-view": {
+      "type": "quick-view",
+      "blocks": {
+        "recharge_subscription_widget": {
+          "type": "shopify://apps/recharge-subscriptions/blocks/subscription-widget-v2/371eed76-0b44-4869-9813-730372ea378e",
+          "settings": {}
+        }
+      },
+      "block_order": ["recharge_subscription_widget"],
+      "settings": {}
+    }
+  },
+  "order": ["quick-view"]
+}

@@ -1,0 +1,130 @@
+{% doc %}
+  Renders the cart drawer's mobile recommendation carousel — a horizontally
+  scrollable row of cards under a "Frequently bought together" heading, with a
+  3px scrollbar beneath it. Hidden from 64rem up, where the rail is used instead.
+
+  @param {number} product_id - The product the recommendations are based on
+
+  @example
+  {% render 'cart-product-recommendations', product_id: cart.items.last.product_id %}
+{% enddoc %}
+
+<cart-product-recommendations
+  class="cart-product-recommendations"
+  data-product-id="{{ product_id }}"
+  data-section-id="{{ section.id }}"
+  data-target="cart-product-recommendations-container"
+  data-limit="{{ settings.number_of_products_to_show }}"
+  data-intent="{{ settings.intent }}"
+>
+  {%- if recommendations.performed and recommendations.products_count > 0 -%}
+    <div class="cart-product-recommendations-container">
+      <h2 class="cart-product-recommendations-heading">
+        {{ 'cart.frequently_bought_together' | t }}
+      </h2>
+
+      <div class="swiper cart-product-recommendations-swiper">
+        <ul class="swiper-wrapper" role="list">
+          {%- for product in recommendations.products -%}
+            <li class="swiper-slide product-recommendations-item">
+              {% render 'cart-product-recommendations-item', product: product %}
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+
+      <div class="swiper-scrollbar"></div>
+    </div>
+  {%- else -%}
+    {%- comment -%}Loading state - will be replaced by JavaScript{%- endcomment -%}
+    <div class="cart-product-recommendations-loading">
+      <div class="loader" aria-label="Loading recommendations"></div>
+    </div>
+  {%- endif -%}
+</cart-product-recommendations>
+
+{% stylesheet %}
+  /*
+   * cart-product-recommendations.js replaces this element's content with the
+   * container's *children*, so the container div only exists on the
+   * server-rendered path. The column layout therefore lives on the custom
+   * element, and the container — when present — passes through.
+   */
+  .cart-product-recommendations {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* 24px */
+    /* Without this the nowrap slide track sets the column's min-content width
+       and the block stretches past the drawer. */
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .cart-product-recommendations-container {
+    display: contents;
+  }
+
+  .cart-product-recommendations-heading {
+    font-family: var(--font-heading--family);
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.4;
+    font-weight: 700;
+    color: var(--color-popover-foreground, #111111);
+  }
+
+  /* The track bleeds through the drawer's right padding so the next card is
+     clipped by the viewport edge, as drawn. */
+  .cart-product-recommendations-swiper {
+    width: auto;
+    min-width: 0;
+    max-width: calc(100% + 1rem);
+    margin-right: -1rem;
+    overflow: hidden;
+  }
+
+  .cart-product-recommendations > *,
+  .cart-product-recommendations-container > * {
+    flex-shrink: 0;
+  }
+
+  .cart-product-recommendations .swiper-slide {
+    width: 238px;
+    height: auto;
+  }
+
+  .cart-product-recommendations-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* --- Swiper scrollbar overrides --- */
+  .cart-product-recommendations .swiper-scrollbar {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 3px;
+    margin: 0;
+    border-radius: 0;
+    background: var(--color-muted-background, #f5f5f5);
+  }
+
+  .cart-product-recommendations .swiper-scrollbar-drag {
+    border-radius: 0;
+    background: var(--color-popover-foreground, #111111);
+  }
+
+  .cursor-grab {
+    cursor: grab;
+  }
+
+  .cursor-grab:active {
+    cursor: grabbing;
+  }
+
+  @media (width >= 64rem) {
+    .cart-product-recommendations {
+      display: none;
+    }
+  }
+{% endstylesheet %}

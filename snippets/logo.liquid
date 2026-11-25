@@ -1,0 +1,156 @@
+{% liquid
+  # LOGO SETTINGS
+  assign id = id
+  assign fallback_font_family = font_family | default: 'var(--font-heading--family)'
+
+  # LOGO IMAGE SELECTION FOR DESKTOP
+  # Choose between regular and inverse logo based on settings
+  assign image_desktop = settings.logo
+  if inverse and settings.logo_inverse
+    assign image_desktop = settings.logo_inverse
+  endif
+
+  # LOGO IMAGE SELECTION FOR MOBILE
+  # Use mobile-specific logo if available, otherwise fall back to desktop logo
+  assign image_mobile = settings.logo_mobile
+  if inverse and settings.logo_inverse_mobile
+    assign image_mobile = settings.logo_inverse_mobile
+  elsif image_mobile == blank
+    assign image_mobile = image_desktop
+  endif
+
+  assign size_type = size_type | default: 'adapt'
+  if size_type == 'adapt'
+    assign unit_mobile = 'percent'
+    assign percent_width_mobile = 100
+    assign unit_desktop = 'percent'
+    assign percent_width_desktop = 100
+  endif
+
+  # MOBILE LOGO IMAGE GENERATION
+  assign logo_image_mobile = ''
+  if image_mobile
+    assign aspect_mobile = image_mobile.aspect_ratio | default: 1.0
+    assign mobile_size = '100vw'
+    if unit_mobile == 'px' and pixel_height_mobile
+      assign mobile_display_width = pixel_height_mobile | times: aspect_mobile | round
+      assign mobile_size = mobile_display_width | append: 'px'
+    elsif unit_mobile == 'percent' and percent_width_mobile
+      assign mobile_size = percent_width_mobile | append: 'vw'
+    endif
+    assign sizes_mobile = mobile_size
+    capture logo_image_mobile
+      echo image_mobile | image_url: width: 3840 | image_tag: width: image_mobile.width, widths: '375, 550, 750', height: image_mobile.height, class: 'logo-image logo-image-mobile', alt: shop.name, sizes: sizes_mobile, loading: 'lazy'
+    endcapture
+  endif
+
+  # DESKTOP LOGO IMAGE GENERATION
+  assign logo_image_desktop = ''
+  if image_desktop
+    assign aspect_desktop = image_desktop.aspect_ratio | default: 1.0
+    assign desktop_size = '100vw'
+    if unit_desktop == 'px' and pixel_height_desktop
+      assign desktop_display_width = pixel_height_desktop | times: aspect_desktop | round
+      assign desktop_size = desktop_display_width | append: 'px'
+    elsif unit_desktop == 'percent' and percent_width_desktop
+      assign desktop_size = percent_width_desktop | append: 'vw'
+    endif
+    assign sizes_desktop = desktop_size
+    capture logo_image_desktop
+      echo image_desktop | image_url: width: 3840 | image_tag: width: image_desktop.width, widths: '750, 1100, 1500, 1780, 2000, 3000, 3840', height: image_desktop.height, class: 'logo-image logo-image-desktop', alt: shop.name, sizes: sizes_desktop, loading: 'lazy'
+    endcapture
+  endif
+
+  assign mobile_height = 'auto'
+  assign mobile_width = 'auto'
+  if unit_mobile == 'px' and pixel_height_mobile
+    assign mobile_height = pixel_height_mobile | append: 'px'
+  elsif unit_mobile == 'percent' and percent_width_mobile
+    assign mobile_width = percent_width_mobile | append: '%'
+  endif
+  assign desktop_height = 'auto'
+  assign desktop_width = 'auto'
+  if unit_desktop == 'px' and pixel_height_desktop
+    assign desktop_height = pixel_height_desktop | append: 'px'
+  elsif unit_desktop == 'percent' and percent_width_desktop
+    assign desktop_width = percent_width_desktop | append: '%'
+  endif
+%}
+
+{% style %}
+  .logo-{{ id }} {
+    --logo-mobile-height: {{ mobile_height }};
+    --logo-mobile-width: {{ mobile_width }};
+    --logo-desktop-height: {{ desktop_height }};
+    --logo-desktop-width: {{ desktop_width }};
+    display: inline-block;
+    max-width: 100%;
+  }
+
+  .logo-{{ id }} .logo-image {
+    max-width: 100%;
+  }
+
+  .logo-{{ id }}.logo-fallback {
+    color: currentColor;
+    font-family: {{ fallback_font_family }};
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 140%;
+    text-transform: none;
+    width: fit-content;
+  }
+
+  .logo-{{ id }} .logo-fallback__text {
+    display: inline-block;
+    margin: 0;
+    max-width: 100%;
+    font-family: {{ fallback_font_family }};
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 140%;
+    overflow-wrap: anywhere;
+  }
+
+  /* Mobile logo styling */
+  .logo-{{ id }} .logo-image-mobile {
+    display: block;
+    height: var(--logo-mobile-height);
+    width: var(--logo-mobile-width);
+  }
+
+  /* Desktop logo styling */
+  .logo-{{ id }} .logo-image-desktop {
+    display: none;
+    height: var(--logo-desktop-height);
+    width: var(--logo-desktop-width);
+  }
+
+  @media (width >= 64rem) {
+    .logo-{{ id }} .logo-image-mobile {
+      display: none;
+    }
+    .logo-{{ id }} .logo-image-desktop {
+      display: block;
+    }
+  }
+{% endstyle %}
+
+{% if logo_image_mobile != blank or logo_image_desktop != blank %}
+  <!-- IMAGE LOGO -->
+  <div
+    class="logo-{{ id }}"
+    {{ shopify_attributes }}
+  >
+    {{ logo_image_mobile }}
+    {{ logo_image_desktop }}
+  </div>
+{% else %}
+  <!-- TEXT FALLBACK -->
+  <div
+    class="logo-{{ id }} logo-fallback"
+    {{ shopify_attributes }}
+  >
+    <span class="logo-fallback__text">{{- shop.name -}}</span>
+  </div>
+{% endif %}

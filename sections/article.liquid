@@ -1,0 +1,538 @@
+{%- liquid
+  assign section_id = section.id
+
+  comment
+    The article page.
+
+    The hero (region A, the `title` block) is a full-bleed two-panel split and
+    the body (region B, the `content` block) is a 1264 measure with its own
+    88/16 gutter, so NEITHER can sit inside a shared `.shopify-page-width`
+    wrapper the way this section used to render them — the wrapper and its
+    858px inner cap are gone, and every block owns its own width and padding.
+
+    `share`, `featured_image` and `tags` are not in the design. They stay
+    available as block types and keep a page-width inset of their own so they
+    still render sensibly if a merchant adds one.
+
+    No required settings: `article.title` and `article.content` always exist on
+    an article template, so this section never withholds itself.
+  endcomment
+-%}
+
+{%- style -%}
+  #article-{{ section_id }} {
+    --article-fg-color: {{ section.settings.fg_color | default: '#ffffff' }};
+    --article-bg-color: {{ section.settings.bg_color | default: '#222222' }};
+
+    {%- if section.settings.color_mode == 'custom' -%}
+      color: var(--article-fg-color);
+      background: var(--article-bg-color);
+    {%- else -%}
+      color: var(--color-foreground);
+      background: var(--color-background);
+    {%- endif -%}
+  }
+
+  /* Every region abuts the next — a 0px gap between all four, with all the
+     vertical air coming from each region's own padding. */
+  #article-{{ section_id }} .article__regions {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  #article-{{ section_id }} .article__inset {
+    padding-block: 2rem;
+  }
+{%- endstyle -%}
+
+<div id="article-{{ section_id }}" class="article">
+  <div class="article__regions">
+    {%- for block in section.blocks -%}
+      {%- case block.type -%}
+        {%- when 'title' -%}
+          {%- render 'article-title', block: block -%}
+
+        {%- when 'content' -%}
+          {%- render 'article-content', block: block -%}
+
+        {%- when 'share' -%}
+          <div class="article__inset shopify-page-width shopify-page-padding">
+            {%- render 'article-share', block: block -%}
+          </div>
+
+        {%- when 'featured_image' -%}
+          <div class="article__inset shopify-page-width shopify-page-padding">
+            {%- render 'article-featured-image', block: block -%}
+          </div>
+
+        {%- when 'tags' -%}
+          <div class="article__inset shopify-page-width shopify-page-padding">
+            {%- render 'article-tags', block: block -%}
+          </div>
+      {%- endcase -%}
+    {%- endfor -%}
+  </div>
+</div>
+
+{%- schema -%}
+{
+  "name": "t:section.article.name",
+  "tag": "article",
+  "class": "article-wrapper",
+  "settings": [
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "fg_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#ffffff",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#222222",
+      "info": "Choose a solid background color",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "title",
+      "name": "t:block.article_page.title.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:image.label",
+          "info": "t:block.article_page.title.image.info"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_breadcrumb",
+          "label": "t:block.article_page.title.show_breadcrumb.label",
+          "info": "t:block.article_page.title.show_breadcrumb.info",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_author",
+          "label": "t:author.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_date",
+          "label": "t:date.label",
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": "t:typography.name"
+        },
+        {
+          "type": "text",
+          "id": "title_font_size",
+          "label": "t:typography.font_size.desktop.label",
+          "default": "2.5rem"
+        },
+        {
+          "type": "text",
+          "id": "mobile_title_font_size",
+          "label": "t:typography.font_size.mobile.label",
+          "default": "2.5rem"
+        },
+        {
+          "type": "checkbox",
+          "id": "title_capitalize",
+          "label": "t:block.article_page.title.capitalize.label",
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": "t:colors.name"
+        },
+        {
+          "type": "select",
+          "id": "color_mode",
+          "label": "t:color_mode.label",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "t:color_mode.options.inherit"
+            },
+            {
+              "value": "custom",
+              "label": "t:color_mode.options.custom"
+            }
+          ],
+          "default": "inherit"
+        },
+        {
+          "type": "color",
+          "id": "panel_background",
+          "label": "t:colors.background_color.label",
+          "default": "#f5f5f5",
+          "visible_if": "{{ block.settings.color_mode == 'custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "t:colors.foreground_color.label",
+          "default": "#111111",
+          "visible_if": "{{ block.settings.color_mode == 'custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "image_placeholder_color",
+          "label": "t:blog.image_placeholder_color.label",
+          "default": "#E5E7EB",
+          "visible_if": "{{ block.settings.color_mode == 'custom' }}"
+        },
+        {
+          "type": "header",
+          "content": "t:layout.desktop.content"
+        },
+        {
+          "type": "range",
+          "id": "content_gap",
+          "label": "t:size.gap.label",
+          "min": 0,
+          "max": 64,
+          "step": 2,
+          "default": 16
+        },
+        {
+          "type": "range",
+          "id": "desktop_padding_block",
+          "label": "t:size.padding.top.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 56
+        },
+        {
+          "type": "range",
+          "id": "desktop_padding_inline",
+          "label": "t:size.padding.left.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 88
+        },
+        {
+          "type": "header",
+          "content": "t:layout.mobile.content"
+        },
+        {
+          "type": "text",
+          "id": "mobile_image_height",
+          "label": "t:blog.mobile_image_height.label",
+          "default": "300px"
+        },
+        {
+          "type": "range",
+          "id": "mobile_padding_block",
+          "label": "t:size.padding.top.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 56
+        },
+        {
+          "type": "range",
+          "id": "mobile_padding_inline",
+          "label": "t:size.padding.left.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 16
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "name": "t:block.article_page.content.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "content_max_width",
+          "label": "t:size.max_width.label",
+          "info": "t:block.article_page.content.content_max_width.info",
+          "default": "90rem"
+        },
+        {
+          "type": "header",
+          "content": "t:typography.name"
+        },
+        {
+          "type": "text",
+          "id": "heading_font_size",
+          "label": "t:typography.font_size.desktop.label",
+          "default": "2rem"
+        },
+        {
+          "type": "text",
+          "id": "mobile_heading_font_size",
+          "label": "t:typography.font_size.mobile.label",
+          "default": "2rem"
+        },
+        {
+          "type": "header",
+          "content": "t:colors.name"
+        },
+        {
+          "type": "select",
+          "id": "color_mode",
+          "label": "t:color_mode.label",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "t:color_mode.options.inherit"
+            },
+            {
+              "value": "custom",
+              "label": "t:color_mode.options.custom"
+            }
+          ],
+          "default": "inherit"
+        },
+        {
+          "type": "color_background",
+          "id": "background",
+          "label": "t:colors.background_color.label",
+          "default": "#ffffff",
+          "visible_if": "{{ block.settings.color_mode == 'custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "t:colors.foreground_color.label",
+          "default": "#111111",
+          "visible_if": "{{ block.settings.color_mode == 'custom' }}"
+        },
+        {
+          "type": "header",
+          "content": "t:layout.desktop.content"
+        },
+        {
+          "type": "range",
+          "id": "group_gap",
+          "label": "t:block.article_page.content.group_gap.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 64
+        },
+        {
+          "type": "range",
+          "id": "inner_gap",
+          "label": "t:block.article_page.content.inner_gap.label",
+          "min": 0,
+          "max": 64,
+          "step": 2,
+          "default": 16
+        },
+        {
+          "type": "range",
+          "id": "desktop_padding_top",
+          "label": "t:size.padding.top.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 64
+        },
+        {
+          "type": "range",
+          "id": "desktop_padding_bottom",
+          "label": "t:size.padding.bottom.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 64
+        },
+        {
+          "type": "range",
+          "id": "desktop_padding_inline",
+          "label": "t:size.padding.left.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 88
+        },
+        {
+          "type": "header",
+          "content": "t:layout.mobile.content"
+        },
+        {
+          "type": "range",
+          "id": "mobile_padding_top",
+          "label": "t:size.padding.top.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 64
+        },
+        {
+          "type": "range",
+          "id": "mobile_padding_bottom",
+          "label": "t:size.padding.bottom.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 64
+        },
+        {
+          "type": "range",
+          "id": "mobile_padding_inline",
+          "label": "t:size.padding.left.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 16
+        }
+      ]
+    },
+    {
+      "type": "share",
+      "name": "t:block.article_page.share.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "t:size.padding.content"
+        },
+        {
+          "type": "range",
+          "id": "padding_top",
+          "label": "t:size.padding.top.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "padding_bottom",
+          "label": "t:size.padding.bottom.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "type": "featured_image",
+      "name": "t:block.article_page.featured_image.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "size",
+          "label": "t:size.label",
+          "options": [
+            {
+              "value": "adapt",
+              "label": "Adapt"
+            },
+            {
+              "value": "small",
+              "label": "Small"
+            },
+            {
+              "value": "medium",
+              "label": "Medium"
+            },
+            {
+              "value": "large",
+              "label": "Large"
+            }
+          ],
+          "default": "adapt"
+        },
+        {
+          "type": "header",
+          "content": "t:size.padding.content"
+        },
+        {
+          "type": "range",
+          "id": "padding_top",
+          "label": "t:size.padding.top.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "padding_bottom",
+          "label": "t:size.padding.bottom.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "type": "tags",
+      "name": "t:block.article_page.tags.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "t:size.padding.content"
+        },
+        {
+          "type": "range",
+          "id": "padding_top",
+          "label": "t:size.padding.top.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "padding_bottom",
+          "label": "t:size.padding.bottom.label",
+          "min": 0,
+          "max": 128,
+          "step": 2,
+          "default": 0
+        }
+      ]
+    }
+  ],
+  "default": {
+    "blocks": [
+      {
+        "type": "title"
+      },
+      {
+        "type": "content"
+      }
+    ]
+  }
+}
+{%- endschema -%}

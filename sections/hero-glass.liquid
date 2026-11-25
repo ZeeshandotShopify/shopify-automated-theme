@@ -1,0 +1,117 @@
+<style>
+  .hero-glass-wrapper {
+    height: 45.5rem;
+    position: relative;
+    background-image: url('{{ section.settings.image | image_url: width: 3840 }}');
+    background-color: rgba(0, 0, 0, 0.2);
+    background-size: cover;
+    margin-top: -88px;
+  }
+
+  .hero-glass {
+    height: 100%;
+    position: relative;
+  }
+
+  .hero-glass-cta {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    max-width: 38.313rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    left: 1rem;
+    right: 1rem;
+    bottom: 4.75rem;
+    z-index: 10;
+    padding: 1.5rem;
+  }
+
+  .hero-glass-heading {
+    font-family: var(--font-heading--family);
+    font-size: 32px;
+    line-height: 140%;
+    color: #ffffff;
+    text-wrap: auto;
+  }
+
+  @media (width >= 64rem) {
+    .hero-glass-wrapper {
+      height: 58.5rem;
+      background-color: transparent;
+      margin-top: -104px;
+    }
+
+    .hero-glass-cta {
+      align-items: flex-end;
+      left: unset;
+      right: 6.5rem;
+      bottom: 6.5rem;
+      padding: 2rem;
+    }
+
+    .hero-glass-heading {
+      font-size: 48px;
+      line-height: 120%;
+      text-align: right;
+    }
+  }
+</style>
+
+<div class="shopify-page-width shopify-page-padding" style="height: 100%;">
+  <div class="hero-glass">
+    <div class="hero-glass-cta">
+      <h1 class="hero-glass-heading">
+        {{ section.settings.heading }}
+      </h1>
+
+      <div class="hero-glass-btn">
+        {% render 'button', label: section.settings.label, url: section.settings.url, variant: 'outline' %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{%- schema -%}
+{
+  "name": "Hero Glass",
+  "tag": "section",
+  "class": "hero-glass-wrapper",
+  "limit": 1,
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:image.label"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Heading"
+    },
+    {
+      "type": "header",
+      "content": "t:button.content"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "t:label.label",
+      "default": "Shop All"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "t:url.label"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Glass",
+      "category": "Hero"
+    }
+  ]
+}
+{%- endschema -%}

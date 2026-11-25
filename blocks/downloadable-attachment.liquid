@@ -1,0 +1,276 @@
+<a href="{{ block.settings.file_name | file_url }}" download {{ block.shopify_attributes }}>
+  {% render 'button',
+    label: block.settings.label,
+    size: block.settings.size,
+    variant: block.settings.variant,
+    icon_mode: block.settings.icon_mode,
+    icon_select: block.settings.icon_select,
+    icon_custom: block.settings.icon,
+    icon_position: block.settings.icon_position,
+    full_width: block.settings.full_width,
+    shopify_attributes: block.shopify_attributes,
+    disabled: block.settings.disabled
+  %}
+</a>
+
+{% schema %}
+{
+  "name": "t:block.downloadable_attachment.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "file_name",
+      "label": "t:file_name.label",
+      "default": "downloadable-attachment.pdf",
+      "info": "Upload file to [Shopify Files](https://admin.shopify.com/store/u0esum-zy/content/files?selectedView=all)."
+    },
+    {
+      "type": "header",
+      "content": "t:button.content"
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "t:label.label",
+      "default": "Download PDF"
+    },
+    {
+      "type": "header",
+      "content": "t:style.content"
+    },
+    {
+      "type": "select",
+      "id": "variant",
+      "label": "t:variant.label",
+      "default": "default",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:variant.options.default"
+        },
+        {
+          "value": "secondary",
+          "label": "t:variant.options.secondary"
+        },
+        {
+          "value": "destructive",
+          "label": "t:variant.options.destructive"
+        },
+        {
+          "value": "outline",
+          "label": "t:variant.options.outline"
+        },
+        {
+          "value": "ghost",
+          "label": "t:variant.options.ghost"
+        },
+        {
+          "value": "link",
+          "label": "t:variant.options.link"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "t:size.label",
+      "default": "default",
+      "options": [
+        {
+          "value": "sm",
+          "label": "t:size.options.sm"
+        },
+        {
+          "value": "default",
+          "label": "t:size.options.default"
+        },
+        {
+          "value": "lg",
+          "label": "t:size.options.lg"
+        },
+        {
+          "value": "icon",
+          "label": "t:size.options.icon"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:icon.content"
+    },
+    {
+      "type": "select",
+      "id": "icon_mode",
+      "label": "t:icon_mode.label",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:icon_mode.options.none"
+        },
+        {
+          "value": "select",
+          "label": "t:icon_mode.options.select"
+        },
+        {
+          "value": "custom",
+          "label": "t:icon_mode.options.custom"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "icon_select",
+      "label": "t:icon.label",
+      "options": [
+        {
+          "value": "arrow-right",
+          "label": "Arrow Right"
+        },
+        {
+          "value": "arrow-down",
+          "label": "Arrow Down"
+        },
+        {
+          "value": "arrow-left-long",
+          "label": "Arrow Left Long"
+        },
+        {
+          "value": "arrow-right-long",
+          "label": "Arrow Right Long"
+        },
+        {
+          "value": "arrow-up-long",
+          "label": "Arrow Up Long"
+        },
+        {
+          "value": "arrow-down-long",
+          "label": "Arrow Down Long"
+        },
+        {
+          "value": "arrow-right-up-long",
+          "label": "Arrow Right Up Long"
+        },
+        {
+          "value": "plus",
+          "label": "Plus"
+        },
+        {
+          "value": "minus",
+          "label": "Minus"
+        },
+        {
+          "value": "check",
+          "label": "Check"
+        },
+        {
+          "value": "close",
+          "label": "Close"
+        },
+        {
+          "value": "menu",
+          "label": "Menu"
+        },
+        {
+          "value": "search",
+          "label": "Search"
+        },
+        {
+          "value": "copy",
+          "label": "Copy"
+        },
+        {
+          "value": "download",
+          "label": "Download"
+        },
+        {
+          "value": "upload",
+          "label": "Upload"
+        },
+        {
+          "value": "share",
+          "label": "Share"
+        },
+        {
+          "value": "gear",
+          "label": "Gear"
+        },
+        {
+          "value": "filter",
+          "label": "Filter"
+        },
+        {
+          "value": "edit",
+          "label": "Edit"
+        },
+        {
+          "value": "trash",
+          "label": "Trash"
+        },
+        {
+          "value": "cart",
+          "label": "Cart"
+        },
+        {
+          "value": "bag",
+          "label": "Bag"
+        },
+        {
+          "value": "lock",
+          "label": "Lock"
+        }
+      ],
+      "visible_if": "{{ block.settings.icon_mode == 'select' }}"
+    },
+    {
+      "type": "html",
+      "id": "icon",
+      "label": "t:icon.label",
+      "info": "Paste SVG code here",
+      "visible_if": "{{ block.settings.icon_mode == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "icon_position",
+      "label": "t:layout.alignment.label",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:layout.alignment.options.left"
+        },
+        {
+          "value": "right",
+          "label": "t:layout.alignment.options.right"
+        }
+      ],
+      "visible_if": "{{ block.settings.icon_mode == 'custom' or block.settings.icon_mode == 'select' and block.settings.size != 'icon' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:options.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:full_width.label",
+      "default": false,
+      "visible_if": "{{ block.settings.size != 'icon' and block.settings.label != blank }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "disabled",
+      "label": "t:disabled.label",
+      "default": false,
+      "info": "Make button non-clickable (useful for demo purposes)"
+    }
+  ],
+  "presets": [
+    {
+      "category": "t:block.downloadable_attachment.category",
+      "name": "t:block.downloadable_attachment.name"
+    }
+  ]
+}
+{% endschema %}

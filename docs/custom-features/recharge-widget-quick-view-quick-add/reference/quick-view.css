@@ -1,0 +1,554 @@
+/*
+ * Quick view panel.
+ * Figma: desktop 2175:421 (820x620 modal) / mobile 2175:364 (390 bottom sheet).
+ *
+ * Mobile-first, desktop from 64rem — the theme's breakpoint.
+ * The panel markup is fetched from templates/product.quick-view.json and
+ * portalled into <dialog-content> (desktop) or <sheet-content> (mobile), so the
+ * host shells are styled here too.
+ */
+
+/* ---------------------------------------------------------------- host */
+
+/* Figma 2175:421 is 820 wide. dialog-menu's named sizes stop at 48rem, so this
+   instance carries its own width. */
+dialog-content[data-size="quick-view"] {
+  --dialog-width: 820px;
+
+  width: var(--dialog-width);
+  max-width: calc(100vw - 2rem);
+  max-height: min(620px, calc(100dvh - 2rem));
+  display: block;
+  gap: 0;
+  padding: 0;
+  /* Figma 2175:421: square corners, no border, no shadow. The base rule ships
+     a 1px border, which would eat 2px of the 820 width. */
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* Figma 2175:365: sheet is content-sized, not full height, with 17px top
+   corners. The scrim is #565656, which is black at ~66% over white — the
+   theme's shared sheet-overlay is 0.5, so it is nudged only while the quick
+   view is open and restored for the cart drawer and mobile menu. */
+[data-quick-view-open] sheet-overlay {
+  --overlay-bg: rgba(0, 0, 0, 0.66);
+}
+
+/* Keyed off an attribute quick-view.js sets, not `:has(.quick-view)`. The
+   `:has()` form re-matches at the moment the panel is injected, and that
+   invalidation left the sheet stuck at translateY(100%) — open, but parked
+   below the fold — until any unrelated style write forced a recalc. An
+   attribute set before the content lands has no such timing hazard. */
+sheet-content[data-quick-view] {
+  --sheet-menu-radius: 17px;
+
+  gap: 0;
+  padding: 0;
+}
+
+.quick-view__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------- panel */
+
+.quick-view {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  font-family: var(--font-body--family);
+}
+
+/* Media column is desktop-only; mobile uses the inline thumbnail instead. */
+.quick-view__media {
+  display: none;
+}
+
+.quick-view__details {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Figma 2175:366: header band 60 tall, 16 inline padding, title centred
+   between an empty 24px spacer and the close button. `justify-between` with a
+   centred absolutely-positioned title is simpler and stays centred when the
+   title length changes. */
+.quick-view__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 60px;
+  padding-inline: 16px;
+}
+
+/* Figma 2175:368 renders this uppercase. The locale string stays sentence case
+   so translators are not handed a shouted string to reproduce. */
+.quick-view__sheet-title {
+  position: absolute;
+  inset-inline: 3.5rem;
+  text-align: center;
+  font-family: var(--font-heading--family);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #1a1a1a;
+  text-transform: uppercase;
+}
+
+.quick-view__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1a1a1a;
+  cursor: pointer;
+}
+
+.quick-view__close svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Figma 2175:371: summary band, 16 inline / 10 block padding, 16 gap,
+   153px square thumbnail beside a flexible info column. */
+.quick-view__summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 10px 16px;
+}
+
+.quick-view__thumb {
+  flex: 0 0 153px;
+  width: 153px;
+}
+
+.quick-view__thumb img,
+.quick-view__thumb svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.quick-view__info {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.quick-view__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #111111;
+}
+
+/* Figma stars are #FCC419 inside the panel — deliberately different from the
+   card's #F4AC46, per the design. */
+.quick-view__rating {
+  --color-star-rating-foreground: #fcc419;
+}
+
+.quick-view__rating .jdgm-star {
+  color: #fcc419 !important;
+}
+
+/* Figma 2176:575: price stack on the left, save badge pushed right. */
+.quick-view__price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.quick-view__price-stack {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.quick-view__price {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-price-foreground, #f03e3e);
+}
+
+.quick-view__compare {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #444444;
+  text-decoration: line-through;
+}
+
+/* Figma 2176:578: 71x42 pill, 4px padding, radius 56, wraps to two lines. */
+.quick-view__save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 71px;
+  padding: 4px;
+  border-radius: 56px;
+  background: #d97706;
+  color: #f5f5f0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Figma draws no dividers on mobile; they belong to the desktop column. */
+.quick-view__divider {
+  display: none;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid #e6e6e6;
+}
+
+/* Figma 2176:525: options band, 16 inline padding, 12 gap between cards.
+   The cards themselves are the Recharge widget, restyled by
+   assets/recharge-subscriptions-overrides.css. */
+.quick-view__purchase-options {
+  padding-inline: 16px;
+}
+
+.quick-view__purchase-options recharge-subscription-widget {
+  display: block;
+  margin-top: 0;
+}
+
+.quick-view__form {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+/* Figma 2176:548: mobile CTA is a centred text link with a 13px plus glyph,
+   and there is no quantity control on mobile at all. */
+.quick-view__cart-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 32px;
+}
+
+.quick-view__quantity {
+  display: none;
+}
+
+.quick-view__atc {
+  display: inline-flex;
+}
+
+.quick-view__submit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1a1a1a;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* Keep the text span from introducing a taller line box than the label's own,
+   which is what pushed the 20px link to 25px. */
+.quick-view__submit .atc-button__text {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+.quick-view__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Figma 2176:548: the link box is 92 x 20 — the label's own line box, with
+   nothing added by the 13px glyph beside it. */
+.quick-view__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1.4;
+}
+
+.quick-view__label--desktop {
+  display: none;
+}
+
+/* Figma 2176:550 strokes the glyph #434343, a step lighter than the label. */
+.quick-view__label-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #434343;
+}
+
+.quick-view__submit .atc-button__loader {
+  display: none;
+  position: absolute;
+  inset: 50%;
+  translate: -50% -50%;
+}
+
+.quick-view__submit.loading .atc-button__text {
+  visibility: hidden;
+}
+
+.quick-view__submit.loading .atc-button__loader {
+  display: block;
+}
+
+.quick-view__error {
+  margin: 0;
+  padding: 0 16px 16px;
+  color: var(--color-destructive-background, #f03e3e);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------- desktop */
+
+@media (width >= 64rem) {
+  /* Figma 2175:421: 380px photo column + 440px details column, no gutter. */
+  .quick-view {
+    flex-direction: row;
+    align-items: stretch;
+    height: min(620px, calc(100dvh - 2rem));
+  }
+
+  /* Figma 2175:422: tinted column, 20px padding, 12px between images.
+     The frame clips its second photo, so the column scrolls through every
+     product image rather than showing a fixed two. */
+  .quick-view__media {
+    display: flex;
+    flex: 0 0 380px;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    background: #f7f4ef;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .quick-view__media-item img,
+  .quick-view__media-item svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Figma 2175:425: 440px, 28px padding, 16px between groups. */
+  .quick-view__details {
+    flex: 1 1 0;
+    gap: 16px;
+    padding: 28px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Desktop header carries only the close button — the "Select Options"
+     eyebrow and the mobile sheet title are both dropped. */
+  .quick-view__header {
+    min-height: 24px;
+    padding-inline: 0;
+  }
+
+  .quick-view__sheet-title {
+    display: none;
+  }
+
+  .quick-view__close {
+    color: #181818;
+  }
+
+  /* The inline thumbnail is mobile-only; desktop has the media column. */
+  .quick-view__thumb {
+    display: none;
+  }
+
+  .quick-view__summary {
+    padding: 0;
+    gap: 16px;
+  }
+
+  .quick-view__info {
+    gap: 16px;
+  }
+
+  .quick-view__title {
+    font-family: var(--font-heading--family);
+    font-size: 1.5rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  /* Figma 2175:478: one row — price, compare-at, badge — 10px apart. */
+  .quick-view__price-row {
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .quick-view__price-stack {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .quick-view__price {
+    font-family: var(--font-heading--family);
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .quick-view__compare {
+    font-size: 1rem;
+  }
+
+  /* Figma 2175:481: 117x28 pill, 10/4 padding, 14px label. */
+  .quick-view__save {
+    min-width: 0;
+    padding: 4px 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .quick-view__divider {
+    display: block;
+  }
+
+  .quick-view__purchase-options {
+    padding-inline: 0;
+  }
+
+  /* Figma 2175:455: quantity stepper and the CTA share one 12px-gap row. */
+  .quick-view__cart-row {
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 0;
+  }
+
+  /* Figma 2175:469: 102x56, 10px padding, radius 10, 1px #EFEFEF. */
+  .quick-view__quantity {
+    display: inline-flex;
+    flex: 0 0 102px;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 10px;
+    border: 1px solid #efefef;
+    border-radius: 10px;
+    background: #fefdfd;
+  }
+
+  .quick-view__quantity-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #444444;
+    cursor: pointer;
+  }
+
+  .quick-view__quantity-button svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .quick-view__quantity-input {
+    width: 2ch;
+    border: none;
+    background: none;
+    color: #444444;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .quick-view__quantity-input::-webkit-outer-spin-button,
+  .quick-view__quantity-input::-webkit-inner-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Figma 2175:466: 270x56, radius 4, primary fill — the theme's own button
+     colours, which match the frame exactly. */
+  .quick-view__atc {
+    flex: 1 1 auto;
+  }
+
+  .quick-view__submit {
+    width: 100%;
+    height: 56px;
+    border-radius: var(--button-border-radius, 4px);
+    background: var(--color-primary-background, #ffe16a);
+    color: var(--color-primary-foreground, #0f2a16);
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.15s ease-in-out;
+  }
+
+  .quick-view__submit:hover:not(:disabled) {
+    background: var(--color-primary-hover-background, #ebcc4d);
+  }
+
+  /* Figma 2175:467 draws the label already uppercased. */
+  .quick-view__label--desktop {
+    display: inline-flex;
+    text-transform: uppercase;
+  }
+
+  .quick-view__label--mobile {
+    display: none;
+  }
+
+  .quick-view__error {
+    padding: 0;
+    text-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-view__submit {
+    transition: none;
+  }
+}

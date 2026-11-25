@@ -1,0 +1,353 @@
+{% doc %}
+  Renders the "Complete the system" cross-sell card at the foot of the product
+  information column.
+
+  Figma reference: 2035:526 (desktop 53:5323), 2035:537 (mobile 72:1113).
+  Desktop is a 220px tall row: a 208px image beside a column holding the
+  eyebrow, title, price and description, with the add-to-cart button filling
+  the remaining height. Mobile stacks: a 113 x 128 image beside the text, then
+  the description at full width, then a 52px button.
+
+  Both breakpoints share one DOM. The four parts are placed by grid areas, so
+  the description can sit inside the text column on desktop and below the
+  image on mobile without being rendered twice.
+
+  Every piece of content comes from ONE metaobject on the product —
+  `custom.cross_sell` — so the pairing travels with the product it belongs to
+  and the block carries no content settings at all. The exact definition is
+  written out in the schema.
+
+  The referenced product supplies the image and the PRICE. The TITLE is the
+  metaobject's own `product_title` field — the field that also names the entry
+  in admin — so the pairing can call the product whatever reads best in this
+  card; the product's real name is only a fallback for a blank field. Eyebrow,
+  description and button label are fields on the metaobject too, and a blank
+  description falls back to the referenced product's own.
+
+  The button adds the referenced product's first available variant straight to
+  cart over AJAX, matching `pdp-order-sample`.
+
+  @param {object} block - Product section block settings and attributes.
+  @param {product} product - The product whose metafield supplies the pairing.
+
+  @example
+  {% render 'pdp-cross-sell', block: block, product: product %}
+{% enddoc %}
+
+{%- liquid
+  assign cs_entry = product.metafields.custom.cross_sell.value
+
+  assign cross_sell_product = cs_entry.product.value
+  assign cross_sell_eyebrow = cs_entry.eyebrow.value
+  assign cross_sell_button_label = cs_entry.button_label.value | default: 'ADD TO CART'
+
+  # The card's title is the metaobject's OWN `product_title` field, not the
+  # referenced product's name — the pairing gets to call the product whatever
+  # reads best here. It doubles as the entry's display name in admin. The
+  # product's own title is only a fallback for a blank field.
+  assign cross_sell_title = cs_entry.product_title.value
+  if cross_sell_title == blank
+    assign cross_sell_title = cross_sell_product.title
+  endif
+
+  # The price is never a field: it is read off the referenced product, so it
+  # follows that product's own pricing and availability.
+  assign cross_sell_variant = cross_sell_product.selected_or_first_available_variant
+  assign cross_sell_image = cross_sell_product.featured_image
+
+  assign cross_sell_description = cs_entry.description.value
+  if cross_sell_description == blank
+    assign cross_sell_description = cross_sell_product.description | strip_html | truncatewords: 24
+  endif
+
+  # Required field is the referenced product: with no product there is no
+  # price, no image and nothing to add to cart.
+  assign show_block = false
+  assign is_placeholder = false
+  if cross_sell_product != blank
+    assign show_block = true
+  elsif request.design_mode
+    assign show_block = true
+    assign is_placeholder = true
+  endif
+-%}
+
+{%- if show_block -%}
+  {%- style -%}
+    #pdp-cross-sell-{{ block.id }} {
+      padding-top: {{ block.settings.padding_top }}px;
+      padding-bottom: {{ block.settings.padding_bottom }}px;
+    }
+
+    /* Figma 2035:537 — mobile: image beside the text, then description and
+       button at full width. Row gap 16, column gap 16. */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell {
+      display: grid;
+      grid-template-columns: 113px minmax(0, 1fr);
+      grid-template-areas:
+        'media info'
+        'desc desc'
+        'button button';
+      column-gap: 16px;
+      row-gap: 16px;
+      width: 100%;
+    }
+
+    /* Figma 2035:539 — 113 x 128 on mobile */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__media {
+      grid-area: media;
+      width: 100%;
+      height: 128px;
+      overflow: hidden;
+    }
+
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Figma 2035:540 — column, gap 16, bottom aligned against the image */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__info {
+      grid-area: info;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__heading {
+      margin: 0;
+      text-transform: capitalize;
+    }
+
+    /* Figma 2035:558 first line — Caviar Dreams Bold 16 / 1.4, #474E52, uppercase */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__eyebrow {
+      display: block;
+      font-family: var(--font-heading--family);
+      font-weight: 700;
+      font-size: 1rem;
+      line-height: 1.4;
+      text-transform: uppercase;
+      color: {{ block.settings.eyebrow_color }};
+    }
+
+    /* Figma 2035:558 second line — Caviar Dreams Regular 24 / 1.4, #212529 */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__title {
+      display: block;
+      font-family: var(--font-heading--family);
+      font-weight: 400;
+      font-size: 1.5rem;
+      line-height: 1.4;
+      color: {{ block.settings.title_color }};
+    }
+
+    /* Figma 2035:544 — Subtitle 2/Medium 18 / 1.4, #1D1F1B */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__price {
+      margin: 0;
+      font-family: var(--font-heading--family);
+      font-weight: 700;
+      font-size: 1.125rem;
+      line-height: 1.4;
+      color: {{ block.settings.price_color }};
+    }
+
+    /* Figma 2035:545 — Body S/Regular 14 / 1.4, #495057 */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__description {
+      grid-area: desc;
+      margin: 0;
+      font-family: var(--font-body--family);
+      font-weight: 400;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      color: {{ block.settings.description_color }};
+    }
+
+    /* Figma 2035:560 — bg #BA6045, radius 40, padding-block 8, 52 tall */
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__button {
+      grid-area: button;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 52px;
+      padding-block: 8px;
+      border: 0;
+      border-radius: 40px;
+      background-color: var(--color-add-to-cart-background);
+      color: var(--color-add-to-cart-foreground);
+      font-family: var(--font-body--family);
+      font-weight: 600;
+      font-size: 1rem;
+      line-height: 1.4;
+      cursor: pointer;
+      transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__button:hover {
+      background-color: var(--color-add-to-cart-hover-background, var(--color-add-to-cart-background));
+      color: var(--color-add-to-cart-hover-foreground, var(--color-add-to-cart-foreground));
+    }
+
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__button[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__note {
+      margin: 0;
+      font-family: var(--font-body--family);
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      color: #6b6b6b;
+    }
+
+    /* Figma 2035:526 — desktop is one 220px row: media 208 wide and full
+       height, text column gap 8, then 18 before a button that takes the rest. */
+    @media (width >= 64rem) {
+      #pdp-cross-sell-{{ block.id }} .pdp-cross-sell {
+        grid-template-columns: 208px minmax(0, 1fr);
+        grid-template-rows: auto auto 1fr;
+        grid-template-areas:
+          'media info'
+          'media desc'
+          'media button';
+        row-gap: 8px;
+        min-height: 220px;
+      }
+
+      #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__media {
+        height: 100%;
+      }
+
+      #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__info {
+        justify-content: flex-start;
+        gap: 8px;
+      }
+
+      /* 8px row-gap + 10px = the 18px Figma puts before the button */
+      #pdp-cross-sell-{{ block.id }} .pdp-cross-sell__button {
+        margin-top: 10px;
+        min-height: 0;
+      }
+    }
+  {%- endstyle -%}
+
+  <div id="pdp-cross-sell-{{ block.id }}" {{ block.shopify_attributes }}>
+    {%- if is_placeholder -%}
+      <p class="pdp-cross-sell__note">
+        <strong>Cross-sell — nothing to show yet.</strong>
+        Add a <em>Cross Sell</em> metaobject entry to this product's <code>custom.cross_sell</code> metafield, with a
+        product picked in its <em>Product</em> field. Visible only to you in the theme editor.
+      </p>
+    {%- else -%}
+      <cross-sell-card
+        class="pdp-cross-sell"
+        data-variant-id="{{ cross_sell_variant.id }}"
+      >
+        {%- if cross_sell_image != blank -%}
+          <div class="pdp-cross-sell__media">
+            {{-
+              cross_sell_image
+              | image_url: width: 640
+              | image_tag: alt: cross_sell_image.alt, widths: '226, 320, 416, 640', loading: 'lazy'
+            -}}
+          </div>
+        {%- endif -%}
+
+        <div class="pdp-cross-sell__info">
+          <p class="pdp-cross-sell__heading">
+            {%- if cross_sell_eyebrow != blank -%}
+              <span class="pdp-cross-sell__eyebrow">{{ cross_sell_eyebrow }}</span>
+            {%- endif -%}
+            <span class="pdp-cross-sell__title">{{ cross_sell_title }}</span>
+          </p>
+
+          <p class="pdp-cross-sell__price">{{ cross_sell_variant.price | money }}</p>
+        </div>
+
+        {%- if cross_sell_description != blank -%}
+          <p class="pdp-cross-sell__description">{{ cross_sell_description }}</p>
+        {%- endif -%}
+
+        <button
+          type="button"
+          class="pdp-cross-sell__button"
+          {% unless cross_sell_variant.available %}
+            disabled
+          {% endunless %}
+        >
+          {{- cross_sell_button_label -}}
+        </button>
+      </cross-sell-card>
+    {%- endif -%}
+  </div>
+
+  {%- unless is_placeholder -%}
+    <script>
+      if (!customElements.get('cross-sell-card')) {
+        class CrossSellCard extends HTMLElement {
+          constructor() {
+            super();
+            this.button = null;
+            this.isLoading = false;
+          }
+
+          connectedCallback() {
+            this.button = this.querySelector('.pdp-cross-sell__button');
+            if (this.button) {
+              this.button.addEventListener('click', this.handleClick.bind(this));
+            }
+          }
+
+          handleClick(event) {
+            event.preventDefault();
+            if (this.isLoading || this.button.disabled) return;
+            this.isLoading = true;
+
+            const payload = {
+              items: [{ id: this.dataset.variantId, quantity: 1 }],
+              sections: 'cart-drawer,cart-icon',
+            };
+
+            fetch(window.Shopify.routes.root + 'cart/add.js', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            })
+              .then(async (response) => {
+                const data = await response.json();
+                if (!response.ok) {
+                  const msg = (data && data.description) || 'Could not add this product to cart.';
+                  if (typeof showToast === 'function') {
+                    showToast(msg);
+                  } else {
+                    alert(msg);
+                  }
+                } else {
+                  document.documentElement.dispatchEvent(
+                    new CustomEvent('cart:rerender', { detail: data, bubbles: true }),
+                  );
+                }
+              })
+              .catch(() => {
+                const msg = 'An unexpected error occurred.';
+                if (typeof showToast === 'function') {
+                  showToast(msg);
+                } else {
+                  alert(msg);
+                }
+              })
+              .finally(() => {
+                this.isLoading = false;
+              });
+          }
+        }
+
+        customElements.define('cross-sell-card', CrossSellCard);
+      }
+    </script>
+  {%- endunless -%}
+{%- endif -%}

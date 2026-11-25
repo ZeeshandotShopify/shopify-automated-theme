@@ -1,0 +1,50 @@
+<accordion-item
+  {% if block.settings.open_by_default %}
+    default-open
+  {% endif %}
+  {{ block.shopify_attributes }}
+>
+  <accordion-trigger>
+    {{ block.settings.heading }}
+  </accordion-trigger>
+  <accordion-content>
+    <div class="accordion-content-inner">
+      {% content_for 'blocks' %}
+    </div>
+  </accordion-content>
+</accordion-item>
+
+{% schema %}
+{
+  "name": "t:block.accordion.item.name",
+  "tag": null,
+  "blocks": [
+    { "type": "text" },
+    { "type": "button" },
+    { "type": "icon" },
+    { "type": "link" },
+    { "type": "contact-link" },
+    { "type": "divider" },
+    { "type": "media" }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:heading.label",
+      "default": "Accordion"
+    },
+    {
+      "type": "checkbox",
+      "id": "open_by_default",
+      "label": "Open By Default",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.accordion.item.name"
+    }
+  ]
+}
+{% endschema %}

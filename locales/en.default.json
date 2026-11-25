@@ -1,0 +1,115 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin language editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "accessibility": {
+    "close": "Close",
+    "skip_to_content": "Skip to content",
+    "previous_slide": "Previous slide",
+    "next_slide": "Next slide"
+  },
+  "sections": {
+    "specific_products_promo": {
+      "editor_note": "Specific Products Promo — add Collection or Product List to show this section."
+    }
+  },
+  "404": {
+    "title": "404",
+    "not_found": "Page not found.",
+    "back_to_shopping": "Back to shopping"
+  },
+  "blog": {
+    "article_comments": "Comments",
+    "article_metadata_html": "{{ date }} by {{ author }}",
+    "comment_form_body": "Comment",
+    "comment_form_email": "Email",
+    "comment_form_name": "Name",
+    "comment_form_submit": "Post",
+    "comment_form_title": "Add a comment",
+    "article_byline_html": "{{ author }} | Published {{ date }}"
+  },
+  "cart": {
+    "checkout": "Checkout",
+    "title": "Cart",
+    "update": "Update",
+    "remove": "Remove",
+    "continue_shopping": "Continue shopping",
+    "estimated_total": "Estimated total:",
+    "taxes_and_shipping": "Taxes and shipping calculated\nat checkout",
+    "frequently_bought_together": "Frequently bought together",
+    "increase_quantity": "Increase quantity",
+    "decrease_quantity": "Decrease quantity",
+    "uploaded_photo": "Uploaded photo {{ index }}",
+    "free_shipping": {
+      "progress": "You are {{ amount }} away from free shipping!",
+      "unlocked": "You unlocked free shipping!"
+    }
+  },
+  "payment_type": "Payment Type",
+  "customers": {
+    "login": {
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "title": "Login"
+    }
+  },
+  "collections": {
+    "title": "Collections",
+    "general": {
+      "items_with_count": {
+        "one": "{{ count }} item",
+        "other": "{{ count }} items"
+      },
+      "products_with_count": {
+        "one": "{{ count }} Product",
+        "other": "{{ count }} Products"
+      },
+      "no_products": "No products found in this collection.",
+      "read_more": "Read More",
+      "read_less": "Read Less",
+      "seo_placeholder": "SEO description — add {{ setting }} to show this block"
+    }
+  },
+  "gift_card": {
+    "add_to_apple_wallet": "Add to Apple Wallet",
+    "card": "Gift card",
+    "expired": "This gift card has expired",
+    "expires_on": "Expires on {{ expires_on }}",
+    "use_at_checkout": "Use this gift card at checkout"
+  },
+  "password": {
+    "title": "This shop is private",
+    "password": "Password",
+    "enter": "Enter"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search articles, pages, or products",
+    "submit": "Search",
+    "no_results_html": "No results found for {{ terms }}",
+    "results_for_html": "{{ count }} results found for {{ terms }}"
+  },
+  "product": {
+    "quantity": "Quantity",
+    "quantity_increase": "Increase quantity",
+    "quantity_decrease": "Decrease quantity",
+    "quick_view": "Quick view",
+    "quick_view_open": "Quick view for {{ title }}",
+    "quick_view_loading": "Loading product…",
+    "select_options": "Select options"
+  },
+  "facets": {
+    "sort": "Sort by"
+  },
+  "localization": {
+    "label_country_currency": "Change country and currency, currently {{ country }}, {{ currency_code }} {{ currency_symbol }}",
+    "country_currency_heading": "Country and currency"
+  }
+}

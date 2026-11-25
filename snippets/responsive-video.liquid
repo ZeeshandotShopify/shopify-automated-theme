@@ -1,0 +1,249 @@
+{%- liquid
+  assign video = video
+
+  assign unique_suffix = block.id | default: section.id | default: 'now' | date: '%N'
+  assign id = 'responsive-video-' | append: unique_suffix
+
+  assign autoplay = autoplay | default: false
+  assign loop = loop | default: false
+  assign muted = muted | default: false
+
+  assign object_fit = object_fit | default: 'cover'
+
+  assign enable_mobile_size = enable_mobile_size | default: false
+  assign mobile_aspect_ratio = mobile_aspect_ratio | default: '1 / 1'
+  assign mobile_enable_custom_dimension = mobile_enable_custom_dimension | default: false
+  assign mobile_custom_width = mobile_custom_width | default: '100%'
+  assign mobile_custom_height = mobile_custom_height | default: '100%'
+
+  assign desktop_aspect_ratio = desktop_aspect_ratio | default: '1 / 1'
+  assign desktop_enable_custom_dimension = desktop_enable_custom_dimension | default: false
+  assign desktop_custom_width = desktop_custom_width | default: '100%'
+  assign desktop_custom_height = desktop_custom_height | default: '100%'
+
+  assign border_mode = border_mode | default: 'inherit'
+
+  assign mobile_border_top_left_radius = mobile_border_top_left_radius | default: '0'
+  assign mobile_border_top_right_radius = mobile_border_top_right_radius | default: '0'
+  assign mobile_border_bottom_left_radius = mobile_border_bottom_left_radius | default: '0'
+  assign mobile_border_bottom_right_radius = mobile_border_bottom_right_radius | default: '0'
+
+  assign desktop_border_top_left_radius = desktop_border_top_left_radius | default: '0'
+  assign desktop_border_top_right_radius = desktop_border_top_right_radius | default: '0'
+  assign desktop_border_bottom_left_radius = desktop_border_bottom_left_radius | default: '0'
+  assign desktop_border_bottom_right_radius = desktop_border_bottom_right_radius | default: '0'
+
+  assign youtube_url = youtube_url | default: ''
+  assign youtube_id = ''
+  if youtube_url contains 'youtu.be/'
+    assign youtube_id = youtube_url | split: 'youtu.be/' | last | split: '?' | first | split: '&' | first
+  elsif youtube_url contains 'v='
+    assign youtube_id = youtube_url | split: 'v=' | last | split: '&' | first
+  elsif youtube_url contains 'embed/'
+    assign youtube_id = youtube_url | split: 'embed/' | last | split: '?' | first | split: '&' | first
+  endif
+
+  assign youtube_src = ''
+  if youtube_id != blank
+    assign yt_query = ''
+    if autoplay
+      assign yt_query = yt_query | append: 'autoplay=1&'
+    endif
+    if muted or autoplay
+      assign yt_query = yt_query | append: 'mute=1&'
+    endif
+    if loop
+      assign yt_query = yt_query | append: 'loop=1&playlist=' | append: youtube_id | append: '&'
+    endif
+    assign yt_query = yt_query | append: 'rel=0&playsinline=1'
+    assign youtube_src = 'https://www.youtube.com/embed/' | append: youtube_id | append: '?' | append: yt_query
+  endif
+-%}
+
+{%- style -%}
+  #{{ id }} {
+     --object-fit: {{ object_fit }};
+
+     /* Always define both mobile and desktop CSS vars */
+
+     {%- if enable_mobile_size -%}
+       --mobile-aspect-ratio: {{ mobile_aspect_ratio }};
+     {%- endif -%}
+
+     --desktop-aspect-ratio: {{ desktop_aspect_ratio }};
+
+     {%- if mobile_enable_custom_dimension and enable_mobile_size -%}
+       --mobile-width: {{ mobile_custom_width }};
+       --mobile-height: {{ mobile_custom_height }};
+     {%- endif -%}
+
+     {%- if desktop_enable_custom_dimension -%}
+       --desktop-width: {{ desktop_custom_width }};
+       --desktop-height: {{ desktop_custom_height }};
+     {%- endif -%}
+
+     {%- if border_mode == 'custom' -%}
+       --border-tl: {{ mobile_border_top_left_radius }};
+       --border-tr: {{ mobile_border_top_right_radius }};
+       --border-bl: {{ mobile_border_bottom_left_radius }};
+       --border-br: {{ mobile_border_bottom_right_radius }};
+     {%- endif -%}
+
+     display: block;
+     position: relative;
+     overflow: hidden;
+
+     /* Mobile: Use mobile vars if enable_mobile_size is true, otherwise use desktop vars */
+     {%- if enable_mobile_size -%}
+       {%- if mobile_enable_custom_dimension -%}
+         width: var(--mobile-width);
+         height: var(--mobile-height);
+       {%- endif -%}
+       aspect-ratio: var(--aspect-ratio);
+     {%- else -%}
+       {%- if desktop_enable_custom_dimension -%}
+         width: var(--desktop-width);
+         height: var(--desktop-height);
+       {%- endif -%}
+       aspect-ratio: var(--desktop-aspect-ratio);
+     {%- endif -%}
+
+     {%- if border_mode == 'inherit' -%}
+       border-radius: var(--image-border-radius);
+     {%- else -%}
+       border-top-left-radius: var(--border-tl);
+       border-top-right-radius: var(--border-tr);
+       border-bottom-left-radius: var(--border-bl);
+       border-bottom-right-radius: var(--border-br);
+     {%- endif -%}
+   }
+
+   /*
+   #{{ id }} > *,
+   #{{ id }} video,
+   #{{ id }} .video-placeholder {
+     {%- if border_mode == 'inherit' -%}
+       border-radius: var(--image-border-radius);
+     {%- else -%}
+       border-top-left-radius: var(--border-tl);
+       border-top-right-radius: var(--border-tr);
+       border-bottom-left-radius: var(--border-bl);
+       border-bottom-right-radius: var(--border-br);
+     {%- endif -%}
+   }
+   */
+
+   .responsive-video {
+     display: block;
+     width: 100%;
+     height: 100%;
+     object-fit: var(--object-fit);
+   }
+
+   .video-placeholder {
+     background: var(--color-primary-background);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     width: 100%;
+   }
+
+   .video-placeholder svg {
+     color: var(--color-primary-foreground);
+     fill: var(--color-primary-foreground);
+   }
+
+   @media (width >= 64rem) {
+     #{{ id }} {
+       {%- if border_mode == 'custom' -%}
+         --border-tl: {{ desktop_border_top_left_radius }};
+         --border-tr: {{ desktop_border_top_right_radius }};
+         --border-bl: {{ desktop_border_bottom_left_radius }};
+         --border-br: {{ desktop_border_bottom_right_radius }};
+       {%- endif -%}
+
+       {%- if desktop_enable_custom_dimension -%}
+         width: var(--desktop-width);
+         height: var(--desktop-height);
+       {%- else -%}
+         width: auto;
+         height: auto;
+       {%- endif -%}
+        aspect-ratio: var(--desktop-aspect-ratio);
+
+       {%- if border_mode == 'inherit' -%}
+         border-radius: var(--image-border-radius);
+       {%- else -%}
+         border-top-left-radius: var(--border-tl);
+         border-top-right-radius: var(--border-tr);
+         border-bottom-left-radius: var(--border-bl);
+         border-bottom-right-radius: var(--border-br);
+       {%- endif -%}
+     }
+
+     /*
+     #{{ id }} > *,
+     #{{ id }} video,
+     #{{ id }} .video-placeholder {
+       {%- if border_mode == 'inherit' -%}
+         border-radius: var(--image-border-radius);
+       {%- else -%}
+         border-top-left-radius: var(--border-tl-desktop);
+         border-top-right-radius: var(--border-tr-desktop);
+         border-bottom-left-radius: var(--border-bl-desktop);
+         border-bottom-right-radius: var(--border-br-desktop);
+       {%- endif -%}
+     }
+     */
+   }
+{%- endstyle -%}
+
+<div
+  id="{{ id }}"
+  {{ shopify_attributes }}
+>
+  {%- if youtube_id != blank -%}
+    <iframe
+      src="{{ youtube_src }}"
+      class="responsive-video"
+      loading="lazy"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      title="YouTube video"
+    ></iframe>
+  {%- else -%}
+    <video-player>
+      {%- if video != blank -%}
+        {{
+          video
+          | video_tag:
+            image_size: '1200x',
+            autoplay: autoplay,
+            loop: loop,
+            muted: mute,
+            controls: false,
+            class: 'responsive-video',
+            playsinline: true,
+            data-target: 'video-source'
+        }}
+
+        <play-video>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </play-video>
+
+        <pause-video>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+          </svg>
+        </pause-video>
+      {%- else -%}
+        <div class="responsive-video video-placeholder">
+          {{ 'lifestyle-1' | placeholder_svg_tag }}
+        </div>
+      {%- endif -%}
+    </video-player>
+  {%- endif -%}
+</div>

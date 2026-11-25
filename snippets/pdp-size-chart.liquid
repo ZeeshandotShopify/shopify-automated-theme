@@ -1,0 +1,147 @@
+{%- liquid
+  assign size_chart_label = block.settings.size_chart_label | default: 'Size Chart'
+  assign size_chart_source = block.settings.size_chart_source | default: 'page'
+  assign size_chart_url = block.settings.size_chart_url
+  assign size_chart_anchor_attributes = block.settings.size_chart_anchor_attributes | strip
+-%}
+
+{% stylesheet %}
+  .pdp-size-chart dialog-trigger button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .pdp-size-chart dialog-trigger svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .pdp-size-chart-dialog-content {
+    width: auto;
+  }
+
+  .pdp-size-chart--link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .pdp-size-chart--link span {
+    text-decoration: underline;
+  }
+
+  .pdp-size-chart--link svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .pdp-size-chart__dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pdp-size-chart__dialog-title {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.75rem; /* 28px */
+    font-weight: 600;
+  }
+
+  .pdp-size-chart__content.rte table {
+    display: table;
+    border-collapse: separate;
+    border-spacing: 4px;
+    border-color: #aaa;
+  }
+
+  .pdp-size-chart__content.rte th {
+    display: table-cell;
+    vertical-align: middle;
+    font-weight: bold;
+    text-align: center;
+    border: 1px dashed #aaa; /* The dashed border */
+    padding: 10px 15px; /* Space inside the box */
+    text-align: left;
+  }
+
+  .pdp-size-chart__content.rte td {
+    display: table-cell;
+    vertical-align: middle;
+    border: 1px dashed#aaa; /* The dashed border */
+    padding: 10px 15px; /* Space inside the box */
+    text-align: left;
+  }
+
+  .pdp-size-chart__content.rte thead {
+    display: table-header-group;
+    vertical-align: middle;
+    border-color: inherit;
+  }
+
+  .pdp-size-chart__content.rte tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+  }
+
+  .pdp-size-chart__content.rte tr {
+    display: table-row;
+    vertical-align: inherit;
+    border-color: inherit;
+  }
+{% endstylesheet %}
+
+{%- capture size_chart_icon -%}
+  {%- if block.settings.size_chart_icon != blank -%}
+    {{- block.settings.size_chart_icon -}}
+  {%- else -%}
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2.39979 1.28003C1.76939 1.28003 1.27979 1.81123 1.27979 2.40003V7.20003L8.47978 14.4C8.68251 14.6027 8.93531 14.7168 9.19978 14.72C9.47258 14.7232 9.71082 14.6091 9.91978 14.4L14.3998 9.92003C14.6049 9.71491 14.7191 9.46611 14.7198 9.20995C14.7204 8.95203 14.6063 8.68675 14.3998 8.48003L7.19979 1.28003H2.39979ZM3.67979 2.72003C3.91318 2.72003 4.13701 2.81274 4.30204 2.97778C4.46707 3.14281 4.55979 3.36664 4.55979 3.60003C4.55979 3.83342 4.46707 4.05725 4.30204 4.22228C4.13701 4.38732 3.91318 4.48003 3.67979 4.48003C3.44639 4.48003 3.22256 4.38732 3.05753 4.22228C2.8925 4.05725 2.79979 3.83342 2.79979 3.60003C2.79979 3.36664 2.8925 3.14281 3.05753 2.97778C3.22256 2.81274 3.44639 2.72003 3.67979 2.72003Z" fill="#111315"/>
+    </svg>
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- if size_chart_source == 'url' -%}
+  {%- if size_chart_url != blank -%}
+    <a
+      class="pdp-size-chart pdp-size-chart--link"
+      href="{{ size_chart_url }}"
+      aria-label="Size chart"
+      role="link"
+      {{ block.shopify_attributes }}
+      {%- if size_chart_anchor_attributes != blank %}
+        {{ size_chart_anchor_attributes -}}
+      {% endif -%}
+    >
+      {{- size_chart_icon -}}
+      <span>{{- size_chart_label -}}</span>
+    </a>
+  {%- endif -%}
+{%- else -%}
+  <dialog-menu class="pdp-size-chart" {{ block.shopify_attributes }}>
+    <dialog-trigger>
+      <button>
+        {{- size_chart_icon -}}
+        {{- size_chart_label -}}
+      </button>
+    </dialog-trigger>
+    <dialog-content class="pdp-size-chart-dialog-content">
+      <div class="pdp-size-chart__dialog-header">
+        <h2 class="pdp-size-chart__dialog-title">
+          {{- size_chart_label -}}
+        </h2>
+
+        <dialog-close>
+          {{ 'close.svg' | inline_asset_content }}
+        </dialog-close>
+      </div>
+
+      <div class="pdp-size-chart__content rte">
+        {{- block.settings.size_chart_page.content -}}
+      </div>
+    </dialog-content>
+  </dialog-menu>
+{%- endif -%}

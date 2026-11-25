@@ -1,0 +1,144 @@
+/* ========================================================================== */
+/* PhotoSwipe Theme: PDP                                                      */
+/* ========================================================================== */
+
+/* Base gallery behavior (click targets) */
+a.pswp-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ========================================================================== */
+/* Overlay + Variables                                                        */
+/* ========================================================================== */
+
+.pswp.pswp-theme-pdp {
+  --pswp-bg: var(--color-background);
+}
+
+/* ========================================================================== */
+/* Toolbar + Navigation Buttons                                                */
+/* ========================================================================== */
+
+.pswp.pswp-theme-pdp .pswp__button {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-background);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s !important;
+}
+
+.pswp.pswp-theme-pdp .pswp__button:hover {
+  transform: scale(1.1);
+  background-color: rgba(var(--color-foreground-rgb), 0.1);
+}
+
+.pswp.pswp-theme-pdp .pswp__button--arrow:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* ========================================================================== */
+/* Layout (Close, Arrows, Counter)                                             */
+/* ========================================================================== */
+
+.pswp.pswp-theme-pdp .pswp__top-bar {
+  position: relative;
+}
+
+.pswp.pswp-theme-pdp .pswp__counter {
+  position: absolute;
+  left: 2rem;
+  top: 2rem;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  border-radius: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 48px;
+  line-height: 48px;
+  padding: 0 20px;
+  font-size: 14px;
+  margin: 0;
+  opacity: 1;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  text-shadow: none;
+}
+
+.pswp.pswp-theme-pdp .pswp__button--close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+}
+
+.pswp.pswp-theme-pdp .pswp__button--zoom {
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pswp.pswp-theme-pdp .pswp__button--zoom:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.pswp.pswp-theme-pdp .pswp__button--arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.pswp.pswp-theme-pdp .pswp__button--arrow--prev {
+  left: 2rem;
+}
+
+.pswp.pswp-theme-pdp .pswp__button--arrow--next {
+  right: 2rem;
+}
+
+/* Hide the default PhotoSwipe icon container (we provide custom SVGs via JS) */
+.pswp.pswp-theme-pdp .pswp__icn {
+  display: none !important;
+}
+
+/* Ensure custom SVG icons are visible and theme-colored */
+.pswp.pswp-theme-pdp .pswp__button svg {
+  display: block !important;
+  width: 20px;
+  height: 20px;
+  stroke: var(--color-foreground);
+  stroke-width: 1.5px;
+  fill: none;
+  pointer-events: none;
+}
+
+/* ========================================================================== */
+/* Captions                                                                    */
+/* ========================================================================== */
+
+.pswp.pswp-theme-pdp .pswp__caption {
+  color: var(--color-foreground);
+}
+
+.pswp.pswp-theme-pdp .pswp__caption__center {
+  max-width: 60rem;
+}
+
+/* ========================================================================== */
+/* Responsive                                                                  */
+/* ========================================================================== */
+
+@media (width >= 64rem) {
+  .pswp.pswp-theme-pdp .pswp__button {
+    width: 48px;
+    height: 48px;
+  }
+}

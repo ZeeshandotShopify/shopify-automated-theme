@@ -1,0 +1,130 @@
+{%- stylesheet -%}
+  .collection-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+
+    /* padding-left: var(--gutter); */
+    /* padding-right: var(--gutter); */
+  }
+
+  .collection-tab {
+    position: relative;
+    color: var(--fg-color);
+    font-family: var(--collection-title-font-family);
+    font-size: var(--collection-title-font-size);
+    line-height: var(--collection-title-line-height);
+    font-weight: var(--collection-title-font-weight);
+    text-transform: var(--collection-title-text-transform);
+    cursor: pointer;
+    transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
+      opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    opacity: 0.25;
+
+    /* Ensure the button doesn't shrink if text is long */
+    flex-shrink: 0;
+  }
+
+  .collection-tab:hover {
+    opacity: 1;
+  }
+
+  /* base pseudo */
+  .collection-tab::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform-origin: left center;
+    transform: scaleX(0);
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  .collection-tab.active {
+    color: var(--collection-title-active-color);
+    opacity: 1;
+  }
+
+  .collection-tab.active::after {
+    animation: underline-slide 360ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  }
+
+  @keyframes underline-slide {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .collection-tabs span {
+    color: var(--fg-color);
+    font-family: var(--collection-title-font-family);
+    font-size: var(--collection-title-font-size);
+    line-height: var(--collection-title-line-height);
+    font-weight: var(--collection-title-font-weight);
+    text-transform: var(--collection-title-text-transform);
+    opacity: 0.25;
+  }
+{%- endstylesheet -%}
+
+<scroll-shadow data-target-active="collection-tab">
+  <collection-tabs data-target="collection-tabs-swiper-{{ section.id }}" class="collection-tabs">
+    {%- if section_blocks.size > 0 -%}
+      {%- assign rendered_tab_count = 0 -%}
+      {%- for block in section_blocks -%}
+        {%- liquid
+          assign collection = collections[block.settings.collection]
+          assign title_override = block.settings.title_override | strip
+          assign has_products = false
+          if collection != blank and collection.all_products_count > 0
+            assign has_products = true
+          endif
+
+          assign should_render = has_products
+          if request.design_mode
+            assign should_render = true
+          endif
+
+          assign tab_title = title_override | default: collection.title
+          assign tab_collection = block.settings.collection
+          if tab_collection == blank
+            assign tab_collection = 'placeholder-' | append: block.id
+          endif
+        -%}
+
+        {%- if should_render -%}
+          {%- if rendered_tab_count > 0 -%}
+            <span>/</span>
+          {%- endif -%}
+          <button
+            data-collection="{{ tab_collection }}"
+            class="collection-tab {% if rendered_tab_count == 0 %}active{% endif %}"
+            {{ block.shopify_attributes }}
+          >
+            {%- if tab_title != blank -%}
+              {{ tab_title }}
+            {%- else -%}
+              Tab {{ forloop.index }}
+            {%- endif -%}
+          </button>
+          {%- assign rendered_tab_count = rendered_tab_count | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- else -%}
+      {%- comment -%} Placeholder tabs {%- endcomment -%}
+      <button data-collection="placeholder-1" class="collection-tab active">New Arrivals</button>
+      <span>/</span>
+      <button data-collection="placeholder-2" class="collection-tab">Best Sellers</button>
+      <span>/</span>
+      <button data-collection="placeholder-3" class="collection-tab">Sale Items</button>
+    {%- endif -%}
+  </collection-tabs>
+</scroll-shadow>

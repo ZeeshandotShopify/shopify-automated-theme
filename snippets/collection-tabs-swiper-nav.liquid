@@ -1,0 +1,36 @@
+{%- stylesheet -%}
+  .collection-tabs-swiper-nav {
+    display: none;
+  }
+
+  .collection-tabs-swiper-nav button {
+    cursor: pointer;
+  }
+
+  .collection-tabs-swiper-prev.swiper-button-disabled,
+  .collection-tabs-swiper-next.swiper-button-disabled {
+    opacity: 0.2;
+  }
+
+  @media (width >= 64rem) {
+    .collection-tabs-swiper-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+{%- endstylesheet -%}
+
+<div class="collection-tabs-swiper-nav">
+  <button class="collection-tabs-swiper-prev" aria-label="Previous slide">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M17 5.20177L9.612 12L17 18.7982L15.694 20L7 12L15.694 4L17 5.20177Z" fill="currentColor"/>
+    </svg>
+  </button>
+
+  <button class="collection-tabs-swiper-next" aria-label="Next slide">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M7 18.7982L14.388 12L7 5.2018L8.30602 4L17 12L8.30602 20L7 18.7982Z" fill="currentColor"/>
+    </svg>
+  </button>
+</div>

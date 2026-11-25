@@ -1,0 +1,248 @@
+{%- comment -%}
+  Quick view panel.
+
+  Rendered on the alternate product template `templates/product.quick-view.json`
+  and fetched by `assets/quick-view.js` via `/products/<handle>?view=quick-view`.
+  The fetched markup is portalled into a `<dialog-menu>` (desktop) or
+  `<sheet-menu>` (mobile) on the collection page.
+
+  It lives on its own template — rather than as a second section inside
+  `templates/product.json` — because Recharge allows one subscription widget per
+  template, and because `@app` blocks cannot be rendered by `{% section %}`.
+
+  `#QuickViewRoot` is the extraction handle: quick-view.js takes this element and
+  nothing else from the response.
+{%- endcomment -%}
+
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign form_id = 'QuickViewForm'
+
+  assign on_sale = false
+  if variant.compare_at_price > variant.price
+    assign on_sale = true
+  endif
+
+  assign review_count = product.metafields.reviews.rating_count | default: 0 | plus: 0
+-%}
+
+<div
+  id="QuickViewRoot"
+  class="quick-view"
+  data-product-url="{{ product.url }}"
+  data-product-title="{{ product.title | escape }}"
+>
+  {%- comment -%} Media column — scrolls through every product image. {%- endcomment -%}
+  <div class="quick-view__media">
+    {%- if product.media.size > 0 -%}
+      {%- for media in product.media -%}
+        {%- liquid
+          assign media_alt = media.alt | default: product.title | escape
+          # The panel is on screen the moment it is injected, so the first image
+          # is never below the fold — lazy-loading it only buys an empty column.
+          assign media_loading = 'lazy'
+          if forloop.first
+            assign media_loading = 'eager'
+          endif
+        -%}
+        <div class="quick-view__media-item">
+          {{
+            media
+            | image_url: width: 680
+            | image_tag:
+              loading: media_loading,
+              widths: '340, 680, 1020',
+              sizes: '(min-width: 64rem) 340px, 153px',
+              alt: media_alt,
+              class: 'quick-view__image'
+          }}
+        </div>
+      {%- endfor -%}
+    {%- else -%}
+      <div class="quick-view__media-item quick-view__media-item--empty">
+        {{ 'product-1' | placeholder_svg_tag: 'quick-view__image' }}
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- comment -%} Details column. {%- endcomment -%}
+  <div class="quick-view__details">
+    <div class="quick-view__header">
+      <span class="quick-view__sheet-title">{{ 'products.quick_view.sheet_title' | t }}</span>
+      <button
+        type="button"
+        class="quick-view__close"
+        data-quick-view-close
+        aria-label="{{ 'products.quick_view.close' | t }}"
+      >
+        {%- render 'icon', icon_mode: 'select', icon_select: 'close' -%}
+      </button>
+    </div>
+
+    {%- comment -%}
+      Mobile puts the thumbnail beside the title; desktop uses the media column
+      above. One markup, two layouts — the thumbnail is hidden at >= 64rem.
+    {%- endcomment -%}
+    <div class="quick-view__summary">
+      <div class="quick-view__thumb">
+        {%- if product.featured_media -%}
+          {%- assign thumb_alt = product.title | escape -%}
+          {{
+            product.featured_media
+            | image_url: width: 306
+            | image_tag: loading: 'eager', widths: '153, 306', sizes: '153px', alt: thumb_alt
+          }}
+        {%- else -%}
+          {{ 'product-1' | placeholder_svg_tag: '' }}
+        {%- endif -%}
+      </div>
+
+      <div class="quick-view__info">
+        <h2 class="quick-view__title">{{ product.title }}</h2>
+
+        {%- if review_count > 0 and product.metafields.judgeme.badge -%}
+          <div
+            class="quick-view__rating jdgm-widget jdgm-preview-badge"
+            data-id="{{ product.id }}"
+            data-auto-install="false"
+          >
+            {{ product.metafields.judgeme.badge }}
+          </div>
+        {%- endif -%}
+
+        <div class="quick-view__price-row">
+          <div class="quick-view__price-stack">
+            <span class="quick-view__price" data-quick-view-price>
+              {{- variant.price | money_with_currency -}}
+            </span>
+            {%- if on_sale -%}
+              <s class="quick-view__compare">{{ variant.compare_at_price | money_with_currency }}</s>
+            {%- endif -%}
+          </div>
+
+          {%- if on_sale -%}
+            {%- assign saving = variant.compare_at_price | minus: variant.price -%}
+            <span class="quick-view__save">
+              {{- 'products.quick_view.save' | t: amount: saving | money_with_currency -}}
+            </span>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+
+    <hr class="quick-view__divider">
+
+    {%- comment -%}
+      The Recharge subscription widget renders here as an `@app` block. It finds
+      the form below by scanning `document.forms` for an action containing
+      /cart/add whose `[name="id"]` matches, then prepends a hidden
+      `selling_plan` input into it. quick-view.js masks the product-card forms
+      while the panel is open so the widget cannot bind to the wrong one.
+    {%- endcomment -%}
+    <div class="quick-view__purchase-options">
+      {% content_for 'blocks' %}
+    </div>
+
+    <hr class="quick-view__divider">
+
+    {% form 'product', product, id: form_id, class: 'quick-view__form', novalidate: 'novalidate' %}
+      <input type="hidden" name="id" value="{{ variant.id }}">
+
+      <div class="quick-view__cart-row">
+        <quantity-selector class="quick-view__quantity" data-max="{{ variant.inventory_quantity }}">
+          <button
+            type="button"
+            class="quick-view__quantity-button"
+            data-quantity-minus
+            aria-label="{{ 'products.quick_view.decrease' | t }}"
+          >
+            {{- 'subtract.svg' | inline_asset_content -}}
+          </button>
+          <input
+            id="QuickViewQuantity"
+            class="quick-view__quantity-input"
+            name="quantity"
+            type="number"
+            min="1"
+            value="1"
+            pattern="[0-9]*"
+            inputmode="numeric"
+            aria-label="{{ 'product.quantity' | t }}"
+          >
+          <button
+            type="button"
+            class="quick-view__quantity-button"
+            data-quantity-plus
+            aria-label="{{ 'products.quick_view.increase' | t }}"
+          >
+            {{- 'add.svg' | inline_asset_content -}}
+          </button>
+        </quantity-selector>
+
+        {%- comment -%}
+          `<add-to-cart>` is the theme's AJAX submit contract (assets/cart.js).
+          It binds on connectedCallback via the button's `form` attribute, so it
+          works once this markup is portalled to <body>. The `.atc-button__text`
+          / `.atc-button__loader` pair is the loading-state contract it expects.
+
+          Desktop and mobile carry different copy — Figma shows "ADD TO CART" on
+          the modal and "Add to bag" with a plus glyph on the sheet — so both are
+          rendered and the cascade picks one. `display: none` keeps the unused
+          label out of the accessibility tree, so no aria juggling is needed.
+        {%- endcomment -%}
+        <add-to-cart class="quick-view__atc">
+          <button
+            type="submit"
+            form="{{ form_id }}"
+            class="quick-view__submit"
+            {% unless variant.available %}
+              disabled
+            {% endunless %}
+          >
+            <span class="atc-button__text">
+              {%- if variant.available -%}
+                <span class="quick-view__label quick-view__label--desktop">
+                  {{- 'products.quick_view.add_to_cart' | t -}}
+                </span>
+                <span class="quick-view__label quick-view__label--mobile">
+                  {{- 'products.quick_view.add_to_bag' | t -}}
+                  {%- comment -%}
+                    Figma 2176:550 is 13x13. The icon snippet writes its own
+                    `#icon-… svg { width: var(--icon-size) }` rule, and an id
+                    beats any class here — so the size has to come through its
+                    own `icon_size` argument rather than from a stylesheet.
+                  {%- endcomment -%}
+                  <span class="quick-view__label-icon" aria-hidden="true">
+                    {%- render 'icon',
+                      id: 'quick-view-plus',
+                      icon_mode: 'select',
+                      icon_select: 'plus',
+                      icon_size: 13
+                    -%}
+                  </span>
+                </span>
+              {%- else -%}
+                {{ 'products.product.sold_out' | t }}
+              {%- endif -%}
+            </span>
+            <span class="atc-button__loader"><div class="loader"></div></span>
+          </button>
+        </add-to-cart>
+      </div>
+
+      <p class="quick-view__error" data-quick-view-error hidden></p>
+    {% endform %}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:section.quick_view.name",
+  "tag": "div",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "blocks": [{ "type": "@app" }],
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,841 @@
+{% comment %}
+  Section: Product List (collection grid)
+
+  Mobile-first. Desktop styles apply from 64rem up.
+
+  Renders four stacked bands inside one shared container, matching the Figma
+  "Three Column Product Grid With Filters" frames (47:943 desktop / 47:2071 mobile):
+    1. toolbar  — product count + filter/sort chips
+    2. grid     — the product cards
+    3. pagination
+    4. SEO description — heading + collapsible rich text
+
+  Bands 2 and 3 both live inside #ProductList because assets/filters.js replaces
+  that element's innerHTML wholesale on every filter, sort and page change. The SEO
+  band is deliberately a SIBLING of #ProductList: inside it, it would be destroyed
+  and rebuilt on each filter change, and injected <script> tags never re-execute,
+  so its read-more toggle would stop working after the first interaction.
+{% endcomment %}
+
+{%- liquid
+  assign seo_heading = section.settings.seo_heading
+  assign seo_body = section.settings.seo_description
+
+  comment
+    A blank richtext setting arrives as "<p></p>", not as blank, so strip markup
+    before testing it or an empty paragraph renders and holds the gap open.
+  endcomment
+  assign seo_body_text = seo_body | strip_html | strip
+
+  assign show_seo = false
+  if seo_body_text != blank
+    assign show_seo = true
+  endif
+
+  assign show_seo_placeholder = false
+  if show_seo == false and request.design_mode
+    assign show_seo_placeholder = true
+  endif
+-%}
+
+{% style %}
+  #products-{{ section.id }} {
+    /* ---- Structure (Figma: 32px is the section's beat at both breakpoints) ---- */
+    --products-content-gap: 32px;
+    --products-toolbar-gap: 24px;
+
+    /* ---- Grid ---- */
+    --products-grid-columns: {{ section.settings.mobile_grid_columns }};
+    --products-grid-column-gap: 15px;
+    --products-grid-row-gap: 40px;
+
+    /* ---- Card image ---- */
+    --desktop-image-ratio: {{ section.settings.desktop_aspect_ratio }};
+    --mobile-image-ratio: {{ section.settings.mobile_aspect_ratio }};
+    --image-border-radius: 15px;
+    --image-border-thickness: 0px;
+    --products-image-placeholder: #eae8e6;
+
+    /* ---- Card typography ---- */
+    --products-card-text-color: #212426;
+    --products-count-color: #34393c;
+    --products-star-size: 16px;
+    --products-star-gap: 2px;
+
+    /* ---- Round icon add-to-cart (consumed by snippets/product-card.liquid) ---- */
+    --card-atc-icon-size: 32px;
+    --card-atc-icon-inset: 8px;
+    --card-atc-icon-glyph-size: 16px;
+    --card-atc-icon-background: #ffffff;
+    --card-atc-icon-foreground: #212426;
+    --card-atc-icon-hover-background: #ffffff;
+    --card-atc-icon-hover-foreground: #212426;
+
+    /* ---- Pagination: 32px root gap + 40px own top padding = 72px visual ---- */
+    --products-pagination-offset: 72px;
+
+    /* ---- SEO band: 32px root gap + 40px own top padding = 72px visual ---- */
+    --products-seo-offset: 40px;
+    --products-seo-color: #474e52;
+    --products-seo-heading-size: 18px;
+    --products-seo-heading-gap: 25px;
+    --products-seo-body-size: 16px;
+    --products-seo-action-color: #212426;
+    --products-seo-clamp-lines: 3;
+
+    /* ---- Padding ---- */
+    --products-padding-top: {{ section.settings.mobile_padding_top }}px;
+    --products-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+    --products-padding-left: {{ section.settings.mobile_padding_left }}px;
+    --products-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+    {%- if section.settings.bg_color_mode == 'custom' -%}
+      background: {{ section.settings.bg_color }};
+    {%- else -%}
+      background: var(--color-background);
+    {%- endif -%}
+  }
+
+  #products-{{ section.id }} .products-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--products-content-gap);
+    padding: var(--products-padding-top) var(--products-padding-right) var(--products-padding-bottom)
+      var(--products-padding-left);
+  }
+
+  /* ---------- 1. Toolbar ---------- */
+
+  #products-{{ section.id }} .products-toolbar {
+    display: grid;
+    gap: var(--products-toolbar-gap);
+  }
+
+  #products-{{ section.id }} .products-count {
+    font-family: var(--font-heading--family);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--products-count-color);
+  }
+
+  /* ---------- 2. Grid ---------- */
+
+  #products-{{ section.id }} .products {
+    display: grid;
+    grid-template-columns: repeat(var(--products-grid-columns), minmax(0, 1fr));
+    column-gap: var(--products-grid-column-gap);
+    row-gap: var(--products-grid-row-gap);
+  }
+
+  #products-{{ section.id }} #ProductList.loading {
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  #products-{{ section.id }} .products-empty {
+    font-family: var(--font-body--family);
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--products-card-text-color);
+  }
+
+  /* ---------- Card overrides ----------
+     snippets/product-card.liquid is shared by six sections, so every card change
+     is made here as scoped CSS rather than in the snippet. */
+
+  #products-{{ section.id }} .product-image-container {
+    background: var(--products-image-placeholder);
+  }
+
+  #products-{{ section.id }} .product-title,
+  #products-{{ section.id }} .product-price {
+    font-family: var(--font-body--family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--products-card-text-color);
+  }
+
+  #products-{{ section.id }} .product-price-container,
+  #products-{{ section.id }} .product-price-container-content {
+    gap: 0;
+  }
+
+  /* Figma stars: 16px, 2px apart, Accent/500 (= --color-star-rating-foreground).
+     The design shows no numeric rating or review count, so Judge.me's count text
+     is hidden inside this grid only. */
+  #products-{{ section.id }} .product-card .jdgm-preview-badge .jdgm-prev-badge__stars {
+    gap: var(--products-star-gap);
+  }
+
+  #products-{{ section.id }} .product-card .jdgm-prev-badge__text {
+    display: none;
+  }
+
+  #products-{{ section.id }} .product-card .jdgm-star.jdgm--on:before,
+  #products-{{ section.id }} .product-card .jdgm-star.jdgm--half:before,
+  #products-{{ section.id }} .product-card .jdgm-star.jdgm--off:before {
+    font-size: var(--products-star-size);
+  }
+
+  #products-{{ section.id }} .product-card-placeholder-rating {
+    gap: var(--products-star-gap);
+  }
+
+  #products-{{ section.id }} .product-card-placeholder-star {
+    width: var(--products-star-size);
+    height: var(--products-star-size);
+  }
+
+  /* ---------- 3. Pagination ---------- */
+
+  #products-{{ section.id }} .pagination-nav {
+    margin-top: var(--products-pagination-offset);
+    gap: 4px;
+  }
+
+  /* The pill radius (10px) and the active fill (#212426) both come from the
+     Pagination theme globals, so only geometry and type are set here. */
+  #products-{{ section.id }} .pagination-nav-button {
+    width: 32px;
+    height: 32px;
+    font-family: var(--font-body--family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--products-card-text-color);
+  }
+
+  /* This id-scoped selector outranks the snippet's `.pagination-nav-button.current-page`,
+     so the active pill's foreground has to be restated or its label goes dark-on-dark. */
+  #products-{{ section.id }} .pagination-nav-button.current-page {
+    color: var(--color-pagination-nav-foreground);
+  }
+
+  #products-{{ section.id }} .pagination-nav-button:hover {
+    color: var(--color-pagination-nav-hover-foreground);
+  }
+
+  #products-{{ section.id }} .pagination-nav-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* ---------- 4. SEO description ---------- */
+
+  #products-{{ section.id }} .products-seo {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: var(--products-seo-offset);
+  }
+
+  #products-{{ section.id }} .products-seo-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--products-seo-heading-gap);
+  }
+
+  #products-{{ section.id }} .products-seo-heading {
+    font-family: var(--font-heading--family);
+    font-size: var(--products-seo-heading-size);
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--products-seo-color);
+  }
+
+  #products-{{ section.id }} .products-seo-body,
+  #products-{{ section.id }} .products-seo-body.rte {
+    font-family: var(--font-body--family);
+    font-size: var(--products-seo-body-size);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--products-seo-color);
+
+    /* Clamped by default; the inline script reveals the toggle only when the copy
+       actually overflows. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--products-seo-clamp-lines);
+    overflow: hidden;
+  }
+
+  #products-{{ section.id }} .products-seo-body.expanded {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+
+  /* Figma spaces body paragraphs by one blank 16px line (1.4em). */
+  #products-{{ section.id }} .products-seo-body p {
+    margin-bottom: 1.4em;
+  }
+
+  #products-{{ section.id }} .products-seo-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* .rte gives anchors the theme's article-link colour; keep them on the copy
+     colour instead, underline retained. */
+  #products-{{ section.id }} .products-seo-body a {
+    color: inherit;
+  }
+
+  /* A bare text + chevron toggle: no border, no background, no padding. */
+  #products-{{ section.id }} .products-seo-toggle {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: var(--font-body--family);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--products-seo-action-color);
+    cursor: pointer;
+  }
+
+  #products-{{ section.id }} .products-seo-toggle svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+  }
+
+  #products-{{ section.id }} .products-seo-toggle.expanded svg {
+    transform: rotate(180deg);
+  }
+
+  #products-{{ section.id }} .products-seo-toggle .read-more-text,
+  #products-{{ section.id }} .products-seo-toggle .read-less-text {
+    display: none;
+  }
+
+  #products-{{ section.id }} .products-seo-toggle:not(.expanded) .read-more-text {
+    display: inline;
+  }
+
+  #products-{{ section.id }} .products-seo-toggle.expanded .read-less-text {
+    display: inline;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #products-{{ section.id }} .products-seo-toggle svg {
+      transition: none;
+    }
+  }
+
+  /* Mobile image ratio, forced past snippets/responsive-image.liquid's own value. */
+  @media (width < 64rem) {
+    #products-{{ section.id }} .product-image-container,
+    #products-{{ section.id }} .product-image-container > div {
+      aspect-ratio: var(--mobile-image-ratio) !important;
+    }
+  }
+
+  /* ---------- Desktop ---------- */
+
+  @media (width >= 64rem) {
+    #products-{{ section.id }} {
+      --products-toolbar-gap: 32px;
+      --products-grid-columns: {{ section.settings.desktop_grid_columns }};
+      --products-grid-column-gap: 16px;
+      --products-grid-row-gap: 48px;
+      --products-pagination-offset: 80px;
+      --products-seo-offset: 48px;
+      --products-seo-clamp-lines: 2;
+
+      --products-padding-top: {{ section.settings.desktop_padding_top }}px;
+      --products-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+      --products-padding-left: {{ section.settings.desktop_padding_left }}px;
+      --products-padding-right: {{ section.settings.desktop_padding_right }}px;
+    }
+
+    #products-{{ section.id }} .product-image-container,
+    #products-{{ section.id }} .product-image-container > div {
+      aspect-ratio: var(--desktop-image-ratio) !important;
+    }
+
+    /* Figma desktop: name and price share one row, price flush right, stars
+       spanning the row beneath. Title and price are placed explicitly so the row
+       survives the optional vendor line, which sits between them in the DOM. */
+    #products-{{ section.id }} .product-details {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      column-gap: 1rem;
+      row-gap: 8px;
+    }
+
+    #products-{{ section.id }} .product-title {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    #products-{{ section.id }} .product-price-container {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: end;
+    }
+
+    #products-{{ section.id }} .product-card .jdgm-widget,
+    #products-{{ section.id }} .product-card-placeholder-rating,
+    #products-{{ section.id }} .product-card product-card-variant-selector,
+    #products-{{ section.id }} .product-card .product-vendor {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* The design draws no add-to-cart on desktop cards, so the icon button is
+     revealed on hover there and left persistent on touch. */
+  @media (width >= 64rem) and (hover: hover) {
+    #products-{{ section.id }} .product-card-add-to-cart--icon {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    #products-{{ section.id }} .product-card:hover .product-card-add-to-cart--icon,
+    #products-{{ section.id }} .product-card:focus-within .product-card-add-to-cart--icon {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #products-{{ section.id }} .product-card-add-to-cart--icon {
+      transition: none;
+    }
+  }
+
+  /* The labelled add-to-cart button is hidden below 64rem by the shared snippet;
+     inside this section the setting should mean what it says at both sizes. */
+  @media (width < 64rem) {
+    #products-{{ section.id }} .product-card--atc-button .product-card-add-to-cart {
+      display: block;
+    }
+  }
+{% endstyle %}
+
+<div id="products-{{ section.id }}">
+  <div class="shopify-page-width">
+    <div class="products-container">
+      {% if collection.products.size > 0 %}
+        {% comment %}! 1. Toolbar — count + filter/sort chips {% endcomment %}
+        <div class="products-toolbar">
+          <p class="products-count">
+            {{ 'collections.general.products_with_count' | t: count: collection.all_products_count }}
+          </p>
+
+          {%- render 'filters-sort-bar',
+            filter_target_id: 'ProductList',
+            filters: collection.filters,
+            sort_options: collection.sort_options,
+            collection: collection,
+            sort_by: collection.sort_by
+          -%}
+        </div>
+
+        {% comment %}! 2. Grid + 3. Pagination — both replaced together by filters.js {% endcomment %}
+        {% paginate collection.products by section.settings.products_per_page %}
+          <div id="ProductList" data-section-id="{{ section.id }}">
+            <div class="products">
+              {%- for block in section.blocks -%}
+                {%- if block.type == 'product_card' -%}
+                  {% for product in collection.products %}
+                    {% render 'product-card',
+                      product: product,
+                      aspect_ratio: section.settings.desktop_aspect_ratio,
+                      secondary_image_hover_effect: block.settings.secondary_image_hover_effect,
+                      show_discounted_promo: block.settings.show_discounted_promo,
+                      show_rating: block.settings.show_rating,
+                      show_color_variants: block.settings.show_color_variants,
+                      show_size_variants: block.settings.show_size_variants,
+                      show_add_to_cart: block.settings.show_add_to_cart,
+                      add_to_cart_style: block.settings.add_to_cart_style,
+                      show_vendor: block.settings.show_vendor,
+                      show_quick_view: block.settings.show_quick_view
+                    %}
+                  {% endfor %}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+
+            {% render 'pagination-nav', paginate: paginate, pagination_nav_target_id: 'ProductList' %}
+          </div>
+        {% endpaginate %}
+      {% else %}
+        <p class="products-empty">{{ 'collections.general.no_products' | t }}</p>
+      {% endif %}
+
+      {% comment %}! 4. SEO description — sibling of #ProductList, never a child {% endcomment %}
+      {%- if show_seo -%}
+        <div class="products-seo">
+          <div class="products-seo-copy">
+            {%- if seo_heading != blank -%}
+              <h2 class="products-seo-heading">{{ seo_heading | escape }}</h2>
+            {%- endif -%}
+
+            <div class="products-seo-body rte" data-expandable-content>
+              {{- seo_body -}}
+            </div>
+          </div>
+
+          <div class="products-seo-action">
+            <button type="button" class="products-seo-toggle" data-toggle-btn aria-expanded="false">
+              <span class="read-more-text">{{ 'collections.general.read_more' | t }}</span>
+              <span class="read-less-text">{{ 'collections.general.read_less' | t }}</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      {%- elsif show_seo_placeholder -%}
+        <div class="products-seo">
+          <p class="products-empty">
+            {{ 'collections.general.seo_placeholder' | t: setting: 'Description' }}
+          </p>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{%- if show_seo -%}
+  <script>
+    (function () {
+      const container = document.getElementById('products-{{ section.id }}');
+      if (!container) return;
+
+      const content = container.querySelector('[data-expandable-content]');
+      const btn = container.querySelector('[data-toggle-btn]');
+      if (!content || !btn) return;
+
+      /* Show the toggle only when the copy is actually clamped. */
+      function checkOverflow() {
+        if (content.classList.contains('expanded')) return;
+        btn.style.display = content.scrollHeight > content.clientHeight ? 'inline-flex' : 'none';
+      }
+
+      btn.addEventListener('click', function () {
+        const isExpanded = content.classList.toggle('expanded');
+        btn.classList.toggle('expanded', isExpanded);
+        btn.setAttribute('aria-expanded', isExpanded);
+      });
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(checkOverflow);
+      } else {
+        setTimeout(checkOverflow, 100);
+      }
+      window.addEventListener('resize', checkOverflow);
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:section.product_list.name",
+  "tag": "section",
+  "enabled_on": {
+    "templates": ["collection"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:product.content"
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "label": "Products per page",
+      "min": 4,
+      "max": 40,
+      "step": 4,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "desktop_grid_columns",
+      "label": "t:layout.columns.label",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "mobile_grid_columns",
+      "label": "t:layout.columns.label",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "select",
+      "id": "desktop_aspect_ratio",
+      "label": "Desktop image ratio",
+      "options": [
+        { "label": "t:aspect_ratio.options.unset", "value": "unset" },
+        { "label": "t:aspect_ratio.options.adapt", "value": "auto" },
+        { "label": "324:420 (Figma)", "value": "324 / 420" },
+        { "label": "16:9 (Widescreen)", "value": "16 / 9" },
+        { "label": "4:3 (Standard)", "value": "4 / 3" },
+        { "label": "1:1 (Square)", "value": "1 / 1" },
+        { "label": "9:16 (Vertical)", "value": "9 / 16" },
+        { "label": "21:9 (Cinematic)", "value": "21 / 9" }
+      ],
+      "default": "324 / 420"
+    },
+    {
+      "type": "select",
+      "id": "mobile_aspect_ratio",
+      "label": "Mobile image ratio",
+      "options": [
+        { "label": "t:aspect_ratio.options.unset", "value": "unset" },
+        { "label": "t:aspect_ratio.options.adapt", "value": "auto" },
+        { "label": "173:230 (Figma)", "value": "173 / 230" },
+        { "label": "324:420", "value": "324 / 420" },
+        { "label": "4:3 (Standard)", "value": "4 / 3" },
+        { "label": "1:1 (Square)", "value": "1 / 1" },
+        { "label": "9:16 (Vertical)", "value": "9 / 16" }
+      ],
+      "default": "173 / 230"
+    },
+    {
+      "type": "header",
+      "content": "SEO description"
+    },
+    {
+      "type": "text",
+      "id": "seo_heading",
+      "label": "t:heading.label"
+    },
+    {
+      "type": "richtext",
+      "id": "seo_description",
+      "label": "t:description.label",
+      "info": "Collapses to two lines on desktop and three on mobile, with a Read more toggle. Leave empty to hide."
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "bg_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#ffffff",
+      "info": "Choose a solid background color",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 48
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product_card",
+      "name": "t:block.product_card.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "secondary_image_hover_effect",
+          "label": "t:secondary_image_hover_effect.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_discounted_promo",
+          "label": "t:discounted_promo.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_rating",
+          "label": "t:product_rating.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_vendor",
+          "label": "Vendor",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_quick_view",
+          "label": "t:quick_view.label",
+          "info": "t:quick_view.info",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_color_variants",
+          "label": "t:color_variants.label",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_size_variants",
+          "label": "Size Variants",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_add_to_cart",
+          "label": "t:add_to_cart.label",
+          "default": true
+        },
+        {
+          "type": "select",
+          "id": "add_to_cart_style",
+          "label": "Add to cart style",
+          "options": [
+            { "value": "icon", "label": "Icon button on the image" },
+            { "value": "button", "label": "Full button below the details" }
+          ],
+          "default": "icon",
+          "visible_if": "{{ block.settings.show_add_to_cart }}"
+        }
+      ]
+    }
+  ],
+  "default": {
+    "blocks": [
+      {
+        "type": "product_card",
+        "settings": {
+          "secondary_image_hover_effect": true,
+          "show_discounted_promo": true,
+          "show_rating": true,
+          "show_vendor": false,
+          "show_color_variants": false,
+          "show_size_variants": false,
+          "show_add_to_cart": true,
+          "add_to_cart_style": "icon"
+        }
+      }
+    ]
+  }
+}
+{% endschema %}

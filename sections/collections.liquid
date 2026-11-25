@@ -1,0 +1,396 @@
+<style>
+  #{{ section.id }} {
+    --bg-color: {{ section.settings.bg_color | default: '#ffffff' }};
+
+    --desktop-padding-top: {{ section.settings.desktop_padding_top }}px;
+    --desktop-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+    --desktop-padding-left: {{ section.settings.desktop_padding_left }}px;
+    --desktop-padding-right: {{ section.settings.desktop_padding_right }}px;
+    --mobile-padding-top: {{ section.settings.mobile_padding_top }}px;
+    --mobile-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+    --mobile-padding-left: {{ section.settings.mobile_padding_left }}px;
+    --mobile-padding-right: {{ section.settings.mobile_padding_right }}px;
+    --desktop-grid-gap: {{ section.settings.desktop_grid_gap }};
+    --mobile-grid-gap: {{ section.settings.mobile_grid_gap }};
+    --desktop-gap: {{ section.settings.desktop_gap }};
+    --mobile-gap: {{ section.settings.mobile_gap }};
+    --grid-columns-desktop: repeat({{ section.settings.desktop_grid_columns }}, minmax(0, 1fr));
+    --grid-columns-mobile: repeat({{ section.settings.mobile_grid_columns }}, minmax(0, 1fr));
+  }
+
+  #{{ section.id }}.collections-bg {
+    {%- if section.settings.bg_color_mode == 'custom' -%}
+      background: var(--bg-color);
+    {%- else -%}
+      background: var(--color-background);
+    {%- endif -%}
+  }
+
+  .collections-inner {
+    display: grid;
+    gap: var(--mobile-gap);
+    padding: var(--mobile-padding-top) var(--mobile-padding-right) var(--mobile-padding-bottom) var(--mobile-padding-left);
+  }
+
+  .collections-grid {
+    display: grid;
+    width: 100%;
+    gap: var(--mobile-grid-gap);
+    grid-template-columns: var(--grid-columns-mobile);
+  }
+
+  @media (width >= 64rem) {
+    .collections-inner {
+      gap: var(--desktop-gap);
+      padding: var(--desktop-padding-top) var(--desktop-padding-right) var(--desktop-padding-bottom) var(--desktop-padding-left);
+    }
+
+    .collections-grid {
+      gap: var(--desktop-grid-gap);
+      grid-template-columns: var(--grid-columns-desktop);
+    }
+  }
+</style>
+
+<div
+  id="{{ section.id }}"
+  class="collections-bg"
+>
+  <div class="shopify-page-width shopify-page-padding">
+    <div class="collections-inner">
+      <div
+        class="collections-grid"
+      >
+        {% for collection in collections %}
+          {% render 'collection-card', collection: collection, icon_mode: 'none' %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Collections",
+  "enabled_on": {
+    "templates": ["list-collections"]
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "bg_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#222222",
+      "info": "Choose a solid background color",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:card.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_grid_columns",
+      "label": "t:layout.columns.label",
+      "min": 1,
+      "max": 8,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "select",
+      "id": "desktop_grid_gap",
+      "label": "t:size.gap.label",
+      "options": [
+        { "value": "0rem", "label": "t:size.options.gap.0" },
+        { "value": "1px", "label": "t:size.options.gap.1" },
+        { "value": "0.125rem", "label": "t:size.options.gap.2" },
+        { "value": "0.25rem", "label": "t:size.options.gap.4" },
+        { "value": "0.375rem", "label": "t:size.options.gap.6" },
+        { "value": "0.5rem", "label": "t:size.options.gap.8" },
+        { "value": "0.625rem", "label": "t:size.options.gap.10" },
+        { "value": "0.75rem", "label": "t:size.options.gap.12" },
+        { "value": "0.875rem", "label": "t:size.options.gap.14" },
+        { "value": "1rem", "label": "t:size.options.gap.16" },
+        { "value": "1.25rem", "label": "t:size.options.gap.20" },
+        { "value": "1.5rem", "label": "t:size.options.gap.24" },
+        { "value": "1.75rem", "label": "t:size.options.gap.28" },
+        { "value": "2rem", "label": "t:size.options.gap.32" },
+        { "value": "2.25rem", "label": "t:size.options.gap.36" },
+        { "value": "2.5rem", "label": "t:size.options.gap.40" },
+        { "value": "2.75rem", "label": "t:size.options.gap.44" },
+        { "value": "3rem", "label": "t:size.options.gap.48" },
+        { "value": "3.5rem", "label": "t:size.options.gap.56" },
+        { "value": "4rem", "label": "t:size.options.gap.64" },
+        { "value": "5rem", "label": "t:size.options.gap.80" },
+        { "value": "6rem", "label": "t:size.options.gap.96" },
+        { "value": "7rem", "label": "t:size.options.gap.112" },
+        { "value": "8rem", "label": "t:size.options.gap.128" },
+        { "value": "9rem", "label": "t:size.options.gap.144" },
+        { "value": "10rem", "label": "t:size.options.gap.160" },
+        { "value": "11rem", "label": "t:size.options.gap.176" },
+        { "value": "12rem", "label": "t:size.options.gap.192" },
+        { "value": "13rem", "label": "t:size.options.gap.208" },
+        { "value": "14rem", "label": "t:size.options.gap.224" },
+        { "value": "15rem", "label": "t:size.options.gap.240" },
+        { "value": "16rem", "label": "t:size.options.gap.256" },
+        { "value": "18rem", "label": "t:size.options.gap.288" },
+        { "value": "20rem", "label": "t:size.options.gap.320" },
+        { "value": "24rem", "label": "t:size.options.gap.384" }
+      ],
+      "default": "2rem"
+    },
+    {
+      "type": "header",
+      "content": "t:card.mobile.content"
+    },
+    {
+      "type": "select",
+      "id": "mobile_grid_columns",
+      "label": "t:layout.columns.label",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "select",
+      "id": "mobile_grid_gap",
+      "label": "t:size.gap.label",
+      "options": [
+        { "value": "0rem", "label": "t:size.options.gap.0" },
+        { "value": "1px", "label": "t:size.options.gap.1" },
+        { "value": "0.125rem", "label": "t:size.options.gap.2" },
+        { "value": "0.25rem", "label": "t:size.options.gap.4" },
+        { "value": "0.375rem", "label": "t:size.options.gap.6" },
+        { "value": "0.5rem", "label": "t:size.options.gap.8" },
+        { "value": "0.625rem", "label": "t:size.options.gap.10" },
+        { "value": "0.75rem", "label": "t:size.options.gap.12" },
+        { "value": "0.875rem", "label": "t:size.options.gap.14" },
+        { "value": "1rem", "label": "t:size.options.gap.16" },
+        { "value": "1.25rem", "label": "t:size.options.gap.20" },
+        { "value": "1.5rem", "label": "t:size.options.gap.24" },
+        { "value": "1.75rem", "label": "t:size.options.gap.28" },
+        { "value": "2rem", "label": "t:size.options.gap.32" },
+        { "value": "2.25rem", "label": "t:size.options.gap.36" },
+        { "value": "2.5rem", "label": "t:size.options.gap.40" },
+        { "value": "2.75rem", "label": "t:size.options.gap.44" },
+        { "value": "3rem", "label": "t:size.options.gap.48" },
+        { "value": "3.5rem", "label": "t:size.options.gap.56" },
+        { "value": "4rem", "label": "t:size.options.gap.64" },
+        { "value": "5rem", "label": "t:size.options.gap.80" },
+        { "value": "6rem", "label": "t:size.options.gap.96" },
+        { "value": "7rem", "label": "t:size.options.gap.112" },
+        { "value": "8rem", "label": "t:size.options.gap.128" },
+        { "value": "9rem", "label": "t:size.options.gap.144" },
+        { "value": "10rem", "label": "t:size.options.gap.160" },
+        { "value": "11rem", "label": "t:size.options.gap.176" },
+        { "value": "12rem", "label": "t:size.options.gap.192" },
+        { "value": "13rem", "label": "t:size.options.gap.208" },
+        { "value": "14rem", "label": "t:size.options.gap.224" },
+        { "value": "15rem", "label": "t:size.options.gap.240" },
+        { "value": "16rem", "label": "t:size.options.gap.256" },
+        { "value": "18rem", "label": "t:size.options.gap.288" },
+        { "value": "20rem", "label": "t:size.options.gap.320" },
+        { "value": "24rem", "label": "t:size.options.gap.384" }
+      ],
+      "default": "1.5rem"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "select",
+      "id": "desktop_gap",
+      "label": "t:size.gap.label",
+      "options": [
+        { "value": "0rem", "label": "t:size.options.gap.0" },
+        { "value": "1px", "label": "t:size.options.gap.1" },
+        { "value": "0.125rem", "label": "t:size.options.gap.2" },
+        { "value": "0.25rem", "label": "t:size.options.gap.4" },
+        { "value": "0.375rem", "label": "t:size.options.gap.6" },
+        { "value": "0.5rem", "label": "t:size.options.gap.8" },
+        { "value": "0.625rem", "label": "t:size.options.gap.10" },
+        { "value": "0.75rem", "label": "t:size.options.gap.12" },
+        { "value": "0.875rem", "label": "t:size.options.gap.14" },
+        { "value": "1rem", "label": "t:size.options.gap.16" },
+        { "value": "1.25rem", "label": "t:size.options.gap.20" },
+        { "value": "1.5rem", "label": "t:size.options.gap.24" },
+        { "value": "1.75rem", "label": "t:size.options.gap.28" },
+        { "value": "2rem", "label": "t:size.options.gap.32" },
+        { "value": "2.25rem", "label": "t:size.options.gap.36" },
+        { "value": "2.5rem", "label": "t:size.options.gap.40" },
+        { "value": "2.75rem", "label": "t:size.options.gap.44" },
+        { "value": "3rem", "label": "t:size.options.gap.48" },
+        { "value": "3.5rem", "label": "t:size.options.gap.56" },
+        { "value": "4rem", "label": "t:size.options.gap.64" },
+        { "value": "5rem", "label": "t:size.options.gap.80" },
+        { "value": "6rem", "label": "t:size.options.gap.96" },
+        { "value": "7rem", "label": "t:size.options.gap.112" },
+        { "value": "8rem", "label": "t:size.options.gap.128" },
+        { "value": "9rem", "label": "t:size.options.gap.144" },
+        { "value": "10rem", "label": "t:size.options.gap.160" },
+        { "value": "11rem", "label": "t:size.options.gap.176" },
+        { "value": "12rem", "label": "t:size.options.gap.192" },
+        { "value": "13rem", "label": "t:size.options.gap.208" },
+        { "value": "14rem", "label": "t:size.options.gap.224" },
+        { "value": "15rem", "label": "t:size.options.gap.240" },
+        { "value": "16rem", "label": "t:size.options.gap.256" },
+        { "value": "18rem", "label": "t:size.options.gap.288" },
+        { "value": "20rem", "label": "t:size.options.gap.320" },
+        { "value": "24rem", "label": "t:size.options.gap.384" }
+      ],
+      "default": "2rem"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "select",
+      "id": "mobile_gap",
+      "label": "t:size.gap.label",
+      "options": [
+        { "value": "0rem", "label": "t:size.options.gap.0" },
+        { "value": "1px", "label": "t:size.options.gap.1" },
+        { "value": "0.125rem", "label": "t:size.options.gap.2" },
+        { "value": "0.25rem", "label": "t:size.options.gap.4" },
+        { "value": "0.375rem", "label": "t:size.options.gap.6" },
+        { "value": "0.5rem", "label": "t:size.options.gap.8" },
+        { "value": "0.625rem", "label": "t:size.options.gap.10" },
+        { "value": "0.75rem", "label": "t:size.options.gap.12" },
+        { "value": "0.875rem", "label": "t:size.options.gap.14" },
+        { "value": "1rem", "label": "t:size.options.gap.16" },
+        { "value": "1.25rem", "label": "t:size.options.gap.20" },
+        { "value": "1.5rem", "label": "t:size.options.gap.24" },
+        { "value": "1.75rem", "label": "t:size.options.gap.28" },
+        { "value": "2rem", "label": "t:size.options.gap.32" },
+        { "value": "2.25rem", "label": "t:size.options.gap.36" },
+        { "value": "2.5rem", "label": "t:size.options.gap.40" },
+        { "value": "2.75rem", "label": "t:size.options.gap.44" },
+        { "value": "3rem", "label": "t:size.options.gap.48" },
+        { "value": "3.5rem", "label": "t:size.options.gap.56" },
+        { "value": "4rem", "label": "t:size.options.gap.64" },
+        { "value": "5rem", "label": "t:size.options.gap.80" },
+        { "value": "6rem", "label": "t:size.options.gap.96" },
+        { "value": "7rem", "label": "t:size.options.gap.112" },
+        { "value": "8rem", "label": "t:size.options.gap.128" },
+        { "value": "9rem", "label": "t:size.options.gap.144" },
+        { "value": "10rem", "label": "t:size.options.gap.160" },
+        { "value": "11rem", "label": "t:size.options.gap.176" },
+        { "value": "12rem", "label": "t:size.options.gap.192" },
+        { "value": "13rem", "label": "t:size.options.gap.208" },
+        { "value": "14rem", "label": "t:size.options.gap.224" },
+        { "value": "15rem", "label": "t:size.options.gap.240" },
+        { "value": "16rem", "label": "t:size.options.gap.256" },
+        { "value": "18rem", "label": "t:size.options.gap.288" },
+        { "value": "20rem", "label": "t:size.options.gap.320" },
+        { "value": "24rem", "label": "t:size.options.gap.384" }
+      ],
+      "default": "2rem"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 6
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 6
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collections list"
+    }
+  ]
+}
+{% endschema %}

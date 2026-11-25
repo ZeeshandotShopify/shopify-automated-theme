@@ -1,0 +1,26 @@
+{%- style -%}
+  #pdp-divider-wrapper-{{ block.id }} {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+  }
+
+  #pdp-divider-wrapper-{{ block.id }} .pdp-divider {
+    {%- if block.settings.orientation == 'horizontal' -%}
+      width: 100%;
+      height: 1px;
+    {%- else -%}
+      height: 100%;
+      width: 1px;
+    {%- endif -%}
+
+    {%- if block.settings.color_mode == 'custom' -%}
+      background: {{ block.settings.bg_color }};
+    {%- else -%}
+        background: var(--color-border);
+    {%- endif -%}
+  }
+{%- endstyle -%}
+
+<div id="pdp-divider-wrapper-{{ block.id }}">
+  <div class="pdp-divider" {{ block.shopify_attributes }}></div>
+</div>

@@ -1,0 +1,88 @@
+<div class="link-block" {{ block.shopify_attributes }}>
+  {% render 'link',
+    id: block.id,
+    text: block.settings.text,
+    url: block.settings.url,
+    text_color: block.settings.text_color,
+    font_size: block.settings.font_size,
+    line_height: block.settings.line_height,
+    font_weight: block.settings.font_weight,
+    text_transform: block.settings.text_transform,
+    shopify_attributes: block.shopify_attributes
+  %}
+</div>
+
+{% schema %}
+{
+  "name": "t:block.link.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "text",
+      "label": "t:text.label",
+      "default": "Link Text"
+    },
+    {
+      "type": "url",
+      "id": "url",
+      "label": "t:url.label"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#000000"
+    },
+    {
+      "type": "text",
+      "id": "font_size",
+      "label": "t:typography.font_size.label",
+      "placeholder": "px, rem, etc.",
+      "default": "0.875rem"
+    },
+    {
+      "type": "text",
+      "id": "line_height",
+      "label": "t:typography.line_height.label",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "calc(1.25 / 0.875)"
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "t:typography.font_weight.label",
+      "options": [
+        { "value": "100", "label": "t:typography.font_weight.options.thin" },
+        { "value": "200", "label": "t:typography.font_weight.options.extra_light" },
+        { "value": "300", "label": "t:typography.font_weight.options.light" },
+        { "value": "400", "label": "t:typography.font_weight.options.regular" },
+        { "value": "500", "label": "t:typography.font_weight.options.medium" },
+        { "value": "600", "label": "t:typography.font_weight.options.semibold" },
+        { "value": "700", "label": "t:typography.font_weight.options.bold" },
+        { "value": "800", "label": "t:typography.font_weight.options.extra_bold" },
+        { "value": "900", "label": "t:typography.font_weight.options.black" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "t:typography.text_transform.label",
+      "options": [
+        { "value": "none", "label": "t:typography.text_transform.options.normal" },
+        { "value": "lowercase", "label": "t:typography.text_transform.options.lowercase" },
+        { "value": "uppercase", "label": "t:typography.text_transform.options.uppercase" },
+        { "value": "capitalize", "label": "t:typography.text_transform.options.capitalize" }
+      ],
+      "default": "none"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.link.name",
+      "category": "t:block.link.category"
+    }
+  ]
+}
+{% endschema %}

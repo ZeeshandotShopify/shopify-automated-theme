@@ -1,0 +1,55 @@
+{%- style -%}
+  /* Featured Image */
+  .article-featured-image {
+    --padding-top: {{ block.settings.padding_top }}px;
+    --padding-bottom: {{ block.settings.padding_bottom }}px;
+
+    width: 100%;
+    overflow: hidden;
+    padding-top: var(--padding-top);
+    padding-bottom: var(--padding-bottom);
+  }
+
+  .article-featured-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .article-featured-image--adapt img {
+    object-fit: cover;
+    aspect-ratio: 16 / 9;
+  }
+
+  .article-featured-image--small img {
+    max-height: 20rem;
+    object-fit: cover;
+  }
+
+  .article-featured-image--medium img {
+    max-height: 30rem;
+    object-fit: cover;
+  }
+
+  .article-featured-image--large img {
+    max-height: 40rem;
+    object-fit: cover;
+  }
+{%- endstyle -%}
+
+{% if article.image %}
+  <div
+    class="article-featured-image article-featured-image--{{ block.settings.size }}"
+    {{ block.shopify_attributes }}
+  >
+    {{
+      article.image
+      | image_url: width: 1000
+      | image_tag:
+        class: 'article__image',
+        loading: 'lazy',
+        alt: article.title,
+        sizes: '(min-width: 1024px) 600px, 100vw'
+    }}
+  </div>
+{% endif %}

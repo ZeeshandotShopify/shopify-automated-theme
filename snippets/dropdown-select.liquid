@@ -1,0 +1,16 @@
+<option
+  id="{{ id }}"
+  value="{{ value | escape }}"
+  {% if checked %}
+    selected="selected"
+  {% endif %}
+  {% if additional_props %}
+    {{ additional_props }}
+  {% endif %}
+>
+  {% if visually_disabled %}
+    {{ value }} - Unavailable
+  {% else %}
+    {{ value }}
+  {% endif %}
+</option>

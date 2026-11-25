@@ -1,0 +1,59 @@
+{%- style -%}
+  #pdp-accordion-{{ block.id }} {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+  }
+
+  #pdp-accordion-{{ block.id }} accordion-item {
+    {%- if block.settings.trigger_style_mode == 'inherit' -%}
+    background-color: var(--color-accordion-background);
+    color: var(--color-accordion-foreground);
+    border: var(--accordion-border-thickness) solid var(--color-border, #e5e5e5);
+    border-radius: var(--accordion-border-radius);
+    {%- else -%}
+    background-color: {{ block.settings.trigger_background_color }};
+    color: {{ block.settings.trigger_foreground_color }};
+    border-top: {{ block.settings.border_top_thickness }}px solid {{ block.settings.border_color }};
+    border-bottom: {{ block.settings.border_bottom_thickness }}px solid {{ block.settings.border_color }};
+    border-left: {{ block.settings.border_left_thickness }}px solid {{ block.settings.border_color }};
+    border-right: {{ block.settings.border_right_thickness }}px solid {{ block.settings.border_color }};
+    border-radius: {{ block.settings.border_radius }};
+    {%- endif -%}
+  }
+
+  #pdp-accordion-{{ block.id }} accordion-trigger {
+    font-size: {{ block.settings.trigger_font_size }};
+    line-height: {{ block.settings.trigger_line_height }};
+    font-weight: {{ block.settings.trigger_font_weight }};
+    padding: {{ block.settings.trigger_padding_y }}px {{ block.settings.trigger_padding_x }}px;
+  }
+
+  #pdp-accordion-{{ block.id }} accordion-content {
+    padding-left: {{ block.settings.trigger_padding_x }}px;
+    padding-right: {{ block.settings.trigger_padding_x }}px;
+  }
+
+  #pdp-accordion-{{ block.id }} .accordion-content-inner {
+    padding-bottom: {{ block.settings.trigger_padding_y }}px;
+  }
+{%- endstyle -%}
+
+{%- if block.settings.heading != blank and block.settings.content != blank -%}
+  <div id="pdp-accordion-{{ block.id }}" {{ block.shopify_attributes }}>
+    <accordion-item
+      icon="{{ block.settings.icon | default: 'chevron' }}"
+      {% if block.settings.open_by_default %}
+        default-open
+      {% endif %}
+    >
+      <accordion-trigger>{{ block.settings.heading }}</accordion-trigger>
+      <accordion-content>
+        <div class="accordion-content-inner">
+          <div class="rte">
+            {{- block.settings.content -}}
+          </div>
+        </div>
+      </accordion-content>
+    </accordion-item>
+  </div>
+{%- endif -%}

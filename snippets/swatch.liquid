@@ -1,0 +1,55 @@
+{% comment %}
+  Renders a swatch component.
+  Accepts:
+  - swatch: {Object} a swatch object
+
+  Usage:
+  {% render 'swatch',
+    swatch: value.swatch
+    shape: 'square'
+  %}
+{% endcomment %}
+
+{%- stylesheet -%}
+  /* swatch lives in its own file for reusability of the swatch in swatch-input and dropdown */
+  .swatch {
+    --swatch--size: var(--swatch-input--size, 4.4rem);
+    --swatch--border-radius: var(--swatch-input--border-radius, 50%);
+
+    display: block;
+    width: var(--swatch--size);
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--swatch--background);
+    background-position: var(--swatch-focal-point, initial);
+    background-size: cover;
+    background-origin: border-box;
+    border: 0.1rem solid rgba(var(--color-foreground-rgb), 0.15);
+    border-radius: var(--swatch--border-radius);
+  }
+
+  .swatch--unavailable {
+    border-style: dashed;
+    border-color: rgba(var(--color-foreground-rgb), 0.5);
+  }
+{%- endstylesheet -%}
+
+{%- liquid
+  assign swatch_value = null
+  if swatch.image
+    assign image_url = swatch.image | image_url: width: 50
+    assign swatch_value = 'url(' | append: image_url | append: ')'
+    assign swatch_focal_point = swatch.image.presentation.focal_point
+  elsif swatch.color
+    assign swatch_value = 'rgb(' | append: swatch.color.rgb | append: ')'
+  endif
+-%}
+
+<span
+  {% if swatch_value %}
+    class="swatch"
+    style="--swatch--background: {{ swatch_value }};{% if swatch_focal_point %} --swatch-focal-point: {{ swatch_focal_point }};{% endif %}"
+  {% else %}
+    class="swatch swatch--unavailable"
+  {% endif %}
+></span>

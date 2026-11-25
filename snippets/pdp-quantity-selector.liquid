@@ -1,0 +1,121 @@
+{% style %}
+  .pdp-quantity-selector__wrapper {
+     padding-top: {{ block.settings.padding_top }}px;
+     padding-bottom: {{ block.settings.padding_bottom }}px
+  }
+
+  .pdp-quantity-selector__wrapper legend {
+    font-family: var(--font-body--family);
+    font-size: 1rem; /* 16px */
+    line-height: 1.5rem; /* 24px */
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+  }
+
+  .pdp-quantity-selector {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background-color: var(--color-quantity-selector-background);
+    color: var(--color-quantity-selector-foreground);
+    border: var(--input-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+    border-radius: var(--input-border-radius);
+    padding-block: 0.875rem;
+    padding-inline: 1rem;
+  }
+
+  .pdp-quantity-selector-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    white-space: nowrap;
+    border-radius: var(--button-border-radius);
+    flex-shrink: 0;
+  }
+
+  .pdp-quantity-selector-button svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .pdp-quantity-selector-button:hover {
+    opacity: 0.8;
+  }
+
+  .pdp-quantity-selector-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+    width: 2rem;
+  }
+
+  .pdp-quantity-selector-input:focus {
+    outline: none;
+    border: var(--input-border-thickness, 1px) solid var(--color-input, #e5e5e5);
+  }
+
+  .pdp-quantity-selector-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Chrome, Safari, Edge, Opera */
+  .pdp-quantity-selector-input::-webkit-outer-spin-button,
+  .pdp-quantity-selector-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  .pdp-quantity-selector-input[type='number'] {
+    -moz-appearance: textfield;
+  }
+{% endstyle %}
+
+<div class="pdp-quantity-selector__wrapper" {{ block.shopify_attributes }}>
+  <legend>Quantity:</legend>
+  <quantity-selector
+    class="pdp-quantity-selector"
+    data-max="{{ product.selected_or_first_available_variant.inventory_quantity }}"
+  >
+    <button
+      type="button"
+      class="pdp-quantity-selector-button"
+      data-quantity-minus
+      aria-label="Decrease Quantity"
+    >
+      {{ 'subtract.svg' | inline_asset_content }}
+    </button>
+    <input
+      id="Quantity-{{ product.id }}"
+      name="quantity"
+      type="number"
+      min="1"
+      value="1"
+      aria-label="Quantity"
+      pattern="[0-9]*"
+      inputmode="numeric"
+      class="pdp-quantity-selector-input"
+    >
+    <button
+      type="button"
+      class="pdp-quantity-selector-button"
+      data-quantity-plus
+      aria-label="Increase Quantity"
+    >
+      {{ 'add.svg' | inline_asset_content }}
+    </button>
+  </quantity-selector>
+</div>

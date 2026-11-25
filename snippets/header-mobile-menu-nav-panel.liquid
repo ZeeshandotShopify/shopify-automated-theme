@@ -1,0 +1,60 @@
+{%- style -%}
+  .nav-panel-header {
+    background: {{ settings.popover_background_color | color_modify: 'alpha', 0.5 }};
+  }
+
+  nav-panel-parent,
+  nav-panel-child {
+    font-size: {{ block.settings.nav_item_font_size }};
+    line-height: {{ block.settings.nav_item_line_height }};
+    font-weight: {{ block.settings.nav_item_font_weight }};
+    padding: {{ block.settings.nav_item_padding_y }}px {{ block.settings.nav_item_padding_x }}px;
+  }
+
+  {%- if block.settings.nav_item_style_mode == 'custom' -%}
+    nav-panel-parent,
+    nav-panel-child {
+      background-color: {{ block.settings.nav_item_background_color }};
+      color: {{ block.settings.nav_item_foreground_color }};
+      border-top: {{ block.settings.border_top_thickness }}px solid {{ block.settings.border_color }};
+      border-bottom: {{ block.settings.border_bottom_thickness }}px solid {{ block.settings.border_color }};
+      border-left: {{ block.settings.border_left_thickness }}px solid {{ block.settings.border_color }};
+      border-right: {{ block.settings.border_right_thickness }}px solid {{ block.settings.border_color }};
+      border-radius: {{ block.settings.border_radius }};
+    }
+  {%- endif -%}
+{%- endstyle -%}
+
+{%- if block.settings.menu != blank -%}
+  <nav-panel>
+    {%- for link in linklists[block.settings.menu].links -%}
+      {%- if link.links.size == 0 -%}
+        <nav-panel-child>
+          <a href="{{ link.url }}">{{- link.title -}}</a>
+        </nav-panel-child>
+      {%- else -%}
+        <nav-panel-parent label="{{- link.title -}}">
+          {{- link.title -}}
+
+          {%- for sublink in link.links -%}
+            {%- if sublink.links.size == 0 -%}
+              <nav-panel-child>
+                <a href="{{ sublink.url }}">{{- sublink.title -}}</a>
+              </nav-panel-child>
+            {%- else -%}
+              <nav-panel-parent label="{{- sublink.title -}}">
+                {{- sublink.title -}}
+
+                {%- for nested_sublink in sublink.links -%}
+                  <nav-panel-child>
+                    <a href="{{ nested_sublink.url }}">{{- nested_sublink.title -}}</a>
+                  </nav-panel-child>
+                {%- endfor -%}
+              </nav-panel-parent>
+            {%- endif -%}
+          {%- endfor -%}
+        </nav-panel-parent>
+      {%- endif -%}
+    {%- endfor -%}
+  </nav-panel>
+{%- endif -%}

@@ -1,0 +1,23 @@
+<div {{ block.shopify_attributes }}>
+  {{ block.settings.custom_liquid }}
+</div>
+
+{%- schema -%}
+{
+  "name": "t:block.custom_liquid.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "liquid",
+      "id": "custom_liquid",
+      "label": "Custom liquid",
+      "info": "Add app snippets or other Liquid code to create advanced customizations."
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.custom_liquid.name"
+    }
+  ]
+}
+{%- endschema -%}

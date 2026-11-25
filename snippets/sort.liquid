@@ -1,0 +1,209 @@
+{%- liquid
+  assign sort_options = sort_options
+  assign sort_by = sort_by | default: 'manual'
+-%}
+
+{%- comment -%}
+  Short label for the currently applied sort, shown in the trigger as
+  "Sort By: <value>" per the collection design.
+{%- endcomment -%}
+{%- capture current_sort_label -%}
+  {%- case sort_by -%}
+    {%- when 'best-selling' -%}
+      Best Selling
+    {%- when 'title-ascending' -%}
+      A-Z
+    {%- when 'title-descending' -%}
+      Z-A
+    {%- when 'price-ascending' -%}
+      Price Low-High
+    {%- when 'price-descending' -%}
+      Price High-Low
+    {%- when 'created-ascending' -%}
+      Oldest
+    {%- when 'created-descending' -%}
+      Newest
+    {%- when 'most-relevant' -%}
+      Relevance
+    {%- else -%}
+      Featured
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- style -%}
+  .sort-disclosure {
+    position: relative;
+  }
+
+  /* Remove default marker */
+  .sort-disclosure summary {
+    list-style: none;
+  }
+  .sort-disclosure summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .sort-disclosure-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3rem;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    background: var(--color-dropdown-trigger-background);
+    color: var(--color-dropdown-trigger-foreground);
+    border: var(--dropdown-trigger-border-thickness, 1px) solid var(--color-dropdown-trigger-border, transparent);
+    border-radius: var(--dropdown-trigger-border-radius, 0);
+    width: 100%;
+  }
+
+  /* Keep the chip at its designed height whatever the active sort is named —
+     "Sort By: Featured" is far longer than the design's "Sort By: A-Z" and would
+     otherwise wrap and grow the chip. */
+  .sort-disclosure-trigger > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  @media (width >= 64rem) {
+    .sort-disclosure-trigger {
+      justify-content: center;
+      padding-inline: 1.5rem;
+      width: auto;
+    }
+  }
+
+  .sort-disclosure-trigger:hover {
+    background: var(--color-dropdown-trigger-hover-background);
+    color: var(--color-dropdown-trigger-hover-foreground);
+  }
+
+  .sort-disclosure-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    transition: transform 200ms ease;
+  }
+
+  .sort-disclosure-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .sort-disclosure[open] .sort-disclosure-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Dropdown panel */
+  .sort-disclosure-panel {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    z-index: 10001;
+    min-width: 14rem;
+    max-height: min(33rem, calc(100vh - 8rem));
+    overflow-y: auto;
+    padding: 0.25rem;
+    background-color: var(--color-popover-background, #ffffff);
+    color: var(--color-popover-foreground, #000000);
+    border: var(--popover-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+    border-radius: var(--popover-border-radius, 0.375rem);
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  }
+
+  .sort-disclosure-panel ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sort-disclosure-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-family: var(--font-body--family);
+    background: transparent;
+    text-align: left;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    border-radius: var(--popover-border-radius, 0.375rem);
+  }
+
+  .sort-disclosure-item:hover {
+    background: var(--color-dropdown-trigger-hover-background);
+  }
+
+  .sort-disclosure-item svg {
+    display: none;
+    width: 1rem;
+    height: 1rem;
+    margin-left: auto;
+  }
+
+  .sort-disclosure-item.active svg {
+    display: inline-block;
+  }
+{%- endstyle -%}
+
+<details class="sort-disclosure">
+  <summary class="sort-disclosure-trigger">
+    <span>Sort By: {{ current_sort_label | strip }}</span>
+    <span class="sort-disclosure-icon">
+      {{ 'arrow-down.svg' | inline_asset_content }}
+    </span>
+  </summary>
+  <div class="sort-disclosure-panel">
+    <ul>
+      {%- for sort_option in sort_options -%}
+        <li>
+          <button
+            type="button"
+            class="sort-disclosure-item{% if sort_option.value == sort_by %} active{% endif %}"
+            data-sort-value="{{ sort_option.value }}"
+            data-sort-option
+          >
+            <span>
+              {%- case sort_option.value -%}
+                {%- when 'best-selling' -%}
+                  Show best seller first
+                {%- when 'title-ascending' -%}
+                  Sort A to Z
+                {%- when 'title-descending' -%}
+                  Sort Z to A
+                {%- when 'price-ascending' -%}
+                  Show lowest price first
+                {%- when 'price-descending' -%}
+                  Show highest price first
+                {%- when 'created-ascending' -%}
+                  Show oldest products first
+                {%- when 'created-descending' -%}
+                  Show newest products first
+                {%- when 'most-relevant' -%}
+                  Show most relevant first
+                {%- else -%}
+                  Featured
+              {%- endcase -%}
+            </span>
+            {{ 'check.svg' | inline_asset_content }}
+          </button>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</details>
+<input type="hidden" name="sort_by" id="SortByHidden" value="{{ sort_by }}">

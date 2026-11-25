@@ -1,0 +1,213 @@
+{%- stylesheet -%}
+  /* This snippet renders a `.filter-disclosure-trigger`, but that class is owned by
+     snippets/filter.liquid — whose styles are only on the page when the collection
+     also has a list filter. Declared here too so a price-only collection still gets
+     a correctly shaped chip. */
+  .filter-disclosure-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    min-height: 3rem;
+    padding: 0.5rem 1.5rem;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    line-height: 1.4;
+    cursor: pointer;
+    background: var(--color-dropdown-trigger-background);
+    color: var(--color-dropdown-trigger-foreground);
+    border: var(--dropdown-trigger-border-thickness, 1px) solid var(--color-dropdown-trigger-border, transparent);
+    border-radius: var(--dropdown-trigger-border-radius, 0);
+  }
+
+  .price-range-filter-content {
+    font-family: var(--font-body--family);
+    padding: 0;
+  }
+
+  .price-range-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+    gap: 1rem;
+    padding: 0.375rem 0.5rem;
+  }
+
+  .price-range-filter-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem; /* 20px */
+    padding: 0.375rem 0.5rem;
+  }
+
+  .price-range-filter-header a {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .price-range-filter-from,
+  .price-range-filter-to {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .price-range-filter-accordion {
+    display: block;
+    background-color: transparent;
+    color: inherit;
+    border-radius: 0;
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+  }
+
+  .price-range-filter-accordion-trigger {
+    padding-inline: 1rem;
+  }
+
+  .price-range-filter-accordion-content {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .price-range-filter-accordion-content .price-range-filter-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .price-range-filter-accordion-content .price-range-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .price-range-filter-accordion-content .price-range-filter-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  /* Price range panel needs to be wider than standard filters */
+  .filter-disclosure-price-range .filter-disclosure-panel {
+    min-width: 20rem;
+  }
+
+  @media (width >= 64rem) {
+    .price-range-filter-accordion {
+      display: none;
+    }
+  }
+{%- endstylesheet -%}
+
+{% if variant == 'desktop' %}
+  <details id="FilterDesktop-{{ filter.param_name }}" class="filter-disclosure filter-disclosure-price-range js-filter">
+    <summary class="filter-disclosure-trigger">
+      <span>{{ filter.label }}</span>
+      <span class="filter-disclosure-icon">
+        {{ 'arrow-down.svg' | inline_asset_content }}
+      </span>
+    </summary>
+    <div class="filter-disclosure-panel">
+      <div class="price-range-filter-content filter-content">
+        <div class="price-range-filter-header">
+          <p>The highest price is {{ filter.range_max | money }}</p>
+          <a href="{{ filter.url_to_remove }}">Reset</a>
+        </div>
+
+        <div class="price-range-filter-form">
+          <div class="price-range-filter-from">
+            <span>{{ cart.currency.symbol }}</span>
+            <div class="input-container">
+              <input
+                name="{{ filter.min_value.param_name }}"
+                id="Filter-{{ filter.min_value.param_name }}-desktop"
+                {% if filter.min_value.value -%}
+                  value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                {%- endif %}
+                type="number"
+                placeholder="0"
+                min="0"
+                max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+              >
+              <label for="Filter-{{ filter.min_value.param_name }}">From</label>
+            </div>
+          </div>
+
+          <div class="price-range-filter-to">
+            <span>{{ cart.currency.symbol }}</span>
+            <div class="input-container">
+              <input
+                name="{{ filter.max_value.param_name }}"
+                id="Filter-{{ filter.max_value.param_name }}-desktop"
+                {% if filter.max_value.value -%}
+                  value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                {%- endif %}
+                type="number"
+                placeholder="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                min="0"
+                max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+              >
+              <label for="Filter-{{ filter.max_value.param_name }}">To</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+{% endif %}
+
+{% if variant == 'mobile' %}
+  <accordion-item id="FilterMobile-{{ filter.param_name }}" icon="caret" class="price-range-filter-accordion js-filter">
+    <accordion-trigger class="price-range-filter-accordion-trigger">{{- filter.label -}}</accordion-trigger>
+    <accordion-content>
+      <div class="price-range-filter-accordion-content">
+        <div class="price-range-filter-content">
+          <div class="price-range-filter-header">
+            <p>The highest price is {{ filter.range_max | money }}</p>
+            <a href="{{ filter.url_to_remove }}">Reset</a>
+          </div>
+
+          <div class="price-range-filter-form">
+            <div class="price-range-filter-from">
+              <span>{{ cart.currency.symbol }}</span>
+              <div class="input-container">
+                <input
+                  name="{{ filter.min_value.param_name }}"
+                  id="Filter-{{ filter.min_value.param_name }}-mobile"
+                  {% if filter.min_value.value -%}
+                    value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                  {%- endif %}
+                  type="number"
+                  placeholder="0"
+                  min="0"
+                  max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                >
+                <label for="Filter-{{ filter.min_value.param_name }}">From</label>
+              </div>
+            </div>
+
+            <div class="price-range-filter-to">
+              <span>{{ cart.currency.symbol }}</span>
+              <div class="input-container">
+                <input
+                  name="{{ filter.max_value.param_name }}"
+                  id="Filter-{{ filter.max_value.param_name }}-mobile"
+                  {% if filter.max_value.value -%}
+                    value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                  {%- endif %}
+                  type="number"
+                  placeholder="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                  min="0"
+                  max="{{ filter.range_max | money_without_currency | replace: ',', '' }}"
+                >
+                <label for="Filter-{{ filter.max_value.param_name }}">To</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </accordion-content>
+  </accordion-item>
+{% endif %}

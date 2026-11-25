@@ -1,0 +1,363 @@
+{% doc %}
+  Renders one cart drawer line item: a 112px square image beside a column that
+  pins the title and line price to the top and the quantity pill and remove
+  button to the bottom.
+
+  Variant title, selling plan, line-level discounts, custom properties and
+  uploaded photos render underneath the title only when the line carries them.
+
+  @param {object} item - The cart line item
+  @param {number} line - The line item's 1-based index, used by cart-actions
+
+  @example
+  {% render 'cart-drawer-item', item: item, line: forloop.index %}
+{% enddoc %}
+
+<div class="cart-drawer-item">
+  <a href="{{ item.url }}" class="cart-drawer-item__media" tabindex="-1" aria-hidden="true">
+    {%- if item.image -%}
+      {{
+        item.image
+        | image_url: width: 224, height: 224, crop: 'center'
+        | image_tag: alt: item.image.alt, loading: 'lazy', class: 'cart-drawer-item__image'
+      }}
+    {%- endif -%}
+  </a>
+
+  <div class="cart-drawer-item__body">
+    <div class="cart-drawer-item__head">
+      <div class="cart-drawer-item__info">
+        <h3 class="cart-drawer-item__title">
+          <a href="{{ item.url }}">{{ item.product.title }}</a>
+        </h3>
+
+        {%- if item.variant.title != 'Default Title' -%}
+          <p class="cart-drawer-item__meta">{{ item.variant.title }}</p>
+        {%- endif -%}
+
+        {%- if item.selling_plan_allocation != null -%}
+          <p class="cart-drawer-item__meta">{{ item.selling_plan_allocation.selling_plan.name }}</p>
+        {%- endif -%}
+
+        {%- comment -%} Text (non-image) custom properties {%- endcomment -%}
+        {%- for p in item.properties -%}
+          {%- assign first_char = p.first | slice: 0, 1 -%}
+          {%- if first_char != '_' -%}
+            {%- unless p.last contains 'http' -%}
+              <p class="cart-drawer-item__meta">{{ p.last }}</p>
+            {%- endunless -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- comment -%} Uploaded photos, rendered as clickable thumbnails {%- endcomment -%}
+        {%- assign has_link_props = false -%}
+        {%- for p in item.properties -%}
+          {%- assign first_char = p.first | slice: 0, 1 -%}
+          {%- if first_char != '_' -%}
+            {%- if p.last contains 'http' -%}
+              {%- assign has_link_props = true -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- if has_link_props -%}
+          {%- assign clip_index = 0 -%}
+          <div class="cart-drawer-item__uploads">
+            {%- for p in item.properties -%}
+              {%- assign first_char = p.first | slice: 0, 1 -%}
+              {%- if first_char != '_' -%}
+                {%- if p.last contains 'http' -%}
+                  {%- assign clip_index = clip_index | plus: 1 -%}
+                  <a
+                    href="{{ p.last }}"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    class="cart-drawer-item__upload"
+                    title="{{ 'cart.uploaded_photo' | t: index: clip_index }}"
+                  >
+                    <img
+                      src="{{ p.last }}"
+                      alt="{{ 'cart.uploaded_photo' | t: index: clip_index }}"
+                      loading="lazy"
+                      width="32"
+                      height="32"
+                    >
+                  </a>
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- if item.line_level_discount_allocations.size > 0 -%}
+          <ul class="cart-drawer-item__discounts" role="list">
+            {%- for discount_allocation in item.line_level_discount_allocations -%}
+              <li class="cart-drawer-item__discount">
+                {{- discount_allocation.discount_application.title -}}
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+
+      <div class="cart-drawer-item__price">
+        <span class="cart-drawer-item__price-final">{{ item.final_line_price | money }}</span>
+
+        {%- if item.original_line_price > item.final_line_price -%}
+          <s class="cart-drawer-item__price-compare">{{ item.original_line_price | money }}</s>
+        {%- elsif item.variant.compare_at_price > item.variant.price -%}
+          {%- assign compare_at_line_price = item.variant.compare_at_price | times: item.quantity -%}
+          <s class="cart-drawer-item__price-compare">{{ compare_at_line_price | money }}</s>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <div class="cart-drawer-item__actions">
+      <cart-actions data-line="{{ line }}" class="cart-drawer-item__quantity">
+        <button
+          type="button"
+          data-quantity="{{ item.quantity | minus: 1 }}"
+          data-decrease-quantity
+          aria-label="{{ 'cart.decrease_quantity' | t }}"
+          class="cart-drawer-item__qty-button"
+        >
+          {{ 'subtract.svg' | inline_asset_content }}
+        </button>
+
+        <span class="cart-drawer-item__qty-value">{{ item.quantity }}</span>
+
+        <button
+          type="button"
+          data-quantity="{{ item.quantity | plus: 1 }}"
+          data-increase-quantity
+          aria-label="{{ 'cart.increase_quantity' | t }}"
+          class="cart-drawer-item__qty-button"
+        >
+          {{ 'add.svg' | inline_asset_content }}
+        </button>
+      </cart-actions>
+
+      <cart-actions data-line="{{ line }}">
+        <button
+          type="button"
+          data-quantity="0"
+          data-cart-item-remove
+          aria-label="{{ 'cart.remove' | t }}"
+          class="cart-drawer-item__remove"
+        >
+          {{ 'trash.svg' | inline_asset_content }}
+        </button>
+      </cart-actions>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .cart-drawer-item {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem; /* 16px */
+  }
+
+  .cart-drawer-item__media {
+    display: block;
+    position: relative;
+    flex-shrink: 0;
+    width: 112px;
+    height: 112px;
+    border-radius: var(--image-border-radius, 0);
+    overflow: hidden;
+    background: var(--color-muted-background, #f5f5f5);
+  }
+
+  .cart-drawer-item__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cart-drawer-item__body {
+    flex: 1 1 0%;
+    min-width: 0;
+    /* Matches the media, so the title row pins to the top and the quantity row
+       to the bottom exactly as drawn; only the optional meta lines grow it. */
+    min-height: 112px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .cart-drawer-item__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem; /* 8px */
+  }
+
+  .cart-drawer-item__info {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+
+  .cart-drawer-item__title {
+    font-family: var(--font-body--family);
+    font-size: 1rem; /* 16px */
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--color-popover-foreground, #111111);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cart-drawer-item__meta {
+    font-family: var(--font-body--family);
+    font-size: 0.75rem; /* 12px */
+    line-height: 1.4;
+    color: var(--color-muted-foreground, #737373);
+    margin-top: 0.25rem;
+  }
+
+  .cart-drawer-item__price {
+    flex-shrink: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    font-family: var(--font-body--family);
+    font-size: 1rem; /* 16px */
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--color-popover-foreground, #111111);
+    white-space: nowrap;
+  }
+
+  .cart-drawer-item__price-compare {
+    font-size: 0.75rem; /* 12px */
+    font-weight: 400;
+    color: var(--color-muted-foreground, #737373);
+  }
+
+  .cart-drawer-item__uploads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+  }
+
+  .cart-drawer-item__upload {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    background: var(--color-muted-background, #f5f5f5);
+  }
+
+  .cart-drawer-item__upload img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cart-drawer-item__discounts {
+    margin-top: 0.375rem;
+  }
+
+  .cart-drawer-item__discount {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--color-border, #e5e7eb);
+    font-family: var(--font-body--family);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--color-accent-background, #111111);
+  }
+
+  .cart-drawer-item__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  /* Quantity pill --------------------------------------------------------- */
+
+  .cart-drawer-item__quantity {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem; /* 24px */
+    height: 38px;
+    padding: 0.5rem 0.75rem; /* 8px 12px */
+    border-radius: var(--input-border-radius, 9999px);
+    background: var(--color-quantity-selector-background, #ffffff);
+  }
+
+  .cart-drawer-item__qty-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    color: var(--color-quantity-selector-foreground, #6b7280);
+    transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cart-drawer-item__qty-button:hover {
+    opacity: 0.7;
+  }
+
+  .cart-drawer-item__qty-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .cart-drawer-item__qty-button svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .cart-drawer-item__qty-value {
+    font-family: var(--font-body--family);
+    font-size: 1rem; /* 16px */
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--color-quantity-selector-foreground, #6b7280);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cart-drawer-item__quantity.loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* Remove ---------------------------------------------------------------- */
+
+  .cart-drawer-item__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    color: var(--color-muted-foreground, #737373);
+    transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cart-drawer-item__remove:hover {
+    color: var(--color-popover-foreground, #111111);
+  }
+
+  .cart-drawer-item__remove svg {
+    width: 18px;
+    height: 18px;
+  }
+{% endstylesheet %}

@@ -1,0 +1,8 @@
+extends: theme-check:recommended
+
+# Reference copies of theme files live under docs/ so the guides can ship
+# working code. They are documentation, not part of this theme — linting them
+# fails on translation keys and settings that only exist in the client theme
+# they were taken from.
+ignore:
+  - docs/**

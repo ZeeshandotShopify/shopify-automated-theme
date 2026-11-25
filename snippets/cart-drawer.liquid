@@ -1,0 +1,304 @@
+{% doc %}
+  Renders the cart drawer: the header, the free-shipping progress band, the
+  scrollable line-item list with the mobile "Frequently Bought Together"
+  carousel beneath it, the totals/checkout footer, and — from 64rem up — the
+  recommendation rail that sits flush against the drawer's left edge.
+
+  @param {boolean} [show_icon_labels] - Passed through to the cart icon trigger
+  @param {string} [custom_cart_icon] - Passed through to the cart icon trigger
+
+  @example
+  {% render 'cart-drawer' %}
+{% enddoc %}
+
+{% style %}
+  /*
+   * Shared with sections/cart.liquid, which reuses this class on the cart page,
+   * so the base rule stays exactly as the cart page has always had it and only
+   * the drawer-scoped override carries the new flex/scroll behaviour.
+   */
+  .cart-drawer-form {
+    background: var(--color-popover-background);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .cart-drawer-sheet-content .cart-drawer-form {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+  }
+{% endstyle %}
+
+<custom-cart data-cart-type="drawer">
+  <sheet-menu>
+    <sheet-trigger>
+      <button type="button" class="header__icon-button" aria-label="Open cart">
+        {% render 'cart-icon', show_icon_labels: show_icon_labels, custom_cart_icon: custom_cart_icon %}
+      </button>
+    </sheet-trigger>
+
+    <sheet-content class="cart-drawer-sheet-content">
+      {%- comment -%}
+        The checkout form stays empty and out of the layout: the recommendation
+        cards carry product forms of their own, and HTML forbids nesting them.
+        Everything that posts to it does so through the `form` attribute.
+      {%- endcomment -%}
+      <form id="cart-drawer-checkout-form" action="{{ routes.cart_url }}" method="post" hidden></form>
+
+      <div class="cart-drawer-form">
+        <sheet-header class="cart-drawer-sheet-header">
+          <sheet-title class="cart-drawer-sheet-title">
+            {{ 'cart.title' | t }}
+          </sheet-title>
+
+          <sheet-close class="cart-drawer-sheet-close">
+            {{ 'cart.continue_shopping' | t }}
+
+            {{ 'close.svg' | inline_asset_content }}
+          </sheet-close>
+        </sheet-header>
+
+        {% render 'cart-free-shipping' %}
+
+        <div class="cart-drawer-content">
+          {%- if cart.item_count > 0 -%}
+            <ul class="cart-drawer-items" role="list">
+              {%- for item in cart.items -%}
+                <li>
+                  {% render 'cart-drawer-item', item: item, line: forloop.index -%}
+                </li>
+              {%- endfor -%}
+            </ul>
+
+            {%- if settings.show_product_recommendations -%}
+              {% render 'cart-product-recommendations', product_id: cart.items.last.product_id %}
+            {%- endif -%}
+          {%- else -%}
+            {% render 'cart-empty' %}
+          {%- endif -%}
+        </div>
+      </div>
+
+      {%- if cart.item_count > 0 -%}
+        <sheet-footer class="cart-drawer-sheet-footer">
+          {%- if settings.enable_cart_note -%}
+            {% render 'cart-note' %}
+          {%- endif -%}
+
+          {% render 'cart-footer' %}
+        </sheet-footer>
+
+        {%- if settings.show_product_recommendations -%}
+          {% render 'cart-product-recommendations-desktop', product_id: cart.items.last.product_id %}
+        {%- endif -%}
+      {%- endif -%}
+    </sheet-content>
+  </sheet-menu>
+</custom-cart>
+
+{% stylesheet %}
+  custom-cart {
+    display: inline-flex;
+  }
+
+  /* Panel ------------------------------------------------------------------ */
+
+  /*
+   * `overflow` stays visible so the recommendation rail — absolutely positioned
+   * at the panel's left edge and translated fully out of it — is not clipped.
+   * Scrolling lives on .cart-drawer-content instead.
+   */
+  .cart-drawer-sheet-content {
+    gap: 0;
+    overflow: visible;
+    background: var(--color-popover-background, #fff);
+    /*
+     * `width: 100%` on a fixed element resolves against the initial containing
+     * block, which grows with the document when a page overflows horizontally —
+     * the drawer then renders wider than the screen. Viewport units don't.
+     */
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /*
+   * Anchor from the left and slide in with a transform. `right: 0` would resolve
+   * against the same overflowed containing block and push the drawer off-screen;
+   * transform percentages resolve against the element's own box, so they don't.
+   */
+  .cart-drawer-sheet-content,
+  .cart-drawer-sheet-content[data-direction='right'] {
+    top: 0;
+    left: 0;
+    right: auto;
+    transform: translateX(100vw);
+  }
+
+  .cart-drawer-sheet-content[data-state='open'],
+  .cart-drawer-sheet-content[data-direction='right'][data-state='open'] {
+    transform: translateX(calc(100vw - 100%));
+  }
+
+  @media (width >= 40rem) {
+    .cart-drawer-sheet-content {
+      max-width: 506px;
+    }
+  }
+
+  /* Header ----------------------------------------------------------------- */
+
+  .cart-drawer-sheet-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem 1rem; /* 24px 16px */
+    border-bottom: 0;
+  }
+
+  .cart-drawer-sheet-title {
+    font-family: var(--font-heading--family);
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.4;
+    font-weight: 700;
+  }
+
+  .cart-drawer-sheet-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 0.375rem 0; /* 6px block */
+    border: 0;
+    border-radius: 6px;
+    opacity: 1;
+    font-family: var(--font-body--family);
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.4;
+    font-weight: 400;
+    color: var(--color-muted-foreground, #737373);
+  }
+
+  .cart-drawer-sheet-close:hover {
+    opacity: 0.7;
+  }
+
+  .cart-drawer-sheet-close svg {
+    width: 1.5rem; /* 24px */
+    height: 1.5rem;
+  }
+
+  /* Content ---------------------------------------------------------------- */
+
+  .cart-drawer-content {
+    flex: 1 1 0%;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2.5rem; /* 40px — minimum separation between the list and the carousel */
+    padding: 2.5rem 1rem 1.5rem; /* the 40px top is the gap below the shipping band */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .cart-drawer-content::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cart-drawer-content:has(.cart-empty) {
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* The content column scrolls, so nothing inside it may be squeezed. */
+  .cart-drawer-content > * {
+    flex-shrink: 0;
+  }
+
+  .cart-drawer-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* 16px */
+  }
+
+  /* Footer ----------------------------------------------------------------- */
+
+  .cart-drawer-sheet-footer {
+    display: block;
+    padding: 0;
+    margin-top: auto;
+    background: var(--color-popover-background, #fff);
+  }
+
+  @media (width >= 64rem) {
+    .cart-drawer-sheet-header {
+      padding: 1rem 1.5rem; /* 16px 24px */
+      /* inset shadow, not a border: the design's 68px header includes the rule */
+      box-shadow: inset 0 -1px 0 var(--color-border, #e5e7eb);
+    }
+
+    .cart-drawer-sheet-close {
+      gap: 0.25rem; /* 4px */
+      color: var(--color-muted-foreground, #737373);
+    }
+
+    .cart-drawer-content {
+      justify-content: flex-start;
+      gap: 0;
+      padding: 2rem 1.5rem 1.5rem; /* 32px 24px 24px */
+    }
+  }
+
+  /* Price shimmer ---------------------------------------------------------- */
+
+  .price-loading {
+    position: relative;
+    overflow: hidden;
+    min-height: 1.25rem;
+  }
+
+  .price-loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 25%,
+      rgba(255, 255, 255, 0.8) 50%,
+      rgba(255, 255, 255, 0.4) 75%,
+      transparent 100%
+    );
+    animation: smoothShimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes smoothShimmer {
+    0% {
+      left: -100%;
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 1;
+    }
+
+    90% {
+      opacity: 1;
+    }
+
+    100% {
+      left: 100%;
+      opacity: 0;
+    }
+  }
+{% endstylesheet %}

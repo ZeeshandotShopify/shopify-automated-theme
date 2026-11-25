@@ -1,0 +1,15 @@
+{%- style -%}
+  .header__nav {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-body--family);
+  }
+{%- endstyle -%}
+
+{% case block.settings.menu_type %}
+  {% when 'mega_menu' %}
+    {% render 'header-desktop-menu-mega-menu', block: block %}
+  {% else %}
+    {% render 'header-desktop-menu-dropdown', block: block %}
+{% endcase %}

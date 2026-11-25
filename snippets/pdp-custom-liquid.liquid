@@ -1,0 +1,15 @@
+{%- if block.settings.custom_liquid != blank -%}
+  {%- style -%}
+    #pdp-custom-liquid-{{ block.id }} {
+      padding-top: {{ block.settings.padding_top }}px;
+      padding-bottom: {{ block.settings.padding_bottom }}px;
+    }
+  {%- endstyle -%}
+
+  <div
+    id="pdp-custom-liquid-{{ block.id }}"
+    {{ block.shopify_attributes }}
+  >
+    {{ block.settings.custom_liquid }}
+  </div>
+{%- endif -%}

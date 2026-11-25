@@ -1,0 +1,93 @@
+{%- stylesheet -%}
+  .collection-tabs-linked-to-tab {
+    position: relative;
+    display: none;
+    font-size: 0.875rem;
+    line-height: 140%;
+    font-weight: 500;
+  }
+
+  .collection-tabs-linked-to-tab::before,
+  .collection-tabs-linked-to-tab::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    bottom: 0;
+    pointer-events: none;
+  }
+
+  /* animated fill (starts hidden via scaleX(0)) */
+  .collection-tabs-linked-to-tab::before {
+    background: var(--fg-color);
+    transform-origin: left center;
+    transform: scaleX(0);
+    transition: transform 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    z-index: 2;
+    will-change: transform;
+  }
+
+  /* faint baseline */
+  .collection-tabs-linked-to-tab::after {
+    background: var(--fg-color);
+    opacity: 0.25;
+    z-index: 1;
+  }
+
+  /* trigger on hover / keyboard focus */
+  .collection-tabs-linked-to-tab:hover::before,
+  .collection-tabs-linked-to-tab:focus::before {
+    transform: scaleX(1);
+  }
+
+  .collection-tabs-linked-to-tab.active {
+    display: block;
+  }
+{%- endstylesheet -%}
+
+{%- if section_blocks.size > 0 -%}
+  <div class="collection-tabs-links">
+    {%- assign rendered_link_count = 0 -%}
+    {%- for block in section_blocks -%}
+      {%- liquid
+        assign collection = collections[block.settings.collection]
+        assign title_override = block.settings.title_override | strip
+        assign has_products = false
+        if collection != blank and collection.all_products_count > 0
+          assign has_products = true
+        endif
+
+        assign should_render = has_products
+        if request.design_mode
+          assign should_render = true
+        endif
+
+        assign link_title = title_override | default: collection.title
+      -%}
+      {%- if should_render -%}
+        <a
+          href="{{ collection.url | default: '#' }}"
+          class="collection-tabs-linked-to-tab {% if rendered_link_count == 0 %}active{% endif %}"
+          {% if collection == blank %}
+            aria-disabled="true"
+          {% endif %}
+        >
+          {%- if link_title != blank -%}
+            Shop All {{ link_title }}
+          {%- else -%}
+            Shop All
+          {%- endif -%}
+        </a>
+        {%- assign rendered_link_count = rendered_link_count | plus: 1 -%}
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+{%- else -%}
+  {% comment %} Placeholder Tabs Links {% endcomment %}
+  <div class="collection-tabs-links">
+    <a href="#" class="collection-tabs-linked-to-tab active">Shop All New Arrivals</a>
+    <a href="#" class="collection-tabs-linked-to-tab">Shop All Best Sellers</a>
+    <a href="#" class="collection-tabs-linked-to-tab">Shop All Sale Items</a>
+  </div>
+{%- endif -%}

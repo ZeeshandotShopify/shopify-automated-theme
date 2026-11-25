@@ -1,0 +1,73 @@
+{% liquid
+  assign menu = menu
+
+  assign text_color_mode = text_color_mode | default: 'inherit'
+  if text_color_mode == 'inherit'
+    assign text_color = 'inherit'
+  else
+    assign text_color = text_color | default: '#111111'
+  endif
+
+  assign mobile_gap = mobile_gap | default: 8
+  assign desktop_gap = desktop_gap | default: 8
+
+  assign mobile_direction = mobile_direction | default: 'row'
+  assign desktop_direction = desktop_direction | default: 'row'
+
+  assign shopify_attributes = shopify_attributes
+%}
+
+{% style %}
+  #menu-{{ id }} {
+    --menu-{{ id }}-mobile-gap: {{ mobile_gap }}px;
+    --menu-{{ id }}-desktop-gap: {{ desktop_gap }}px;
+
+    --menu-{{ id }}-text-color: {{ text_color }};
+
+    --menu-{{ id }}-mobile-direction: {{  mobile_direction }};
+    --menu-{{ id }}-desktop-direction: {{ desktop_direction }};
+
+    --menu-{{ id }}-mobile-align: {% if mobile_direction == 'row' %}center{% else %}flex-start{% endif %};
+    --menu-{{ id }}-desktop-align: {% if desktop_direction == 'row' %}center{% else %}flex-start{% endif %};
+
+    font-family: var(--font-body--family);
+  }
+
+  #menu-{{ id }} .menu-list {
+    display: flex;
+    flex-direction: var(--menu-{{ id }}-mobile-direction);
+    align-items: var(--menu-{{ id }}-mobile-align);
+    gap: var(--menu-{{ id }}-mobile-gap);
+  }
+
+  #menu-{{ id }} .menu-item {
+    color: var(--menu-{{ id }}-text-color);
+  }
+
+  @media(width >= 64rem) {
+    #menu-{{ id }} .menu-list {
+      flex-direction: var(--menu-{{ id }}-desktop-direction);
+      align-items: var(--menu-{{ id }}-desktop-align);
+      gap: var(--menu-{{ id }}-desktop-gap);
+    }
+  }
+{% endstyle %}
+
+<nav
+  id="menu-{{ id }}"
+  {{ shopify_attributes }}
+>
+  {%- if menu != blank -%}
+    <ul class="menu-list">
+      {%- for link in menu -%}
+        <li class="menu-item">
+          <a
+            href="{{ link.url }}"
+          >
+            {{ link.title }}
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+</nav>

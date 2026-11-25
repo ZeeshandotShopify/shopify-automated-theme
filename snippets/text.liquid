@@ -1,0 +1,85 @@
+{%- liquid
+  assign id = id
+  assign text_style = text_style | default: 'default'
+  assign text_tag = text_tag | default: 'p'
+  assign text = text | default: ''
+  assign richtext = richtext | default: ''
+  assign text_color_mode = text_color_mode | default: 'inherit'
+  if text_color_mode == 'inherit'
+    assign text_color = 'var(--color-foreground)'
+  else
+    assign text_color = text_color | default: '#111111'
+  endif
+  assign font_family = font_family | default: 'var(--font-body--family)'
+  assign font_weight = font_weight | default: '400'
+  assign mobile_font_size = mobile_font_size | default: '1rem'
+  assign mobile_line_height = mobile_line_height | default: 'calc(1.5 / 1)'
+  assign desktop_font_size = desktop_font_size | default: '1.25rem'
+  assign desktop_line_height = desktop_line_height | default: 'calc(1.75 / 1.25)'
+  assign text_transform = text_transform | default: 'none'
+  assign mobile_width = mobile_width | default: '100%'
+  assign desktop_width = desktop_width | default: '100%'
+  assign mobile_max_width = mobile_max_width | default: '42rem'
+  assign desktop_max_width = desktop_max_width | default: '42rem'
+  assign mobile_text_align = mobile_text_align | default: 'center'
+  assign desktop_text_align = desktop_text_align | default: 'center'
+  assign mobile_letter_spacing = mobile_letter_spacing | default: 'normal'
+  assign desktop_letter_spacing = desktop_letter_spacing | default: 'normal'
+%}
+
+{% if text != blank or richtext != blank %}
+  <style>
+    #text-{{ id }} {
+      --text-color: {{ text_color }};
+      --font-family: {{ font_family }};
+      --font-weight: {{ font_weight }};
+      --font-size: {{ mobile_font_size }};
+      --line-height: {{ mobile_line_height }};
+      --text-transform: {{ text_transform }};
+      --width: {{ mobile_width }};
+      --max-width: {{ mobile_max_width }};
+      --text-align: {{ mobile_text_align }};
+      --letter-spacing: {{ mobile_letter_spacing }};
+
+      color: var(--text-color);
+      font-family: var(--font-family);
+      font-weight: var(--font-weight);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+      text-transform: var(--text-transform);
+      width: var(--width);
+      max-width: var(--max-width);
+      text-align: var(--text-align);
+      letter-spacing: var(--letter-spacing);
+      overflow-wrap: anywhere;
+    }
+
+    @media (width >= 64rem) {
+      #text-{{ id }} {
+        --font-size: {{ desktop_font_size }};
+        --line-height: {{ desktop_line_height }};
+        --width: {{ desktop_width }};
+        --max-width: {{ desktop_max_width }};
+        --text-align: {{ desktop_text_align }};
+        --letter-spacing: {{ desktop_letter_spacing }};
+
+        font-size: var(--font-size);
+        line-height: var(--line-height);
+        width: var(--width);
+        max-width: var(--max-width);
+        text-align: var(--text-align);
+        letter-spacing: var(--letter-spacing);
+      }
+    }
+  </style>
+
+  {% if text_style == 'richtext' %}
+    <div id="text-{{ id }}" class="rte" {{ shopify_attributes }}>
+      {{- richtext -}}
+    </div>
+  {% else %}
+    <div id="text-{{ id }}" {{ shopify_attributes }}>
+      <{{ text_tag }}>{{- text | newline_to_br -}}</{{ text_tag }}>
+    </div>
+  {% endif %}
+{% endif %}

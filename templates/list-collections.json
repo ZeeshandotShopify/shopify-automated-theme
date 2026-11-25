@@ -1,0 +1,36 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "collections_UtdLPq": {
+      "type": "collections",
+      "name": "Collections",
+      "settings": {
+        "bg_color_mode": "inherit",
+        "bg_color": "#ffffff",
+        "desktop_grid_columns": 4,
+        "desktop_grid_gap": "2rem",
+        "mobile_grid_columns": "2",
+        "mobile_grid_gap": "1.5rem",
+        "desktop_gap": "2rem",
+        "desktop_padding_top": 96,
+        "desktop_padding_bottom": 96,
+        "desktop_padding_left": 64,
+        "desktop_padding_right": 64,
+        "mobile_gap": "2rem",
+        "mobile_padding_top": 64,
+        "mobile_padding_bottom": 64,
+        "mobile_padding_left": 16,
+        "mobile_padding_right": 16
+      }
+    }
+  },
+  "order": ["collections_UtdLPq"]
+}

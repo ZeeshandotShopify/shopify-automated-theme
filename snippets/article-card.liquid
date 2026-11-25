@@ -1,0 +1,184 @@
+{%- liquid
+  assign card_style = style | default: 'editorial'
+  assign image_source = override_image | default: article.image
+  assign image_object_fit = image_object_fit | default: 'cover'
+  assign image_desktop_aspect_ratio = image_desktop_aspect_ratio | default: 'auto'
+  assign image_desktop_custom_width = image_desktop_custom_width | default: '100%'
+  assign image_mobile_aspect_ratio = image_mobile_aspect_ratio | default: 'auto'
+  assign image_mobile_custom_width = image_mobile_custom_width | default: '100%'
+  assign image_desktop_enable_custom_dimension = image_desktop_enable_custom_dimension | default: true, allow_false: true
+  assign image_enable_mobile_size = image_enable_mobile_size | default: true, allow_false: true
+  assign image_mobile_enable_custom_dimension = image_mobile_enable_custom_dimension | default: true, allow_false: true
+
+  if card_style == 'minimal'
+    assign fallback_desktop_height = '416px'
+    assign fallback_mobile_height = '320px'
+  else
+    assign fallback_desktop_height = '16rem'
+    assign fallback_mobile_height = '16rem'
+  endif
+
+  if image_desktop_custom_height != blank
+    assign image_desktop_effective_height = image_desktop_custom_height
+  else
+    assign image_desktop_effective_height = fallback_desktop_height
+  endif
+
+  if image_mobile_custom_height != blank
+    assign image_mobile_effective_height = image_mobile_custom_height
+  else
+    assign image_mobile_effective_height = fallback_mobile_height
+  endif
+-%}
+
+{%- stylesheet -%}
+  .article-card {
+    height: 100%;
+  }
+
+  .article-card__image-link,
+  .article-card__title-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .article-card__image-link {
+    display: block;
+    line-height: 0;
+  }
+
+  .article-card__meta {
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+    line-height: 140%;
+  }
+
+  .article-card__title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: 1.5rem;
+    line-height: 140%;
+    font-weight: 500;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  @media (width >= 64rem) {
+    .article-card__title {
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  .article-card--editorial {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
+  }
+
+  .article-card--editorial .article-card__content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.5rem;
+  }
+
+  .article-card--editorial .article-card__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .article-card--editorial .article-card__divider {
+    width: 100%;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  .article-card--minimal {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .article-card--minimal .article-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .article-card--minimal .article-card__title {
+    font-size: 1.25rem;
+    font-weight: 400;
+  }
+
+  .article-card--minimal .article-card__read-more {
+    align-self: flex-start;
+    color: inherit;
+    font-size: 0.875rem;
+    line-height: 140%;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+    text-decoration-thickness: 1px;
+  }
+{%- endstylesheet -%}
+
+<div class="article-card article-card--{{ card_style }}">
+  <a href="{{ article.url }}" class="article-card__image-link" aria-label="{{ article.title | escape }}">
+    {% render 'responsive-image',
+      image: image_source,
+      object_fit: image_object_fit,
+      desktop_aspect_ratio: image_desktop_aspect_ratio,
+      desktop_enable_custom_dimension: image_desktop_enable_custom_dimension,
+      desktop_custom_width: image_desktop_custom_width,
+      desktop_custom_height: image_desktop_effective_height,
+      enable_mobile_size: image_enable_mobile_size,
+      mobile_aspect_ratio: image_mobile_aspect_ratio,
+      mobile_enable_custom_dimension: image_mobile_enable_custom_dimension,
+      mobile_custom_width: image_mobile_custom_width,
+      mobile_custom_height: image_mobile_effective_height
+    %}
+  </a>
+
+  {%- if card_style == 'minimal' -%}
+    <div class="article-card__body">
+      <div class="article-card__meta">{{- article.published_at | date: '%d.%m.%Y' -}}</div>
+
+      <h3 class="article-card__title">
+        <a href="{{ article.url }}" class="article-card__title-link">{{- article.title -}}</a>
+      </h3>
+
+      <a class="article-card__read-more" href="{{ article.url }}">Read More</a>
+    </div>
+  {%- else -%}
+    <div class="article-card__content-wrapper">
+      <div class="article-card__content">
+        <div class="article-card__meta">{{- article.published_at | date: '%b %d, %Y' -}}</div>
+
+        <h3 class="article-card__title">
+          <a href="{{ article.url }}" class="article-card__title-link">{{- article.title -}}</a>
+        </h3>
+
+        <div class="article-card__divider"></div>
+
+        <p>
+          {{ article.excerpt_or_content | strip_html | truncatewords: 30 }}
+        </p>
+      </div>
+
+      <div class="article-card__read-more-button">
+        {% render 'button',
+          label: 'Read More',
+          url: article.url,
+          variant: 'secondary',
+          icon_mode: 'select',
+          icon_select: 'arrow-right-long',
+          icon_position: 'right'
+        %}
+      </div>
+    </div>
+  {%- endif -%}
+</div>

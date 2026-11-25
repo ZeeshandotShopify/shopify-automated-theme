@@ -1,0 +1,377 @@
+{%- liquid
+  assign walkthrough = product.metafields.custom.product_walkthrough.value
+
+  assign walkthrough_image = blank
+  assign walkthrough_heading = blank
+  assign walkthrough_intro_text = blank
+  assign walkthrough_supporting_text = blank
+  assign walkthrough_steps = blank
+
+  if walkthrough != blank
+    assign walkthrough_image = walkthrough.image.value
+    assign walkthrough_heading = walkthrough.heading.value
+    assign walkthrough_intro_text = walkthrough.intro_text.value
+    assign walkthrough_supporting_text = walkthrough.supporting_text.value
+    assign walkthrough_steps = walkthrough.steps.value
+  endif
+
+  assign show_section = false
+  assign is_placeholder = false
+
+  if walkthrough_image != blank or walkthrough_heading != blank or walkthrough_intro_text != blank or walkthrough_supporting_text != blank or walkthrough_steps != blank
+    assign show_section = true
+  elsif request.design_mode
+    assign show_section = true
+    assign is_placeholder = true
+  endif
+-%}
+
+{%- if show_section -%}
+  {%- style -%}
+    #product-walkthrough-metafield-{{ section.id }} {
+      --mobile-padding-top: {{ section.settings.mobile_padding_top }}px;
+      --mobile-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+      --mobile-padding-left: {{ section.settings.mobile_padding_left }}px;
+      --mobile-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+      --desktop-padding-top: {{ section.settings.desktop_padding_top }}px;
+      --desktop-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+      --desktop-padding-left: {{ section.settings.desktop_padding_left }}px;
+      --desktop-padding-right: {{ section.settings.desktop_padding_right }}px;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-metafield {
+      padding: var(--mobile-padding-top) var(--mobile-padding-right) var(--mobile-padding-bottom) var(--mobile-padding-left);
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4rem;
+      align-items: start;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-image-wrapper {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      background: var(--color-muted-background);
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-heading {
+      font-family: var(--font-heading--family);
+      font-size: 2rem;
+      line-height: 140%;
+      font-weight: 500;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-intro-text,
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-supporting-text {
+      font-size: 1.125rem;
+      line-height: 140%;
+      font-weight: 400;
+      margin-top: 1.5rem;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-steps {
+      margin-top: 1.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-step {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-step-icon {
+      width: 3rem;
+      height: 3rem;
+      min-width: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9999px;
+      background: var(--color-primary-background);
+      color: var(--color-primary-foreground);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-step-number {
+      font-size: 1rem;
+      line-height: 1;
+      font-weight: 600;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-step-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-step-title {
+      margin: 0;
+      font-size: 1.25rem;
+      line-height: 140%;
+      font-weight: 600;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-step-description {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      line-height: 140%;
+      font-weight: 400;
+    }
+
+    #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-step-divider {
+      display: block;
+      width: 1px;
+      height: 2.5rem;
+      margin-top: 0.75rem;
+      margin-bottom: 0.75rem;
+      margin-left: calc(1.5rem - 0.5px);
+      background: var(--color-primary-background);
+      opacity: 0.35;
+    }
+
+    @media (width >= 64rem) {
+      #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-metafield {
+        padding: var(--desktop-padding-top) var(--desktop-padding-right) var(--desktop-padding-bottom) var(--desktop-padding-left);
+      }
+
+      #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #product-walkthrough-metafield-{{ section.id }} .product-walkthrough-heading {
+        font-size: 2.5rem;
+      }
+    }
+  {%- endstyle -%}
+
+  <div id="product-walkthrough-metafield-{{ section.id }}">
+    <div class="shopify-page-width shopify-page-padding">
+      <div class="product-walkthrough-metafield">
+        <div class="product-walkthrough-grid">
+          <div class="product-walkthrough-image-wrapper">
+            {%- if is_placeholder -%}
+              {{ 'image' | placeholder_svg_tag }}
+            {%- elsif walkthrough_image != blank -%}
+              {% render 'responsive-image',
+                image: walkthrough_image,
+                desktop_enable_custom_dimension: true,
+                desktop_custom_height: '100%',
+                desktop_custom_width: '100%'
+              %}
+            {%- else -%}
+              {{ 'image' | placeholder_svg_tag }}
+            {%- endif -%}
+          </div>
+
+          <div class="product-walkthrough-content">
+            {%- if is_placeholder -%}
+              <h2 class="product-walkthrough-heading">How It Works</h2>
+              <div class="product-walkthrough-intro-text">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor.
+              </div>
+              <div class="product-walkthrough-supporting-text">Here&apos;s how it works on the course:</div>
+            {%- else -%}
+              {%- if walkthrough_heading != blank -%}
+                <h2 class="product-walkthrough-heading">{{ walkthrough_heading }}</h2>
+              {%- endif -%}
+
+              {%- if walkthrough_intro_text != blank -%}
+                <div class="product-walkthrough-intro-text">{{ walkthrough_intro_text | newline_to_br }}</div>
+              {%- endif -%}
+
+              {%- if walkthrough_supporting_text != blank -%}
+                <div class="product-walkthrough-supporting-text">{{ walkthrough_supporting_text | newline_to_br }}</div>
+              {%- endif -%}
+            {%- endif -%}
+
+            {%- if is_placeholder -%}
+              <div class="product-walkthrough-steps">
+                {%- for i in (1..3) -%}
+                  <div class="product-walkthrough-step">
+                    <div class="product-walkthrough-step-icon" aria-hidden="true">
+                      <span class="product-walkthrough-step-number">{{ i }}</span>
+                    </div>
+
+                    <div class="product-walkthrough-step-text">
+                      <h3 class="product-walkthrough-step-title">Step title {{ i }}</h3>
+                      <div class="product-walkthrough-step-description">
+                        Add your step description here. This placeholder only appears in the theme editor.
+                      </div>
+                    </div>
+                  </div>
+
+                  {%- unless forloop.last -%}
+                    <div class="product-walkthrough-step-divider"></div>
+                  {%- endunless -%}
+                {%- endfor -%}
+              </div>
+            {%- elsif walkthrough_steps != blank -%}
+              <div class="product-walkthrough-steps">
+                {%- for step in walkthrough_steps -%}
+                  {%- assign step_icon_svg = step.icon_svg.value -%}
+                  {%- assign step_title = step.title.value -%}
+                  {%- assign step_description = step.description.value -%}
+
+                  <div class="product-walkthrough-step">
+                    <div class="product-walkthrough-step-icon" aria-hidden="true">
+                      {%- if step_icon_svg != blank -%}
+                        {{ step_icon_svg }}
+                      {%- else -%}
+                        <span class="product-walkthrough-step-number">{{ forloop.index }}</span>
+                      {%- endif -%}
+                    </div>
+
+                    <div class="product-walkthrough-step-text">
+                      {%- if step_title != blank -%}
+                        <h3 class="product-walkthrough-step-title">{{ step_title }}</h3>
+                      {%- endif -%}
+
+                      {%- if step_description != blank -%}
+                        <div class="product-walkthrough-step-description">{{ step_description | newline_to_br }}</div>
+                      {%- endif -%}
+                    </div>
+                  </div>
+
+                  {%- unless forloop.last -%}
+                    <div class="product-walkthrough-step-divider"></div>
+                  {%- endunless -%}
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:section.product_metafield.walkthrough",
+  "tag": "section",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Data Source"
+    },
+    {
+      "type": "paragraph",
+      "content": "How to Create the Product Walkthrough Metafield:"
+    },
+    {
+      "type": "paragraph",
+      "content": "1. Create a metaobject definition named 'Product Walkthrough Step' and make the first field 'Product Title - Step Title' (Single line text). This will be the display name for each step entry, then add fields: 'Icon SVG' (Multi-line text), 'Title' (Single line text), 'Description' (Multi-line text)"
+    },
+    {
+      "type": "paragraph",
+      "content": "2. Create a metaobject definition named 'Product Walkthrough' and make the first field 'Product Title' (Single line text). This will be the display name for each entry, then add fields: 'Image' (Image), 'Heading' (Single line text), 'Intro Text' (Multi-line text), 'Supporting Text' (Single line text), and 'Steps' (List of metaboject Product Walkthrough Step)"
+    },
+    {
+      "type": "paragraph",
+      "content": "3. Create a product metafield and name it 'Product Walkthrough' add the 'Product Walkthrough' metaboject"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:section.product_metafield.walkthrough",
+      "category": "t:section.product_metafield.category"
+    }
+  ]
+}
+{% endschema %}

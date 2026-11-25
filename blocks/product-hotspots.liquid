@@ -1,0 +1,139 @@
+{%- stylesheet -%}
+  .hotspot-container {
+    position: relative;
+    width: 100%;
+    /* overflow: hidden; */
+  }
+{%- endstylesheet -%}
+
+<product-hotspots data-target="hotspot-container-{{ block.id }}" {{ block.shopify_attributes }}>
+  <div class="hotspot-container-{{ block.id }} hotspot-container">
+    {% render 'responsive-image',
+      image: block.settings.image,
+      enable_mobile_size: block.settings.enable_mobile_size,
+      mobile_aspect_ratio: block.settings.mobile_aspect_ratio,
+      mobile_enable_custom_dimension: block.settings.mobile_enable_custom_dimension,
+      mobile_custom_width: block.settings.mobile_custom_width,
+      mobile_custom_height: block.settings.mobile_custom_height,
+      desktop_aspect_ratio: block.settings.desktop_aspect_ratio,
+      desktop_enable_custom_dimension: block.settings.desktop_enable_custom_dimension,
+      desktop_custom_width: block.settings.desktop_custom_width,
+      desktop_custom_height: block.settings.desktop_custom_height
+    %}
+
+    {% content_for 'blocks' %}
+  </div>
+</product-hotspots>
+
+{% schema %}
+{
+  "name": "Product Hotspots",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "product-point"
+    }
+  ],
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Lifestyle Image",
+      "info": "Upload a lifestyle or editorial image showing your products"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content"
+    },
+    {
+      "type": "select",
+      "id": "desktop_aspect_ratio",
+      "label": "t:aspect_ratio.label",
+      "options": [
+        { "label": "t:aspect_ratio.options.unset", "value": "unset" },
+        { "label": "t:aspect_ratio.options.adapt", "value": "auto" },
+        { "label": "16:9 (Widescreen)", "value": "16 / 9" },
+        { "label": "4:3 (Standard)", "value": "4 / 3" },
+        { "label": "1:1 (Square)", "value": "1 / 1" },
+        { "label": "9:16 (Vertical)", "value": "9 / 16" },
+        { "label": "21:9 (Cinematic)", "value": "21 / 9" }
+      ],
+      "default": "1 / 1"
+    },
+    {
+      "type": "checkbox",
+      "id": "desktop_enable_custom_dimension",
+      "label": "Enable Custom Dimension"
+    },
+    {
+      "type": "text",
+      "id": "desktop_custom_width",
+      "label": "Width",
+      "placeholder": "px, rem, %, etc.",
+      "default": "600px",
+      "visible_if": "{{ block.settings.desktop_enable_custom_dimension }}"
+    },
+    {
+      "type": "text",
+      "id": "desktop_custom_height",
+      "label": "Height",
+      "placeholder": "px, rem, %, etc.",
+      "default": "400px",
+      "visible_if": "{{ block.settings.desktop_enable_custom_dimension }}"
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_mobile_size",
+      "label": "Enable Mobile Size",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "mobile_aspect_ratio",
+      "label": "t:aspect_ratio.label",
+      "options": [
+        { "label": "t:aspect_ratio.options.unset", "value": "unset" },
+        { "label": "t:aspect_ratio.options.adapt", "value": "auto" },
+        { "label": "16:9 (Widescreen)", "value": "16 / 9" },
+        { "label": "4:3 (Standard)", "value": "4 / 3" },
+        { "label": "1:1 (Square)", "value": "1 / 1" },
+        { "label": "9:16 (Vertical)", "value": "9 / 16" },
+        { "label": "21:9 (Cinematic)", "value": "21 / 9" }
+      ],
+      "default": "1 / 1",
+      "visible_if": "{{ block.settings.enable_mobile_size }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_enable_custom_dimension",
+      "label": "Enable Custom Dimension",
+      "visible_if": "{{ block.settings.enable_mobile_size }}"
+    },
+    {
+      "type": "text",
+      "id": "mobile_custom_width",
+      "label": "Width",
+      "placeholder": "px, rem, %, etc.",
+      "default": "600px",
+      "visible_if": "{{ block.settings.enable_mobile_size and block.settings.mobile_enable_custom_dimension }}"
+    },
+    {
+      "type": "text",
+      "id": "mobile_custom_height",
+      "label": "Height",
+      "placeholder": "px, rem, %, etc.",
+      "default": "400px",
+      "visible_if": "{{ block.settings.enable_mobile_size and block.settings.mobile_enable_custom_dimension }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Hotspots"
+    }
+  ]
+}
+{% endschema %}

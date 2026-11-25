@@ -1,0 +1,99 @@
+{% doc %}
+  Renders the cart drawer's free-shipping progress band: a headline and a
+  two-tone bar that fills as the cart total approaches the free-shipping
+  threshold, and reads as fully unlocked once it is met.
+
+  Reads `settings.show_free_shipping_bar` and `settings.free_shipping_threshold`
+  (major currency units). Renders nothing when the bar is switched off, when the
+  threshold is unset, or when the cart is empty.
+
+  @example
+  {% render 'cart-free-shipping' %}
+{% enddoc %}
+
+{%- liquid
+  assign threshold = settings.free_shipping_threshold | times: 100
+
+  assign show_bar = false
+  if settings.show_free_shipping_bar
+    if threshold > 0
+      if cart.item_count > 0
+        assign show_bar = true
+      endif
+    endif
+  endif
+
+  assign remaining = threshold | minus: cart.total_price
+  assign remaining_money = remaining | money
+  assign progress = cart.total_price | times: 100.0 | divided_by: threshold | at_most: 100 | at_least: 0
+-%}
+
+{%- if show_bar -%}
+  <div class="cart-free-shipping" style="--cart-free-shipping-progress: {{ progress }}%">
+    <p class="cart-free-shipping__text">
+      {%- if remaining > 0 -%}
+        {{- 'cart.free_shipping.progress' | t: amount: remaining_money -}}
+      {%- else -%}
+        {{- 'cart.free_shipping.unlocked' | t -}}
+      {%- endif -%}
+    </p>
+
+    <div
+      class="cart-free-shipping__track"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="{{ progress | round }}"
+    >
+      <div class="cart-free-shipping__fill"></div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .cart-free-shipping {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem; /* 16px */
+    padding: 1.5rem 1rem 0; /* 24px 16px 0 */
+    background: var(--color-popover-background, #fff);
+  }
+
+  .cart-free-shipping__text {
+    font-family: var(--font-heading--family);
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.4;
+    font-weight: 700;
+    color: var(--color-popover-foreground, #111111);
+    text-align: center;
+  }
+
+  /*
+   * The bar is drawn on a zero-height line in the design: a 6px stroke whose
+   * centre sits on the layout edge, overhanging 3px above and below. The
+   * negative block margin reproduces that without changing the band's height.
+   */
+  .cart-free-shipping__track {
+    width: 100%;
+    height: var(--free-shipping-bar-thickness, 6px);
+    /* Half the thickness, so the bar stays centred on a zero-height line
+       whatever thickness the merchant picks. */
+    margin-block: calc(var(--free-shipping-bar-thickness, 6px) / -2);
+    background: var(--color-free-shipping-bar-track, #e5e7eb);
+    overflow: hidden;
+  }
+
+  .cart-free-shipping__fill {
+    width: var(--cart-free-shipping-progress, 0%);
+    height: 100%;
+    background: var(--color-free-shipping-bar-fill, #c95136);
+    transition: width 0.4s ease;
+  }
+
+  @media (width >= 64rem) {
+    .cart-free-shipping {
+      padding: 1rem; /* 16px */
+    }
+  }
+{% endstylesheet %}

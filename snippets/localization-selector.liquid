@@ -1,0 +1,296 @@
+{% doc %}
+  Renders a Shopify localization (country/currency) selector.
+
+  Built on the native <details>/<summary> disclosure pattern:
+  - <summary> toggles the parent <details>'s open state on click — no JS needed
+    to open or close.
+  - The popover list is positioned with ordinary CSS absolute positioning
+    relative to the <details> element — simple, reliable, no top-layer or
+    anchor-positioning mechanics.
+  - ~15 lines of JavaScript add click-outside close, Escape-to-close, and
+    focus/scroll to the active country when the list opens.
+
+  Each country is a <button type="submit" name="country_code" value="XX"> —
+  the browser includes the clicked submit button's name/value in the POST
+  natively, so the form submits with zero JavaScript (progressive enhancement).
+
+  @param {boolean} [show_country_flag] - Show the country flag. Default: true
+  @param {boolean} [show_country_name] - Show the full country name. Default: false
+
+  @example
+  {% render 'localization-selector' %}
+  {% render 'localization-selector', show_country_name: true %}
+{% enddoc %}
+
+{%- liquid
+  if show_country_flag == null
+    assign show_country_flag = true
+  endif
+  if show_country_name == null
+    assign show_country_name = false
+  endif
+
+  assign current_country_name = localization.country.name
+  assign current_currency_code = localization.country.currency.iso_code
+  assign current_currency_symbol = localization.country.currency.symbol
+
+  assign trigger_label = 'localization.label_country_currency' | t: country: current_country_name, currency_code: current_currency_code, currency_symbol: current_currency_symbol
+-%}
+
+{% stylesheet %}
+  .localization-selector__form {
+    display: inline-block;
+    margin: 0;
+  }
+
+  .localization-selector {
+    position: relative;
+    display: inline-block;
+  }
+
+  .localization-selector__trigger {
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--dropdown-trigger-border-radius);
+    color: inherit;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    font: inherit;
+    font-family: var(--font-body--family);
+    line-height: 1;
+    transition: opacity 180ms ease;
+  }
+
+  .localization-selector__trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .localization-selector__trigger::marker {
+    content: '';
+  }
+
+  .localization-selector__trigger:hover {
+    opacity: 0.7;
+  }
+
+  .localization-selector__trigger:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  .localization-selector__flag {
+    width: 20px;
+    height: auto;
+    display: block;
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+
+  .localization-selector__label {
+    white-space: nowrap;
+  }
+
+  .localization-selector__currency {
+    white-space: nowrap;
+  }
+
+  .localization-selector__label + .localization-selector__currency {
+    border-inline-start: 1px solid currentColor;
+    padding-inline-start: 0.5rem;
+    margin-inline-start: 0.25rem;
+    opacity: 0.75;
+  }
+
+  .localization-selector__chevron {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+    transition: transform 150ms ease;
+  }
+
+  .localization-selector[open] .localization-selector__chevron {
+    transform: rotate(180deg);
+  }
+
+  .localization-selector__popover {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    min-width: 100%;
+    max-width: 22rem;
+    max-height: 20rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.25rem;
+    background: var(--color-popover-background);
+    color: var(--color-popover-foreground);
+    border: var(--popover-border-thickness) solid var(--color-border);
+    border-radius: var(--popover-border-radius);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.08);
+    font-family: var(--font-body--family);
+    z-index: 100;
+  }
+
+  @media (max-width: 767px) {
+    .localization-selector__popover {
+      top: auto;
+      bottom: calc(100% + 0.25rem);
+    }
+  }
+
+  .localization-selector__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .localization-selector__list > li {
+    margin: 0;
+  }
+
+  .localization-selector__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    text-align: start;
+    padding: 0.5rem 0.75rem;
+    font: inherit;
+    font-family: var(--font-body--family);
+    cursor: pointer;
+    border-radius: calc(var(--popover-border-radius) * 0.75);
+  }
+
+  .localization-selector__item:hover {
+    background: var(--color-popover-hover-background);
+    color: var(--color-popover-hover-foreground);
+  }
+
+  .localization-selector__item:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: -2px;
+  }
+
+  .localization-selector__item--active {
+    background: var(--color-popover-hover-background);
+    color: var(--color-popover-hover-foreground);
+    font-weight: 500;
+  }
+{% endstylesheet %}
+
+{%- form 'localization', class: 'localization-selector__form' -%}
+  <details class="localization-selector">
+    <summary
+      class="localization-selector__trigger"
+      aria-label="{{ trigger_label | escape }}"
+    >
+      {%- if show_country_flag -%}
+        {{
+          localization.country
+          | image_url: width: 40
+          | image_tag:
+            class: 'localization-selector__flag',
+            loading: 'lazy',
+            widths: '20,40',
+            sizes: '20px'
+        }}
+      {%- endif -%}
+      {%- if show_country_name -%}
+        <span class="localization-selector__label">
+          {{- current_country_name -}}
+        </span>
+      {%- endif -%}
+      <span class="localization-selector__currency">
+        {{- current_currency_code }}
+        {{ current_currency_symbol -}}
+      </span>
+      <svg
+        class="localization-selector__chevron"
+        aria-hidden="true"
+        viewBox="0 0 12 12"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </summary>
+
+    <div class="localization-selector__popover">
+      <ul role="list" class="localization-selector__list">
+        {%- for country in localization.available_countries -%}
+          {%- assign is_active = false -%}
+          {%- if country.iso_code == localization.country.iso_code -%}
+            {%- assign is_active = true -%}
+          {%- endif -%}
+          <li>
+            <button
+              type="submit"
+              name="country_code"
+              value="{{ country.iso_code }}"
+              class="localization-selector__item{% if is_active %} localization-selector__item--active{% endif %}"
+              {% if is_active %}
+                aria-current="true"
+              {% endif %}
+            >
+              {%- if show_country_flag -%}
+                {{
+                  country
+                  | image_url: width: 40
+                  | image_tag:
+                    class: 'localization-selector__flag',
+                    loading: 'lazy',
+                    widths: '20,40',
+                    sizes: '20px'
+                }}
+              {%- endif -%}
+              {%- if show_country_name -%}
+                <span class="localization-selector__label">
+                  {{- country.name -}}
+                </span>
+              {%- endif -%}
+              <span class="localization-selector__currency">
+                {{- country.currency.iso_code }}
+                {{ country.currency.symbol -}}
+              </span>
+            </button>
+          </li>
+        {%- endfor -%}
+      </ul>
+    </div>
+  </details>
+{%- endform -%}
+
+{% javascript %}
+  document.querySelectorAll('.localization-selector').forEach((details) => {
+    document.addEventListener('click', (event) => {
+      if (details.open && !details.contains(event.target)) {
+        details.open = false;
+      }
+    });
+
+    details.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && details.open) {
+        event.preventDefault();
+        details.open = false;
+        const summary = details.querySelector('summary');
+        if (summary) summary.focus();
+      }
+    });
+
+    details.addEventListener('toggle', () => {
+      if (!details.open) return;
+      const active = details.querySelector('[aria-current="true"]');
+      if (active) {
+        active.focus({ preventScroll: true });
+        active.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  });
+{% endjavascript %}

@@ -1,0 +1,94 @@
+<style>
+  .countdown-timer {
+    background-color: {{ block.settings.bg_color }};
+    color: {{ block.settings.text_color }};
+    padding-block: 0.625rem;
+    padding-inline: 1rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    min-width: 8.5rem;
+    justify-content: center;
+  }
+</style>
+
+<div id="countdown-timer-{{ block.id }}" class="countdown-timer">
+  <span class="countdown-timer-days">0D</span> &nbsp;:&nbsp;
+  <span class="countdown-timer-hours">00H</span> &nbsp;:&nbsp;
+  <span class="countdown-timer-minutes">00M</span>
+</div>
+
+<script>
+  (function () {
+    // Get the end date from settings
+    const endDateString = '{{ block.settings.end_date }}';
+    const timerContainer = document.getElementById('countdown-timer-{{ block.id }}');
+
+    if (!timerContainer || !endDateString) return;
+
+    const countDownDate = new Date(endDateString).getTime();
+
+    const x = setInterval(function () {
+      const now = new Date().getTime();
+      const distance = countDownDate - now;
+
+      if (distance < 0) {
+        clearInterval(x);
+        timerContainer.innerHTML = 'ENDED';
+        // Optional: Hide the timer entirely if expired
+        // timerContainer.style.display = 'none';
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+
+      // Format numbers to always have 2 digits if desired, though image shows single digit for days
+      timerContainer.innerHTML = `
+        ${days}D &nbsp;:&nbsp; ${hours}H &nbsp;:&nbsp; ${minutes}M
+      `;
+    }, 1000);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Countdown Timer",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#222124"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Timer Settings"
+    },
+    {
+      "type": "text",
+      "id": "end_date",
+      "label": "End Date (Format: MM/DD/YYYY HH:MM:SS)",
+      "default": "12/24/2025 23:59:00",
+      "info": "Example: 12/24/2025 23:59:00"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Countdown Timer"
+    }
+  ]
+}
+{% endschema %}

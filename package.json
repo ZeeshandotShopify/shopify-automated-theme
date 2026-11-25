@@ -1,0 +1,19 @@
+{
+  "name": "golden",
+  "version": "3.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "check": "shopify theme check"
+  },
+  "lint-staged": {
+    "*.{liquid,json,css,js}": "prettier --write"
+  },
+  "devDependencies": {
+    "@shopify/prettier-plugin-liquid": "^1.10.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "prettier": "^3.8.3"
+  }
+}

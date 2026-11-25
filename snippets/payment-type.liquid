@@ -1,0 +1,28 @@
+{% style %}
+  .list-payment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .list-payment .list-payment-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.25rem;
+    width: 2rem !important;
+  }
+{% endstyle %}
+
+<div>
+  <span class="sr-only">{{ 'payment_type' | t }}</span>
+  <ul class="list-payment" role="list">
+    {%- for type in shop.enabled_payment_types -%}
+      <li class="list-payment-item">
+        {{ type | payment_type_svg_tag: class: 'icon icon--full-color' }}
+      </li>
+    {%- endfor -%}
+  </ul>
+</div>

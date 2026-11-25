@@ -1,0 +1,622 @@
+{% comment %}
+  Judge.me "All Reviews" (Happy Customers) Section
+
+  Hosts the Judge.me All Reviews Page app block via an @app block and restyles
+  the v2025 widget to match the product Customer Reviews section
+  (sections/customer-reviews.liquid). Judge.me renders in the light DOM, so the
+  .jdgm-* overrides below win with !important. This CSS only loads on the page
+  that uses this section, so the global selectors won't collide with the
+  product-page reviews section.
+{% endcomment %}
+
+<style>
+  .all-reviews-wrapper {
+    --fg-color: {{ section.settings.fg_color | default: '#1a1a1a' }};
+    --bg-color: {{ section.settings.bg_color | default: '#ffffff' }};
+
+    --heading-font-size: {{ section.settings.heading_font_size }};
+    --heading-line-height: {{ section.settings.heading_line_height }};
+    --heading-font-weight: {{ section.settings.heading_font_weight }};
+
+    --mobile-padding-top: {{ section.settings.mobile_padding_top }}px;
+    --mobile-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+    --mobile-padding-left: {{ section.settings.mobile_padding_left }}px;
+    --mobile-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+    --desktop-padding-top: {{ section.settings.desktop_padding_top }}px;
+    --desktop-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+    --desktop-padding-left: {{ section.settings.desktop_padding_left }}px;
+    --desktop-padding-right: {{ section.settings.desktop_padding_right }}px;
+
+    {%- if section.settings.color_mode == 'custom' -%}
+      color: var(--fg-color);
+      background: var(--bg-color);
+    {%- else -%}
+      color: var(--color-foreground);
+      background: var(--color-background);
+    {%- endif -%}
+    padding: var(--mobile-padding-top) var(--mobile-padding-right) var(--mobile-padding-bottom) var(--mobile-padding-left);
+  }
+
+  .all-reviews-heading {
+    font-family: var(--font-heading--family);
+    font-size: var(--heading-font-size);
+    line-height: var(--heading-line-height);
+    font-weight: var(--heading-font-weight);
+    margin-bottom: 1.5rem;
+  }
+
+  .all-reviews-widget {
+    background: #ffffff;
+    border-radius: 0.5rem;
+  }
+
+  .all-reviews-widget .jdgm-review-widget,
+  .all-reviews-widget .jdgm-all-reviews-widget,
+  .all-reviews-widget .jdgm-all-reviews-widget-v2025 {
+    width: 100%;
+  }
+
+  {% comment %} ---- Base font ---- {% endcomment %}
+  .jdgm-rev-widg,
+  .jdgm-all-reviews-widget {
+    font-family: var(--font-body--family) !important;
+    padding: 0 !important;
+  }
+
+  {% comment %} ---- Stars → Figma yellow (match product reviews) ---- {% endcomment %}
+  .jdgm-star.jdgm--on,
+  .jdgm-star.jdgm--half {
+    color: #fcc419 !important;
+  }
+
+  {% comment %} ---- Summary header (v2025) ---- {% endcomment %}
+  .jdgm-all-reviews__header {
+    width: 100% !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  {% comment %} Header as a balanced two-column: summary (+ CTA) left, histogram right {% endcomment %}
+  .jdgm-row-stars {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    column-gap: 4rem !important;
+    row-gap: 2rem !important;
+    margin-bottom: 3rem !important;
+  }
+
+  .jdgm-all-reviews__summary,
+  .jdgm-rev-widg__summary {
+    flex: 0 1 340px !important;
+    width: auto !important;
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  .jdgm-rev-widg__summary-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .jdgm-all-reviews__summary-stars {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap-reverse !important;
+    flex-direction: row-reverse !important;
+  }
+
+  .jdgm-all-reviews__summary-stars .jdgm-star {
+    font-size: 1.5rem !important;
+    height: auto !important;
+  }
+
+  .jdgm-all-reviews__summary-average {
+    display: block !important;
+    color: var(--fg-color);
+    font-size: 2.375rem !important;
+    line-height: 120% !important;
+    font-weight: 500 !important;
+    margin-right: 0.5rem !important;
+  }
+
+  .jdgm-all-reviews__summary-text {
+    color: var(--fg-color);
+    font-size: 0.875rem !important;
+    line-height: 140% !important;
+  }
+
+  {% comment %} ---- Histogram (bars + "N Stars" labels), match product reviews ---- {% endcomment %}
+  .jdgm-histogram {
+    flex: 1 1 380px !important;
+    max-width: 560px !important;
+    width: auto !important;
+    display: flex;
+    align-items: flex-start !important;
+    border: none !important;
+    gap: 0.5rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  .jdgm-histogram__row {
+    display: flex !important;
+    gap: 1rem !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 0 !important;
+  }
+
+  .jdgm-histogram__star {
+    position: relative !important;
+    height: 22.406px !important;
+    width: 53px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .jdgm-histogram__star > .jdgm-star {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+  }
+
+  .jdgm-histogram__star[aria-label*="5 star"]::before { content: "5 Stars"; }
+  .jdgm-histogram__star[aria-label*="4 star"]::before { content: "4 Stars"; }
+  .jdgm-histogram__star[aria-label*="3 star"]::before { content: "3 Stars"; }
+  .jdgm-histogram__star[aria-label*="2 star"]::before { content: "2 Stars"; }
+  .jdgm-histogram__star[aria-label*="1 star"]::before { content: "1 Stars"; }
+
+  .jdgm-histogram__star[aria-label*="star"]::before {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--fg-color);
+    font-size: 1rem;
+    line-height: 140%;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .jdgm-histogram__bar {
+    margin: 0 !important;
+    height: 5px !important;
+    width: 100% !important;
+    background: #f5f5f5 !important;
+  }
+
+  .jdgm-histogram__bar-content {
+    background: #fcc419 !important;
+  }
+
+  .jdgm-histogram__frequency {
+    color: var(--fg-color);
+    font-size: 1rem !important;
+    line-height: 140% !important;
+    width: auto !important;
+    text-align: left !important;
+  }
+
+  .jdgm-histogram__clear-filter {
+    display: none !important;
+  }
+
+  {% comment %} ---- Gallery (customer photos & videos) ---- {% endcomment %}
+  .jdgm-gallery-wrapper {
+    margin-bottom: 2.75rem !important;
+  }
+
+  .jdgm-gallery-title {
+    font-family: var(--font-heading--family) !important;
+    color: var(--fg-color);
+    font-size: 1.25rem !important;
+    line-height: 140% !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .jdgm-gallery__thumbnail,
+  .jdgm-gallery__thumbnail-wrapper {
+    border-radius: 0.5rem !important;
+    overflow: hidden !important;
+  }
+
+  {% comment %} ---- Product / Shop subtabs ---- {% endcomment %}
+  .jdgm-subtab {
+    font-family: var(--font-body--family) !important;
+    font-size: 1rem !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    padding: 0.5rem 0 !important;
+    margin-right: 1.5rem !important;
+  }
+
+  .jdgm-subtab.jdgm--active .jdgm-subtab__name,
+  .jdgm-subtab.jdgm--active {
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+    background: transparent !important;
+    border-bottom-color: #fcc419 !important;
+  }
+
+  {% comment %} ---- Sort dropdown + Write-review button (match product reviews) ---- {% endcomment %}
+  .jdgm-widget-actions-wrapper {
+    width: auto !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    margin-top: 1.5rem !important;
+  }
+
+  .jdgm-write-rev-link {
+    width: auto !important;
+    background: #1a1a1a !important;
+    border: none !important;
+    color: #ffffff !important;
+    padding-block: 0.75rem !important;
+    padding-inline: 1.5rem !important;
+    margin: 0 !important;
+  }
+
+  .jdgm-write-rev-link:hover,
+  .jdgm-write-rev-link:focus {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  .jdgm-row-actions {
+    padding: 0 !important;
+    border: none !important;
+    margin-bottom: 2.75rem !important;
+  }
+
+  .jdgm-sort-dropdown-wrapper {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #f5f5f5 !important;
+  }
+
+  .jdgm-sort-dropdown {
+    padding-block: 0.5rem !important;
+    padding-inline: 1rem !important;
+    color: #1a1a1a !important;
+    font-size: 0.875rem !important;
+  }
+
+  .jdgm-sort-dropdown-arrow {
+    display: inline-flex !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    right: 0 !important;
+    position: absolute !important;
+    color: #1a1a1a !important;
+  }
+
+  {% comment %} ---- Review rows (match product reviews) ---- {% endcomment %}
+  .jdgm-rev {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .jdgm-rev + .jdgm-rev {
+    margin-top: 4rem !important;
+  }
+
+  .jdgm-rev__header {
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    padding-left: 64px !important;
+    min-height: 48px !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .jdgm-row-rating {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin: 0 0 8px 0 !important;
+  }
+
+  .jdgm-rev__timestamp {
+    font-size: 1rem !important;
+    line-height: 140% !important;
+  }
+
+  .jdgm-rev__icon {
+    width: 3rem !important;
+    height: 3rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    background: #fdf6e3 !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    margin: 0 !important;
+  }
+
+  .jdgm-rev__icon::before,
+  .jdgm-rev__icon::after {
+    display: none !important;
+  }
+
+  .jdgm-row-profile {
+    margin: 0 !important;
+  }
+
+  .jdgm-rev__author-wrapper {
+    font-size: 1rem !important;
+    line-height: 140% !important;
+  }
+
+  .jdgm-rev__author {
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+    font-size: 1rem !important;
+  }
+
+  .jdgm-rev__title {
+    font-size: 1.5rem !important;
+    line-height: 140% !important;
+    font-weight: 400 !important;
+  }
+
+  .jdgm-rev__body {
+    font-family: var(--font-body--family) !important;
+    font-size: 1rem !important;
+    line-height: 140% !important;
+  }
+
+  {% comment %} Per-review product link (shown on the all-reviews page) ---- {% endcomment %}
+  .jdgm-rev__prod-info-wrapper {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .jdgm-rev__prod-link,
+  .jdgm-rev__prod-link-prefix {
+    color: var(--fg-color);
+    font-size: 0.875rem !important;
+    line-height: 140% !important;
+  }
+
+  {% comment %} ---- Hide blocks not present in the product reviews look ---- {% endcomment %}
+  .jdgm-verified-checkmark,
+  .jdgm-row-media,
+  .jdgm-rev__buyer-badge-wrapper,
+  .jdgm-rev__transparency-badge-wrapper,
+  .jdgm-rev__actions,
+  .jdgm-rev__votes,
+  .jdgm-row-extra {
+    display: none !important;
+  }
+
+  @media (width >= 64rem) {
+    .all-reviews-wrapper {
+      padding: var(--desktop-padding-top) var(--desktop-padding-right) var(--desktop-padding-bottom) var(--desktop-padding-left);
+    }
+  }
+</style>
+
+<div class="all-reviews-wrapper">
+  <div
+    {% if section.settings.width == 'default' %}
+      class="shopify-page-width shopify-page-padding"
+    {% endif %}
+  >
+    <div class="all-reviews">
+      {%- if section.settings.heading != blank -%}
+        <h2 class="all-reviews-heading">{{ section.settings.heading }}</h2>
+      {%- endif -%}
+
+      <div class="all-reviews-widget">
+        {% content_for 'blocks' %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% comment %}
+  Match the product reviews layout: move the "Write a review" button under the
+  summary rating (Judge.me's v2025 layout parks it as a 3rd column top-right).
+  Idempotent + re-runs on Judge.me re-render via the observer. Theme-only.
+{% endcomment %}
+<script>
+  (function () {
+    var root = document.querySelector('.all-reviews-widget');
+    if (!root) return;
+    function relocate() {
+      var summary = root.querySelector('.jdgm-all-reviews__summary');
+      var btn = root.querySelector('.jdgm-widget-actions-wrapper');
+      if (summary && btn && btn.parentElement !== summary) {
+        summary.appendChild(btn);
+      }
+    }
+    relocate();
+    new MutationObserver(relocate).observe(root, { childList: true, subtree: true });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "All Reviews",
+  "tag": "section",
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Add the Judge.me \"Happy Customers\" (All Reviews) app block to this section using the block picker. Without it, this section will be empty."
+    },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "Width",
+      "options": [
+        { "value": "default", "label": "Default (page width)" },
+        { "value": "full", "label": "Full width" }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:heading.label",
+      "default": "Reviews"
+    },
+    {
+      "type": "text",
+      "id": "heading_font_size",
+      "label": "t:typography.font_size.label",
+      "placeholder": "px, rem, etc.",
+      "default": "1.5rem"
+    },
+    {
+      "type": "text",
+      "id": "heading_line_height",
+      "label": "Line Height",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "140%"
+    },
+    {
+      "type": "select",
+      "id": "heading_font_weight",
+      "label": "t:typography.font_weight.label",
+      "options": [
+        { "value": "400", "label": "t:typography.font_weight.options.regular" },
+        { "value": "500", "label": "t:typography.font_weight.options.medium" },
+        { "value": "600", "label": "t:typography.font_weight.options.semibold" },
+        { "value": "700", "label": "t:typography.font_weight.options.bold" }
+      ],
+      "default": "500"
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        { "value": "inherit", "label": "t:color_mode.options.inherit" },
+        { "value": "custom", "label": "t:color_mode.options.custom" }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "fg_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#1a1a1a",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#ffffff",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "All Reviews"
+    }
+  ]
+}
+{% endschema %}

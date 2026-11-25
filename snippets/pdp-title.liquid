@@ -1,0 +1,19 @@
+{% style %}
+  .pdp-title-container {
+     padding-top: {{ block.settings.padding_top }}px;
+     padding-bottom: {{ block.settings.padding_bottom }}px
+  }
+
+  .pdp-title {
+    font-family: {{ block.settings.font_family }};
+    font-size: {{ block.settings.font_size }};
+    line-height: {{ block.settings.line_height }};
+    font-weight: {{ block.settings.font_weight }};
+    text-transform: {{ block.settings.text_transform }};
+    text-wrap: pretty;
+  }
+{% endstyle %}
+
+<div class="pdp-title-container" {{ block.shopify_attributes }}>
+  <h1 class="pdp-title">{{ product.title }}</h1>
+</div>

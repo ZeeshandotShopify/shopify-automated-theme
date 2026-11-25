@@ -1,0 +1,649 @@
+/* ===========================================================================
+   QUICK VIEW
+
+   A product panel opened from a collection card: a side drawer against the
+   right edge at >= 64rem, a bottom sheet below it. One markup tree
+   (sections/quick-view.liquid), re-laid at the breakpoint.
+
+   REVEAL ORDER (desktop). The drawer arrives first and the gallery follows,
+   because the gallery is a child of the drawer positioned at its left edge
+   with `z-index: -1` — at rest it lies under the drawer's own background, and
+   `translateX(-100%)` walks it out into the open. quick-view.js sets
+   `data-gallery` on the shell one drawer-length after the open, and drops it
+   one gallery-length before the close, so:
+
+     opening   drawer in           → gallery out
+     closing   gallery back under  → drawer out
+
+   A negative z-index paints a child AFTER its stacking context's own
+   background, so the drawer's content bands carry that background themselves —
+   without it the gallery shows straight through the product information while
+   it is still tucked.
+
+   THEME MARKUP ONLY. The panel is fetched with `?section_id=quick-view`, which
+   is the cheap route and the right one while the panel holds nothing but theme
+   markup. A panel that must carry a Shopify app block (a subscription widget, a
+   bundle builder — anything `shopify://apps/…`) cannot use it: `@app` blocks do
+   not render in statically-reachable sections, so that build needs an alternate
+   product template and a full-page fetch. See
+   docs/custom-features/recharge-widget-quick-view-quick-add/README.md.
+
+   EVERY COLOUR, RADIUS AND FONT HERE IS A THEME TOKEN. Nothing is hardcoded, so
+   the panel inherits each store's palette with no per-client edit. Spacing and
+   the two layouts are the only opinionated values; a client build restyles
+   those and leaves the mechanism alone.
+
+   Shell conventions are borrowed from the theme's own overlays rather than
+   their components: `data-state="open|closed"`, `body[data-scroll-locked]`,
+   `var(--overlay-bg)`. <sheet-menu> and <dialog-menu> are NOT reused directly —
+   both portal their content into document.body at init, so a per-card instance
+   would leave one detached panel per product in the grid.
+   =========================================================================== */
+
+:root {
+  --qv-drawer-duration: 300ms;
+  --qv-gallery-duration: 300ms;
+  --qv-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.qv-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: block;
+  pointer-events: none;
+}
+
+.qv-shell[hidden] {
+  display: none;
+}
+
+.qv-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: var(--overlay-bg, rgba(0, 0, 0, 0.5));
+  opacity: 0;
+  transition: opacity var(--qv-drawer-duration) ease-in-out;
+}
+
+.qv-shell[data-state="open"] {
+  pointer-events: auto;
+}
+
+.qv-shell[data-state="open"] .qv-scrim {
+  opacity: 1;
+}
+
+.qv-panel {
+  position: absolute;
+  background-color: var(--color-popover-background, rgb(var(--color-background-rgb)));
+  color: var(--color-popover-foreground, rgb(var(--color-foreground-rgb)));
+  display: flex;
+  flex-direction: column;
+}
+
+.qv-panel:focus {
+  outline: none;
+}
+
+.qv-panel__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  padding: 2rem;
+  font-family: var(--font-body--family);
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground, rgba(var(--color-foreground-rgb), 0.6));
+}
+
+/* ===========================================================================
+   MOBILE — bottom drawer
+   =========================================================================== */
+@media (width < 64rem) {
+  .qv-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 88vh;
+    border-start-start-radius: var(--quick-view-drawer-radius, 1rem);
+    border-start-end-radius: var(--quick-view-drawer-radius, 1rem);
+    transform: translateY(100%);
+    transition: transform var(--qv-drawer-duration) var(--qv-ease);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .qv-shell[data-state="open"] .qv-panel {
+    transform: translateY(0);
+  }
+}
+
+/* ===========================================================================
+   DESKTOP — side drawer against the right edge, full height. `overflow:
+   visible` so the gallery can leave the box; `.qv__body` does the scrolling.
+   =========================================================================== */
+@media (width >= 64rem) {
+  .qv-panel {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: var(--quick-view-drawer-width, 27.5rem);
+    max-width: calc(100vw - 2rem);
+    overflow: visible;
+    transform: translateX(100%);
+    transition: transform var(--qv-drawer-duration) var(--qv-ease);
+  }
+
+  .qv-shell[data-state="open"] .qv-panel {
+    transform: translateX(0);
+  }
+}
+
+/* ===========================================================================
+   PANEL CONTENT
+   =========================================================================== */
+.qv {
+  display: contents;
+}
+
+.qv-panel .qv__form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.qv__vendor {
+  font-family: var(--font-body--family);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground, rgba(var(--color-foreground-rgb), 0.7));
+}
+
+.qv__title {
+  margin: 0;
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight, 700);
+  line-height: 1.4;
+}
+
+.qv__title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.qv__title-link:hover {
+  text-decoration: underline;
+}
+
+.qv__price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-body--family);
+  line-height: 1.2;
+  color: var(--color-price-foreground, rgb(var(--color-foreground-rgb)));
+}
+
+.qv__price-compare {
+  color: var(--color-compare-at-price-foreground, rgba(var(--color-foreground-rgb), 0.6));
+  font-size: 0.875em;
+}
+
+.qv__description {
+  font-family: var(--font-body--family);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* The design's close control is a bare icon; the hit area is padded out to the
+   44px touch minimum and the glyph held at 24. */
+.qv__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: currentcolor;
+  cursor: pointer;
+}
+
+.qv__close-icon {
+  display: block;
+  line-height: 0;
+}
+
+.qv__close svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.qv__media-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qv__rating .jdgm-widget {
+  margin: 0;
+}
+
+.qv__rating .jdgm-prev-badge {
+  display: block !important;
+}
+
+/* --- options --------------------------------------------------------------
+   Deliberately NOT restyled. `product-variant-options` renders the theme's own
+   swatch / pill / dropdown primitives, and they already read the theme's
+   variant tokens — so the selected, hover and unavailable states all come
+   through for free. Only layout is set here. A client build that wants a
+   different chip restyles the primitives, not this file. */
+
+/* snippets/swatch.liquid falls back to `4.4rem` (70px) when nothing sets this,
+   which is the PDP's own default only because pdp-variant-selector overrides it
+   inside its own scope. Set it here too, at the size the product page uses, or
+   the panel renders 70px colour circles. */
+.qv__option {
+  --swatch-input--size: var(--quick-view-swatch-size, 1.875rem);
+}
+
+.qv__option-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.qv__option input[type="radio"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.qv__option input[type="radio"]:not(.disabled):not(.visually-disabled) + label > .label-unavailable {
+  display: none;
+}
+
+.qv__option-label {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-body--family);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.qv__option-name {
+  font-weight: 700;
+}
+
+/* --- quantity -------------------------------------------------------------
+   Rendered inline by the section rather than through
+   snippets/pdp-quantity-selector.liquid: <quantity-selector> syncs into
+   `document.querySelector("form[action*='/cart/add']")`, which on a collection
+   grid is the FIRST product card's form, not the panel's. */
+.qv__quantity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  width: 6rem;
+  height: 3.5rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--input-border-radius);
+  background-color: var(--color-quantity-selector-background);
+  color: var(--color-quantity-selector-foreground);
+  overflow: hidden;
+}
+
+.qv__quantity-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: currentcolor;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.qv__quantity-button svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  display: block;
+}
+
+.qv__quantity-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: none;
+  text-align: center;
+  font-family: var(--font-body--family);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: currentcolor;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.qv__quantity-input::-webkit-outer-spin-button,
+.qv__quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* --- actions --------------------------------------------------------------
+   The add-to-cart button paints entirely from the theme's own add-to-cart
+   tokens, so it matches the card and the product page without restating a
+   colour. */
+.qv__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.qv__actions add-to-cart {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.qv__actions add-to-cart button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 3.5rem;
+  padding-block: 0.5rem;
+  border: 0;
+  border-radius: var(--button-border-radius);
+  background-color: var(--color-add-to-cart-background);
+  color: var(--color-add-to-cart-foreground);
+  font-family: var(--button-font-family, var(--font-body--family));
+  font-size: 1rem;
+  font-weight: var(--button-font-weight, 600);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.qv__actions add-to-cart button:hover:not(:disabled) {
+  background-color: var(--color-add-to-cart-hover-background);
+  color: var(--color-add-to-cart-hover-foreground);
+}
+
+.qv__actions add-to-cart button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ===========================================================================
+   DESKTOP LAYOUT — media rail beside a details column
+   =========================================================================== */
+@media (width >= 64rem) {
+  .qv-panel .qv__form {
+    height: 100%;
+  }
+
+  /* The gallery sits at `z-index: -1`, which paints it above the PANEL'S OWN
+     background — negative children come after the stacking context's
+     background, not before it. So while the gallery is still tucked under the
+     drawer it would show straight through the product information. The two
+     content bands are therefore lifted into their own layer above it and carry
+     the panel's ground themselves, which is what actually hides the gallery. */
+  .qv__header,
+  .qv__body {
+    position: relative;
+    z-index: 1;
+    background-color: var(--color-popover-background, rgb(var(--color-background-rgb)));
+  }
+
+  .qv__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 1.5rem;
+    padding: 1.75rem 1.75rem 1rem;
+  }
+
+  .qv__close {
+    margin: -10px -10px -10px 0;
+  }
+
+  /* The scrolling half of the drawer. Everything stacks from the top and
+     nothing is pinned — whatever height is left over stays empty below. */
+  .qv__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0 1.75rem 1.75rem;
+  }
+
+  /* --- the gallery ------------------------------------------------------
+     Out of the flow and pinned to the drawer's left edge, one gallery-width
+     of content behind it. `translateX(-100%)` is the reveal: the panel walks
+     its own width to the left and clears the drawer entirely.
+
+     `transition-delay` is deliberately NOT used for the stagger — that would
+     delay the retraction on close too, and the close wants the opposite
+     order. quick-view.js owns the timing in both directions. */
+  .qv__media {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    width: var(--quick-view-media-width, 23.75rem);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    background-color: var(--color-muted-background, rgba(var(--color-foreground-rgb), 0.04));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    transform: translateX(0);
+    transition: transform var(--qv-gallery-duration) var(--qv-ease);
+  }
+
+  .qv-shell[data-gallery="open"] .qv__media {
+    transform: translateX(-100%);
+  }
+
+  .qv__media-item {
+    flex: 0 0 auto;
+    aspect-ratio: var(--quick-view-media-ratio, 1 / 1);
+    border-radius: var(--image-border-radius);
+    overflow: hidden;
+  }
+
+  .qv__eyebrow {
+    font-family: var(--font-body--family);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground, rgba(var(--color-foreground-rgb), 0.7));
+  }
+
+  .qv__info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .qv__title {
+    font-size: 1.5rem;
+  }
+
+  .qv__price {
+    font-size: 1.125rem;
+  }
+
+  .qv__description {
+    border-top: var(--sheet-menu-border-thickness, 1px) solid var(--color-border);
+    padding-top: 1rem;
+  }
+
+  .qv__options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .qv__option {
+    padding-block: 0.5rem;
+  }
+
+  /* The last item in the column, in flow — nothing is pinned to the floor. */
+  .qv__actions {
+    border-top: var(--sheet-menu-border-thickness, 1px) solid var(--color-border);
+    padding-top: 1rem;
+  }
+}
+
+/* ===========================================================================
+   MOBILE LAYOUT — the same content, stacked
+   =========================================================================== */
+@media (width < 64rem) {
+  /* A block column, not a flex one: the sheet is capped and scrolls, and flex
+     children of a capped column shrink to fit instead of overflowing — which
+     squashes the media strip to a fraction of its aspect ratio. `position:
+     sticky` on the header resolves against this block box just as happily. */
+  .qv-panel .qv__form {
+    display: block;
+  }
+
+  /* The title is optically centred by a spacer opposite the close control. */
+  .qv__header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background-color: var(--color-popover-background, rgb(var(--color-background-rgb)));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 3.75rem;
+    padding-inline: 1rem;
+  }
+
+  .qv__eyebrow {
+    font-family: var(--font-heading--family);
+    font-size: 1.125rem;
+    font-weight: var(--font-heading--weight, 700);
+    line-height: 1.4;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .qv__close {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+  }
+
+  /* Every image, side by side and snapping, rather than one thumbnail beside
+     the summary with the rest hidden. */
+  .qv__media {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.25rem 1rem 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    /* Without this the first tile snaps its edge to the scrollport's, which
+       scrolls the 1rem gutter out from under it on the very first paint. */
+    scroll-padding-inline: 1rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .qv__media::-webkit-scrollbar {
+    display: none;
+  }
+
+  .qv__media-item {
+    flex: 0 0 auto;
+    width: 9.5rem;
+    aspect-ratio: var(--quick-view-media-ratio, 1 / 1);
+    border-radius: var(--image-border-radius);
+    background-color: var(--color-muted-background, rgba(var(--color-foreground-rgb), 0.04));
+    overflow: hidden;
+    scroll-snap-align: start;
+  }
+
+  .qv__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .qv__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .qv__title {
+    font-size: 1.25rem;
+  }
+
+  .qv__price {
+    font-size: 1rem;
+  }
+
+  .qv__description {
+    border-top: var(--sheet-menu-border-thickness, 1px) solid var(--color-border);
+    padding-top: 1rem;
+  }
+
+  .qv__options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* In flow, like the drawer's — the last item, pinned to nothing. */
+  .qv__actions {
+    border-top: var(--sheet-menu-border-thickness, 1px) solid var(--color-border);
+    padding-top: 1rem;
+  }
+}
+
+/* ===========================================================================
+   REDUCED MOTION
+   Last in the file on purpose: the blocks above declare these transitions at
+   the same specificity, so only a later rule takes them back off.
+   quick-view.js reads the same durations and drops its own staging to match,
+   so the drawer and the gallery land in one step.
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .qv-scrim,
+  .qv-panel,
+  .qv__media {
+    transition: none;
+  }
+}

@@ -1,0 +1,32 @@
+scroll-shadow {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  /* Default values - updated by JS */
+  --fade-left: 0px;
+  --fade-right: 20px;
+
+  /* Dynamic mask */
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--fade-left),
+    black calc(100% - var(--fade-right)),
+    transparent
+  );
+
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--fade-left),
+    black calc(100% - var(--fade-right)),
+    transparent
+  );
+}
+
+scroll-shadow::-webkit-scrollbar {
+  display: none;
+}

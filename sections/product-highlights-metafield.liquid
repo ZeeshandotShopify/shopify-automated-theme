@@ -1,0 +1,347 @@
+{%- liquid
+  assign highlights = product.metafields.custom.product_highlights.value
+
+  assign overline = blank
+  assign heading = blank
+  assign rows = blank
+  assign row_count = 0
+
+  if highlights != blank
+    assign overline = highlights.overline.value
+    assign heading = highlights.heading.value
+    assign rows = highlights.rows.value
+  endif
+
+  if rows != blank
+    assign row_count = rows.count | default: rows.size | default: 0
+  endif
+
+  assign show_section = false
+  assign is_placeholder = false
+
+  if row_count > 0
+    assign show_section = true
+  elsif request.design_mode
+    assign show_section = true
+    assign is_placeholder = true
+  endif
+-%}
+
+{%- if show_section -%}
+  {%- style -%}
+    #product-highlights-metafield-{{ section.id }} {
+      --mobile-padding-top: {{ section.settings.mobile_padding_top }}px;
+      --mobile-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+      --mobile-padding-left: {{ section.settings.mobile_padding_left }}px;
+      --mobile-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+      --desktop-padding-top: {{ section.settings.desktop_padding_top }}px;
+      --desktop-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+      --desktop-padding-left: {{ section.settings.desktop_padding_left }}px;
+      --desktop-padding-right: {{ section.settings.desktop_padding_right }}px;
+
+      --overline-color: {{ section.settings.overline_color }};
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-metafield {
+      padding: var(--mobile-padding-top) var(--mobile-padding-right) var(--mobile-padding-bottom) var(--mobile-padding-left);
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-header {
+      text-align: center;
+      margin-bottom: 2rem
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-overline {
+      color: var(--overline-color);
+      font-size: 1.5rem;
+      line-height: 140%;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-heading {
+      font-family: var(--font-heading--family);
+      font-size: 2rem;
+      line-height: 140%;
+      font-weight: 500;
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4rem;
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-row {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-image {
+      width: 100%;
+      overflow: hidden;
+      aspect-ratio: 16 / 10;
+      background: var(--color-muted-background);
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-content {
+      width: 100%;
+      text-align: left;
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-title {
+      font-family: var(--font-heading--family);
+      font-size: 1.5rem;
+      line-height: 140%;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-description {
+      font-size: 1rem;
+      line-height: 140%;
+      font-weight: 300;
+    }
+
+    #product-highlights-metafield-{{ section.id }} .product-highlights-placeholder-note {
+      margin: 1rem 0 0;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: var(--color-muted-foreground);
+    }
+
+    @media (width >= 64rem) {
+      #product-highlights-metafield-{{ section.id }} .product-highlights-metafield {
+        padding: var(--desktop-padding-top) var(--desktop-padding-right) var(--desktop-padding-bottom) var(--desktop-padding-left);
+      }
+
+      #product-highlights-metafield-{{ section.id }} .product-highlights-header {
+        margin-bottom: 48px;
+      }
+
+      #product-highlights-metafield-{{ section.id }} .product-highlights-list {
+        gap: 2rem;
+      }
+
+      #product-highlights-metafield-{{ section.id }} .product-highlights-row {
+        flex-direction: row;
+        gap: 48px;
+      }
+
+      #product-highlights-metafield-{{ section.id }} .product-highlights-row:nth-child(even) {
+        flex-direction: row-reverse;
+      }
+
+      #product-highlights-metafield-{{ section.id }} .product-highlights-image,
+      #product-highlights-metafield-{{ section.id }} .product-highlights-content {
+        width: 50%;
+      }
+    }
+  {%- endstyle -%}
+
+  <div id="product-highlights-metafield-{{ section.id }}">
+    <div class="shopify-page-width shopify-page-padding">
+      <div class="product-highlights-metafield">
+        <div class="product-highlights-header">
+          {%- if overline != blank -%}
+            <p class="product-highlights-overline">{{ overline }}</p>
+          {%- elsif is_placeholder -%}
+            <p class="product-highlights-overline">The PBE Hybrid</p>
+          {%- endif -%}
+
+          {%- if heading != blank -%}
+            <h2 class="product-highlights-heading">{{ heading }}</h2>
+          {%- elsif is_placeholder -%}
+            <h2 class="product-highlights-heading">Unmatched Versatility</h2>
+          {%- endif -%}
+
+          {%- if is_placeholder -%}
+            <p class="product-highlights-placeholder-note">
+              This placeholder is only visible in the theme editor when no product highlights are configured.
+            </p>
+          {%- endif -%}
+        </div>
+
+        <div class="product-highlights-list">
+          {%- if is_placeholder -%}
+            {%- for i in (1..3) -%}
+              <div class="product-highlights-row">
+                <div class="product-highlights-image">
+                  {{ 'image' | placeholder_svg_tag }}
+                </div>
+                <div class="product-highlights-content">
+                  <h3 class="product-highlights-title">Example Highlight {{ i }}</h3>
+                  <p class="product-highlights-description">
+                    Add a row title and description to showcase this product's strongest benefits.
+                  </p>
+                </div>
+              </div>
+            {%- endfor -%}
+          {%- elsif row_count > 0 -%}
+            {%- for row in rows -%}
+              {%- assign row_image = row.image.value -%}
+              {%- assign row_title = row.title.value -%}
+              {%- assign row_description = row.description.value -%}
+
+              <div class="product-highlights-row">
+                <div class="product-highlights-image">
+                  {%- if row_image != blank -%}
+                    {% render 'responsive-image',
+                      image: row_image,
+                      desktop_enable_custom_dimension: true,
+                      desktop_custom_height: '100%',
+                      desktop_custom_width: '100%'
+                    %}
+                  {%- else -%}
+                    {{ 'image' | placeholder_svg_tag }}
+                  {%- endif -%}
+                </div>
+
+                <div class="product-highlights-content">
+                  {%- if row_title != blank -%}
+                    <h3 class="product-highlights-title">{{ row_title }}</h3>
+                  {%- endif -%}
+
+                  {%- if row_description != blank -%}
+                    <p class="product-highlights-description">{{ row_description | newline_to_br }}</p>
+                  {%- endif -%}
+                </div>
+              </div>
+            {%- endfor -%}
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:section.product_metafield.highlights",
+  "tag": "section",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Data Source"
+    },
+    {
+      "type": "paragraph",
+      "content": "How to Create the Product Highlights"
+    },
+    {
+      "type": "paragraph",
+      "content": "1. Create a metaobject definition named 'Product Highlight Rows' and make the first field 'Product Title - Row Title' (Single line text). This will be the display name for each step entry, then add fields: 'Image' (Image), 'Title' (Single line text), 'Description' (Multi-line text)"
+    },
+    {
+      "type": "paragraph",
+      "content": "2. Create a metaobject definition named 'Product Highlighs' and make the first field 'Product Title' (Single line text). This will be the display name for each entry, then add fields: 'Overline' (Single line text), 'Heading' (Single line text), and 'Rows' (List of metaboject Product Highlight Rows)"
+    },
+    {
+      "type": "paragraph",
+      "content": "3. Create a product metafield and name it 'Product Highlights' add the 'Product Highlights' metaboject"
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "overline_color",
+      "label": "Overline color",
+      "default": "#b7ab83"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 96
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:section.product_metafield.highlights",
+      "category": "t:section.product_metafield.category"
+    }
+  ]
+}
+{% endschema %}

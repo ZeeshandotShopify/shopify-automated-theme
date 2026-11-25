@@ -1,0 +1,76 @@
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+.input-container input,
+.input-container textarea {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* height: 2.8125rem; */
+  text-align: left;
+  padding: 0.9375rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  border: var(--input-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+  border-radius: var(--input-border-radius, 0.5rem);
+  outline: none;
+}
+
+.input-container textarea {
+  min-height: 6rem;
+  height: auto;
+  resize: vertical;
+}
+
+.input-container input:focus,
+.input-container textarea:focus {
+  border-color: var(--color-ring);
+}
+
+.input-container input:not(:placeholder-shown),
+.input-container textarea:not(:placeholder-shown) {
+  padding: 1.375rem 0.9375rem 0.5rem 0.9375rem;
+}
+
+.input-container input::placeholder,
+.input-container textarea::placeholder {
+  color: transparent;
+}
+
+.input-container label {
+  position: absolute;
+  left: 0.9375rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted-foreground);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.input-container input:focus + label,
+.input-container input:not(:placeholder-shown) + label,
+.input-container textarea:focus + label,
+.input-container textarea:not(:placeholder-shown) + label {
+  top: 6px;
+  transform: translateY(0);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+/* Chrome, Safari, Edge, Opera */
+.input-container input::-webkit-outer-spin-button,
+.input-container input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+.input-container input[type="number"] {
+  -moz-appearance: textfield;
+}

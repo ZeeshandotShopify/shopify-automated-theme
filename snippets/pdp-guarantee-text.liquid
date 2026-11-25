@@ -1,0 +1,115 @@
+{%- liquid
+  if block.settings.text_color_mode == 'custom'
+    assign rte_color = block.settings.text_color | default: 'inherit'
+  else
+    assign rte_color = 'inherit'
+  endif
+-%}
+
+{% style %}
+  #pdp-guarantee-text-{{ block.id }} {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px
+  }
+
+  #pdp-guarantee-text-{{ block.id }} .pdp-guarantee-text-wrapper {
+    display: inline-flex;
+    align-items: center;
+    {% if block.settings.columns == 1 %}
+      justify-content: center;
+    {% else %}
+      justify-content: space-between;
+    {% endif %}
+    gap: 0.75rem;
+
+    width: 100%;
+
+    {% if block.settings.border_top_thickness > 0 %}
+      padding-top: 1rem;
+      border-top: {{ block.settings.border_top_thickness }}px solid var(--color-border);
+    {% endif %}
+
+    {% if block.settings.border_bottom_thickness > 0 %}
+      padding-bottom: 1rem;
+      border-bottom: {{ block.settings.border_bottom_thickness }}px solid var(--color-border);
+    {% endif %}
+  }
+
+  #pdp-guarantee-text-{{ block.id }} .pdp-guarantee-icon-with-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+
+    font-family: var(--font-body--family);
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+    /* font-weight: 700; */
+  }
+
+  @media(width >= 64rem) {
+    #pdp-guarantee-text-{{ block.id }} .pdp-guarantee-text-wrapper {
+      gap: 1.75rem;
+    }
+
+    #pdp-guarantee-text-{{ block.id }} .pdp-guarantee-icon-with-text {
+      font-family: var(--font-body--family);
+      font-size: 0.75rem; /* 12px */
+      line-height: 1rem; /* 16px */
+      /* font-weight: 700; */
+    }
+  }
+
+  #pdp-guarantee-text-{{ block.id }} .rte {
+    color: {{ rte_color }};
+    font-size: {{ block.settings.font_size | default: 'inherit' }};
+    line-height: {{ block.settings.line_height | default: 'inherit' }};
+  }
+
+  #pdp-guarantee-text-{{ block.id }} .rte p {
+    margin: 0;
+  }
+{% endstyle %}
+
+<div id="pdp-guarantee-text-{{ block.id }}" {{ block.shopify_attributes }}>
+  <div class="pdp-guarantee-text-wrapper">
+    {% if block.settings.columns >= 1 %}
+      <div class="pdp-guarantee-icon-with-text">
+        {% render 'icon',
+          id: block.id,
+          icon_size: 18,
+          icon_mode: block.settings.icon_mode,
+          icon_select: block.settings.icon_select_1,
+          icon_custom: block.settings.icon_1
+        %}
+        <div class="rte">{{ block.settings.text_1 }}</div>
+      </div>
+    {% endif %}
+
+    {% if block.settings.columns >= 2 %}
+      <div class="pdp-guarantee-icon-with-text">
+        {% render 'icon',
+          id: block.id,
+          icon_size: 18,
+          icon_mode: block.settings.icon_mode,
+          icon_select: block.settings.icon_select_2,
+          icon_custom: block.settings.icon_2
+        %}
+        <div class="rte">{{ block.settings.text_2 }}</div>
+      </div>
+    {% endif %}
+
+    {% if block.settings.columns >= 3 %}
+      <div class="pdp-guarantee-icon-with-text">
+        {% render 'icon',
+          id: block.id,
+          icon_size: 18,
+          icon_mode: block.settings.icon_mode,
+          icon_select: block.settings.icon_select_3,
+          icon_custom: block.settings.icon_3
+        %}
+        <div class="rte">{{ block.settings.text_3 }}</div>
+      </div>
+    {% endif %}
+  </div>
+</div>

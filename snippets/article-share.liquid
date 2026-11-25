@@ -1,0 +1,726 @@
+{%- comment -%}
+  Social Sharing Component
+  Provides comprehensive social sharing functionality with:
+  - All major social platforms (Facebook, X, LinkedIn, Pinterest, Reddit, WhatsApp, Telegram, Email)
+  - Responsive grid layout adapting to screen sizes
+  - Accessibility features (aria-labels, focus states, keyboard navigation)
+  - Mobile-optimized native share dialog support
+  - Customizable icon styles and hover effects
+  - Copy to clipboard functionality with visual feedback
+{%- endcomment -%}
+
+{%- liquid
+  assign share_url = shop.url | append: article.url | url_encode
+  assign share_title = article.title | url_encode
+  assign share_image = article.image | image_url: width: 1200 | url_encode
+
+  # Icon size mapping
+  case settings.social_icon_size
+    when 'small'
+      assign icon_size = '20'
+    when 'large'
+      assign icon_size = '32'
+    else
+      assign icon_size = '24'
+  endcase
+
+  # Button spacing
+  assign button_spacing = settings.social_button_spacing | default: 12
+-%}
+
+{%- style -%}
+  /* ===================================
+     Social Share Component Styles
+     =================================== */
+
+  .article-share {
+    --padding-top: {{ block.settings.padding_top | default: 0 }}px;
+    --padding-bottom: {{ block.settings.padding_bottom | default: 0 }}px;
+    --icon-size: {{ icon_size }}px;
+    --icon-color: {{ settings.social_icon_color | default: '#374151' }};
+    --icon-hover-color: {{ settings.social_icon_hover_color | default: '#111827' }};
+    --button-spacing: {{ button_spacing }}px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: var(--padding-top);
+    padding-bottom: var(--padding-bottom);
+  }
+
+  /* Label Styling */
+  .article-share__label {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: inherit;
+    opacity: 0.8;
+  }
+
+  /* Button Container */
+  .article-share__buttons {
+    display: flex;
+    flex-direction: row;
+    gap: var(--button-spacing);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* Base Button Styles */
+  .article-share__button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--icon-color);
+    background: transparent;
+    border-radius: 9999px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .article-share__button:focus {
+    outline: none;
+  }
+
+  .article-share__button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  /* Icon Styles */
+  .article-share__button svg {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex-shrink: 0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    fill: currentColor;
+  }
+
+  .article-share__button:hover svg,
+  .article-share__button:focus-visible svg {
+    transform: scale(1.15);
+  }
+
+  /* Button Labels */
+  .article-share__button-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* Icon Style Variants */
+
+  /* Filled Circle Style */
+  .article-share__button--filled {
+    background: {{ settings.social_icon_color | default: '#374151' | color_modify: 'alpha', 0.1 }};
+  }
+
+  .article-share__button--filled:hover,
+  .article-share__button--filled:focus-visible {
+    background: {{ settings.social_icon_color | default: '#374151' | color_modify: 'alpha', 0.2 }};
+  }
+
+  /* Outline Style */
+  .article-share__button--outline {
+    border: 1.5px solid currentColor;
+  }
+
+  .article-share__button--outline:hover,
+  .article-share__button--outline:focus-visible {
+    background: {{ settings.social_icon_color | default: '#374151' | color_modify: 'alpha', 0.1 }};
+  }
+
+  /* Minimal Style */
+  .article-share__button--minimal {
+    padding: 0.375rem;
+    min-width: auto;
+    min-height: auto;
+    border-radius: 0.375rem;
+  }
+
+  .article-share__button--minimal:hover,
+  .article-share__button--minimal:focus-visible {
+    background: {{ settings.social_icon_color | default: '#374151' | color_modify: 'alpha', 0.08 }};
+  }
+
+  /* Rounded Square Style */
+  .article-share__button--rounded {
+    border-radius: 0.5rem;
+    background: {{ settings.social_icon_color | default: '#374151' | color_modify: 'alpha', 0.1 }};
+  }
+
+  .article-share__button--rounded:hover,
+  .article-share__button--rounded:focus-visible {
+    background: {{ settings.social_icon_color | default: '#374151' | color_modify: 'alpha', 0.18 }};
+    border-radius: 0.75rem;
+  }
+
+  /* Brand Color Hover Effects */
+  {% if settings.social_use_brand_colors %}
+    .article-share__button--facebook:hover,
+    .article-share__button--facebook:focus-visible {
+      color: #1877f2;
+      background: rgba(24, 119, 242, 0.12);
+    }
+
+    .article-share__button--twitter:hover,
+    .article-share__button--twitter:focus-visible {
+      color: #000000;
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .article-share__button--linkedin:hover,
+    .article-share__button--linkedin:focus-visible {
+      color: #0A66C2;
+      background: rgba(10, 102, 194, 0.12);
+    }
+
+    .article-share__button--pinterest:hover,
+    .article-share__button--pinterest:focus-visible {
+      color: #e60023;
+      background: rgba(230, 0, 35, 0.12);
+    }
+
+    .article-share__button--reddit:hover,
+    .article-share__button--reddit:focus-visible {
+      color: #FF4500;
+      background: rgba(255, 69, 0, 0.12);
+    }
+
+    .article-share__button--whatsapp:hover,
+    .article-share__button--whatsapp:focus-visible {
+      color: #25D366;
+      background: rgba(37, 211, 102, 0.12);
+    }
+
+    .article-share__button--telegram:hover,
+    .article-share__button--telegram:focus-visible {
+      color: #0088cc;
+      background: rgba(0, 136, 204, 0.12);
+    }
+
+    .article-share__button--email:hover,
+    .article-share__button--email:focus-visible {
+      color: #EA4335;
+      background: rgba(234, 67, 53, 0.12);
+    }
+
+    .article-share__button--copy:hover,
+    .article-share__button--copy:focus-visible {
+      color: #6366F1;
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .article-share__button--native:hover,
+    .article-share__button--native:focus-visible {
+      color: #10B981;
+      background: rgba(16, 185, 129, 0.12);
+    }
+  {% else %}
+    .article-share__button:hover,
+    .article-share__button:focus-visible {
+      color: var(--icon-hover-color);
+    }
+  {% endif %}
+
+  /* Copy Success State */
+  .article-share__button--copied {
+    color: #10B981 !important;
+    background: rgba(16, 185, 129, 0.15) !important;
+  }
+
+  .article-share__button--copied svg {
+    animation: copySuccess 0.3s ease-out;
+  }
+
+  @keyframes copySuccess {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  /* Tooltip for Copy Success */
+  .article-share__tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #fff;
+    background: #111827;
+    border-radius: 0.375rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .article-share__tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #111827;
+  }
+
+  .article-share__button--copied .article-share__tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Native Share Button - Mobile Only */
+  .article-share__button--native {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .article-share__button--native {
+      display: inline-flex;
+    }
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 640px) {
+
+    .article-share__button {
+      min-width: 40px;
+      min-height: 40px;
+      padding: 0.5rem;
+    }
+
+    .article-share__button-label {
+      display: none;
+    }
+  }
+{%- endstyle -%}
+
+{%- liquid
+  # Determine icon style class
+  assign style_class = 'article-share__button--minimal'
+  case settings.social_icon_style
+    when 'filled'
+      assign style_class = 'article-share__button--filled'
+    when 'outline'
+      assign style_class = 'article-share__button--outline'
+    when 'rounded'
+      assign style_class = 'article-share__button--rounded'
+  endcase
+-%}
+
+<div class="article-share" {{ block.shopify_attributes }} role="region" aria-label="Share this article">
+  <span class="article-share__label" id="share-label">Share This Article</span>
+
+  <div class="article-share__buttons" role="group" aria-labelledby="share-label">
+    {%- comment -%} Native Share Button (Mobile) {%- endcomment -%}
+    {% if settings.social_share_native %}
+      <button
+        type="button"
+        class="article-share__button {{ style_class }} article-share__button--native"
+        data-share-native
+        data-share-url="{{ shop.url }}{{ article.url }}"
+        data-share-title="{{ article.title | escape }}"
+        data-share-text="{{ article.excerpt | strip_html | truncate: 100 | escape }}"
+        aria-label="Share via your device's share menu"
+        title="Share"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37061L8.08261 9.17026C7.54305 8.46136 6.67378 8 5.7 8C4.04315 8 2.7 9.34315 2.7 11C2.7 12.6569 4.04315 14 5.7 14C6.67378 14 7.54305 13.5386 8.08261 12.8297L15.0227 16.6294C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C17.0262 14 16.1569 14.4614 15.6174 15.1703L8.67727 11.3706C8.69231 11.2492 8.7 11.1255 8.7 11C8.7 10.8745 8.69231 10.7508 8.67727 10.6294L15.6174 6.82974C16.1569 7.53864 17.0262 8 18 8Z" fill="currentColor"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">Share</span>
+        {% endif %}
+      </button>
+    {% endif %}
+
+    {%- comment -%} Facebook Share {%- endcomment -%}
+    {% if settings.social_share_facebook %}
+      <a
+        href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}"
+        class="article-share__button {{ style_class }} article-share__button--facebook"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share on Facebook (opens in new tab)"
+        title="Share on Facebook"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12 1.49792C6.20902 1.49792 1.49805 6.20905 1.49805 11.9998C1.49805 17.7907 6.20902 22.5021 12 22.5021C17.7906 22.5021 22.502 17.7907 22.502 11.9998C22.502 6.20905 17.7906 1.49792 12 1.49792ZM14.9682 8.12755C14.9682 8.17728 14.9484 8.22497 14.9132 8.26013C14.8781 8.2953 14.8304 8.31505 14.7807 8.31505L13.5868 8.3158C12.7991 8.3158 12.6551 8.62255 12.6551 9.22668V10.4799H14.7027C14.7565 10.4799 14.8078 10.5032 14.8433 10.5437C14.8787 10.5842 14.8952 10.638 14.8887 10.6914L14.5971 12.9476C14.5913 12.9928 14.5692 13.0343 14.5349 13.0644C14.5007 13.0945 14.4567 13.1111 14.4111 13.1111H12.6551V18.7134C12.6551 18.7632 12.6354 18.8108 12.6002 18.846C12.5651 18.8812 12.5174 18.9009 12.4676 18.9009H10.1381C10.0884 18.9009 10.0407 18.8812 10.0055 18.846C9.97037 18.8108 9.95061 18.7632 9.95061 18.7134V13.1111H8.18904C8.13931 13.1111 8.09162 13.0914 8.05645 13.0562C8.02129 13.021 8.00153 12.9733 8.00153 12.9236V10.6674C8.00153 10.6177 8.02129 10.57 8.05645 10.5348C8.09162 10.4997 8.13931 10.4799 8.18904 10.4799H9.95061V9.00336C9.95061 7.04774 11.1341 5.83311 13.0397 5.83311C13.8589 5.83311 14.5828 5.89405 14.8052 5.92349C14.8503 5.92944 14.8917 5.95157 14.9216 5.98575C14.9516 6.01993 14.9681 6.06384 14.9682 6.1093V8.12755Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">Facebook</span>
+        {% endif %}
+        <span class="sr-only">Share on Facebook</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} X (Twitter) Share {%- endcomment -%}
+    {% if settings.social_share_twitter %}
+      <a
+        href="https://twitter.com/intent/tweet?url={{ share_url }}&text={{ share_title }}"
+        class="article-share__button {{ style_class }} article-share__button--twitter"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share on X (opens in new tab)"
+        title="Share on X"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12.5 23C18.299 23 23 18.299 23 12.5C23 6.70101 18.299 2 12.5 2C6.70101 2 2 6.70101 2 12.5C2 18.299 6.70101 23 12.5 23Z"/>
+          <path d="M7.02433 7L10.8852 12.5156L7 17H7.87448L11.2761 13.0737L14.0243 17H17L12.9218 11.1742L16.5382 7H15.6637L12.5311 10.6159L10 7H7.02433ZM8.31029 7.68815H9.67729L15.7139 16.3119H14.3469L8.31029 7.68815Z" fill="white"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">X</span>
+        {% endif %}
+        <span class="sr-only">Share on X</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} LinkedIn Share {%- endcomment -%}
+    {% if settings.social_share_linkedin %}
+      <a
+        href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}"
+        class="article-share__button {{ style_class }} article-share__button--linkedin"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share on LinkedIn (opens in new tab)"
+        title="Share on LinkedIn"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 16.5H7.5V9.5H9.5V16.5ZM8.5 8.5C7.95 8.5 7.5 8.05 7.5 7.5C7.5 6.95 7.95 6.5 8.5 6.5C9.05 6.5 9.5 6.95 9.5 7.5C9.5 8.05 9.05 8.5 8.5 8.5ZM17 16.5H15V12.75C15 11.92 14.33 11.25 13.5 11.25C12.67 11.25 12 11.92 12 12.75V16.5H10V9.5H12V10.43C12.58 9.68 13.54 9.25 14.5 9.25C16.16 9.25 17.5 10.59 17.5 12.25V16.5H17Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">LinkedIn</span>
+        {% endif %}
+        <span class="sr-only">Share on LinkedIn</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} Pinterest Share {%- endcomment -%}
+    {% if settings.social_share_pinterest %}
+      <a
+        href="https://pinterest.com/pin/create/button/?url={{ share_url }}&media={{ share_image }}&description={{ share_title }}"
+        class="article-share__button {{ style_class }} article-share__button--pinterest"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Pin on Pinterest (opens in new tab)"
+        title="Pin on Pinterest"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12.4999 2C6.70084 2 2 6.70116 2 12.5C2 18.2987 6.70102 23 12.4999 23C18.2988 23 23 18.2987 23 12.5C23 6.70116 18.2988 2 12.4999 2ZM17.5009 11.2908C17.3759 12.7852 16.2828 14.5289 15.273 15.0271C14.2628 15.5252 13.1833 15.5252 12.5607 15.2208C12.5607 15.2208 11.7581 14.7364 11.6475 14.5979C11.5783 14.6532 11.3568 16.0232 11.0248 16.8811C10.6927 17.7389 10.2361 18.5832 9.58558 18.9706C9.35046 18.1957 9.50261 16.2861 9.95922 14.5979C10.4162 12.9098 10.5959 12.1209 10.5959 12.1209C10.5959 12.1209 10.0148 11.0138 10.5821 9.7963C11.1495 8.57861 12.2149 8.8553 12.4226 9.04902C12.6303 9.24274 13.0037 9.39488 12.6993 10.6403C12.3948 11.8858 11.8828 13.1035 12.3118 13.7678C12.5745 14.1414 13.9723 14.4457 14.7608 13.3942C15.3975 12.3286 15.6468 11.8444 15.6744 10.1699C15.6744 10.1699 15.7042 7.48348 13.3078 7.31954C11.2877 7.18101 10.3546 8.04412 9.7379 8.64779C9.08757 9.28431 8.60336 11.0276 9.21212 11.9964C9.51659 12.4252 9.53039 12.6743 9.48881 12.9234C9.44723 13.1725 9.25351 13.5461 9.25351 13.5461C9.25351 13.5461 7.53781 13.2418 7.45484 11.1383C7.37169 9.03504 8.35409 7.83115 9.22592 7.16703C10.0979 6.5029 11.6107 5.65414 14.5996 6.2077C16.5737 6.7431 17.8189 8.44045 17.5009 11.2908Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">Pinterest</span>
+        {% endif %}
+        <span class="sr-only">Pin on Pinterest</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} Reddit Share {%- endcomment -%}
+    {% if settings.social_share_reddit %}
+      <a
+        href="https://www.reddit.com/submit?url={{ share_url }}&title={{ share_title }}"
+        class="article-share__button {{ style_class }} article-share__button--reddit"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share on Reddit (opens in new tab)"
+        title="Share on Reddit"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM17.5 10.2C17.58 10.36 17.62 10.55 17.62 10.75C17.62 12.69 15.1 14.25 12 14.25C8.9 14.25 6.38 12.69 6.38 10.75C6.38 10.55 6.42 10.36 6.5 10.2C6.18 9.96 6 9.59 6 9.18C6 8.53 6.53 8 7.18 8C7.5 8 7.79 8.12 8.01 8.32C8.89 7.74 10.05 7.38 11.33 7.33L11.97 4.81C12.02 4.62 12.21 4.5 12.41 4.5C12.45 4.5 12.49 4.51 12.53 4.52L14.72 5.01C14.89 4.72 15.21 4.5 15.58 4.5C16.13 4.5 16.58 4.95 16.58 5.5C16.58 6.05 16.13 6.5 15.58 6.5C15.05 6.5 14.62 6.08 14.58 5.56L12.65 5.13L12.1 7.33C13.35 7.4 14.48 7.75 15.35 8.32C15.57 8.12 15.86 8 16.18 8C16.83 8 17.36 8.53 17.36 9.18C17.36 9.59 17.18 9.96 16.86 10.2H17.5ZM9.63 10.5C9.08 10.5 8.63 10.95 8.63 11.5C8.63 12.05 9.08 12.5 9.63 12.5C10.18 12.5 10.63 12.05 10.63 11.5C10.63 10.95 10.18 10.5 9.63 10.5ZM14.38 10.5C13.83 10.5 13.38 10.95 13.38 11.5C13.38 12.05 13.83 12.5 14.38 12.5C14.93 12.5 15.38 12.05 15.38 11.5C15.38 10.95 14.93 10.5 14.38 10.5ZM14.55 13.77C14.29 14.03 13.84 14.25 13.33 14.4C12.82 14.55 12.25 14.63 11.67 14.63C11.09 14.63 10.52 14.55 10.01 14.4C9.5 14.25 9.05 14.03 8.79 13.77C8.64 13.62 8.41 13.62 8.26 13.77C8.11 13.92 8.11 14.15 8.26 14.3C8.62 14.66 9.17 14.94 9.78 15.12C10.39 15.3 11.07 15.4 11.75 15.4C12.43 15.4 13.11 15.3 13.72 15.12C14.33 14.94 14.88 14.66 15.24 14.3C15.39 14.15 15.39 13.92 15.24 13.77C15.09 13.62 14.86 13.62 14.71 13.77H14.55Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">Reddit</span>
+        {% endif %}
+        <span class="sr-only">Share on Reddit</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} WhatsApp Share {%- endcomment -%}
+    {% if settings.social_share_whatsapp %}
+      <a
+        href="https://api.whatsapp.com/send?text={{ share_title }}%20{{ share_url }}"
+        class="article-share__button {{ style_class }} article-share__button--whatsapp"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share via WhatsApp (opens in new tab)"
+        title="Share via WhatsApp"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12.5026 2H12.4974C6.70795 2 2.00001 6.70924 2.00001 12.5C1.99642 14.7116 2.69649 16.8669 3.99895 18.6543L2.69039 22.555L6.72632 21.2649C8.43831 22.4007 10.4481 23.0044 12.5026 23C18.2921 23 23 18.2894 23 12.5C23 6.71056 18.2921 2 12.5026 2ZM18.6123 16.8273C18.359 17.5426 17.3536 18.1359 16.5517 18.3091C16.0031 18.4259 15.2864 18.5191 12.8741 17.519C9.78838 16.2406 7.80126 13.105 7.64638 12.9016C7.49807 12.6982 6.39951 11.2413 6.39951 9.73455C6.39951 8.22781 7.1647 7.49412 7.47313 7.17912C7.72645 6.92056 8.14513 6.80243 8.54676 6.80243C8.6767 6.80243 8.79351 6.80899 8.89851 6.81424C9.20695 6.82737 9.36182 6.84574 9.56526 7.33268C9.81857 7.94299 10.4354 9.44974 10.5089 9.60462C10.5838 9.75949 10.6586 9.96949 10.5536 10.1729C10.4551 10.3829 10.3685 10.4761 10.2136 10.6546C10.0588 10.8331 9.91176 10.9696 9.75688 11.1612C9.61513 11.3279 9.45501 11.5064 9.63351 11.8149C9.81201 12.1167 10.4289 13.1234 11.3371 13.9319C12.5092 14.9754 13.4594 15.3087 13.7994 15.4505C14.0527 15.5555 14.3546 15.5305 14.5396 15.3337C14.7746 15.0804 15.0646 14.6604 15.3599 14.2469C15.5699 13.9503 15.8351 13.9135 16.1133 14.0185C16.3968 14.117 17.897 14.8585 18.2054 15.0121C18.5139 15.167 18.7173 15.2405 18.7921 15.3704C18.8656 15.5004 18.8656 16.1107 18.6123 16.8273Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">WhatsApp</span>
+        {% endif %}
+        <span class="sr-only">Share via WhatsApp</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} Telegram Share {%- endcomment -%}
+    {% if settings.social_share_telegram %}
+      <a
+        href="https://t.me/share/url?url={{ share_url }}&text={{ share_title }}"
+        class="article-share__button {{ style_class }} article-share__button--telegram"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share via Telegram (opens in new tab)"
+        title="Share via Telegram"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.84 14.22 15.51 15.99C15.37 16.74 15.09 16.99 14.83 17.02C14.25 17.07 13.81 16.64 13.25 16.27C12.37 15.69 11.87 15.33 11.02 14.77C10.03 14.12 10.67 13.76 11.24 13.18C11.39 13.03 13.95 10.7 14 10.49C14.007 10.457 14.006 10.423 13.996 10.39C13.986 10.358 13.969 10.329 13.946 10.306C13.88 10.25 13.79 10.27 13.71 10.28C13.61 10.3 12.13 11.24 9.26 13.1C8.86 13.38 8.5 13.52 8.18 13.51C7.83 13.51 7.15 13.32 6.65 13.16C6.03 12.96 5.54 12.85 5.58 12.51C5.6 12.33 5.85 12.15 6.33 11.97C9.42 10.63 11.48 9.74 12.52 9.32C15.45 8.1 16.03 7.89 16.41 7.89C16.49 7.89 16.68 7.91 16.8 8.01C16.9 8.1 16.93 8.22 16.94 8.31C16.93 8.37 16.95 8.56 16.94 8.8H16.64Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">Telegram</span>
+        {% endif %}
+        <span class="sr-only">Share via Telegram</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} Email Share {%- endcomment -%}
+    {% if settings.social_share_email %}
+      {%- liquid
+        assign email_subject = settings.social_share_email_subject | default: 'Check out: {title}'
+        assign email_subject = email_subject | replace: '{title}', article.title | url_encode
+        assign email_body = settings.social_share_email_body | default: 'I thought you might like this: {url}'
+        assign email_body = email_body | replace: '{title}', article.title | replace: '{url}', shop.url | append: article.url | url_encode
+      -%}
+      <a
+        href="mailto:?subject={{ email_subject }}&body={{ email_body }}"
+        class="article-share__button {{ style_class }} article-share__button--email"
+        aria-label="Share via Email"
+        title="Share via Email"
+      >
+        <svg
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM18 15C18 15.55 17.55 16 17 16H7C6.45 16 6 15.55 6 15V9.62L11.55 13.03C11.7 13.12 11.85 13.17 12 13.17C12.15 13.17 12.3 13.12 12.45 13.03L18 9.62V15ZM18 8.24L12 11.91L6 8.24V9C6 8.45 6.45 8 7 8H17C17.55 8 18 8.45 18 9V8.24Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">Email</span>
+        {% endif %}
+        <span class="sr-only">Share via Email</span>
+      </a>
+    {% endif %}
+
+    {%- comment -%} Copy to Clipboard {%- endcomment -%}
+    {% if settings.social_share_clipboard %}
+      <button
+        type="button"
+        class="article-share__button {{ style_class }} article-share__button--copy"
+        data-share-copy
+        data-share-url="{{ shop.url }}{{ article.url }}"
+        aria-label="Copy link to clipboard"
+        title="Copy link"
+      >
+        <svg
+          class="article-share__icon-copy"
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path d="M14 1.25H5C3.48122 1.25 2.25 2.48122 2.25 4V14.857C2.25 16.3758 3.48122 17.607 5 17.607H14C15.5188 17.607 16.75 16.3758 16.75 14.857V4C16.75 2.48122 15.5188 1.25 14 1.25Z"/>
+          <path d="M21.7501 9V20C21.7504 20.3612 21.6794 20.7189 21.5413 21.0527C21.4032 21.3865 21.2007 21.6897 20.9452 21.9451C20.6898 22.2005 20.3866 22.4031 20.0528 22.5412C19.719 22.6793 19.3613 22.7503 19.0001 22.75H9.88012C9.14961 22.7508 8.44864 22.4616 7.93116 21.946C7.41367 21.4304 7.12197 20.7305 7.12012 20V18.61H14.0001C14.994 18.6079 15.9466 18.2121 16.6494 17.5093C17.3522 16.8065 17.748 15.8539 17.7501 14.86V6.25H19.0001C19.3613 6.24974 19.719 6.32069 20.0528 6.4588C20.3866 6.5969 20.6898 6.79946 20.9452 7.05487C21.2007 7.31028 21.4032 7.61355 21.5413 7.94731C21.6794 8.28107 21.7504 8.63879 21.7501 9Z"/>
+        </svg>
+        <svg
+          class="article-share__icon-check"
+          width="{{ icon_size }}"
+          height="{{ icon_size }}"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+          style="display: none;"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z"/>
+        </svg>
+        {% if settings.social_show_labels %}
+          <span class="article-share__button-label">Copy</span>
+        {% endif %}
+        <span class="article-share__tooltip">Copied!</span>
+        <span class="sr-only">Copy link to clipboard</span>
+      </button>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    // Initialize share functionality when DOM is ready
+    function initShareButtons() {
+      // Copy to clipboard functionality
+      const copyButtons = document.querySelectorAll('[data-share-copy]');
+      copyButtons.forEach(function (button) {
+        button.addEventListener('click', function (e) {
+          e.preventDefault();
+          const url = this.getAttribute('data-share-url');
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+              .writeText(url)
+              .then(function () {
+                showCopySuccess(button);
+              })
+              .catch(function () {
+                fallbackCopy(url, button);
+              });
+          } else {
+            fallbackCopy(url, button);
+          }
+        });
+      });
+
+      // Native share functionality (mobile)
+      const nativeShareButtons = document.querySelectorAll('[data-share-native]');
+      nativeShareButtons.forEach(function (button) {
+        if (!navigator.share) {
+          button.style.display = 'none';
+          return;
+        }
+
+        button.addEventListener('click', async function (e) {
+          e.preventDefault();
+          const shareData = {
+            title: this.getAttribute('data-share-title'),
+            text: this.getAttribute('data-share-text'),
+            url: this.getAttribute('data-share-url'),
+          };
+
+          try {
+            await navigator.share(shareData);
+          } catch (err) {
+            // User cancelled or share failed
+            console.log('Share cancelled or failed:', err);
+          }
+        });
+      });
+    }
+
+    // Fallback copy method for older browsers
+    function fallbackCopy(text, button) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+        showCopySuccess(button);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+
+      document.body.removeChild(textArea);
+    }
+
+    // Show copy success visual feedback
+    function showCopySuccess(button) {
+      const iconCopy = button.querySelector('.article-share__icon-copy');
+      const iconCheck = button.querySelector('.article-share__icon-check');
+
+      button.classList.add('article-share__button--copied');
+
+      if (iconCopy && iconCheck) {
+        iconCopy.style.display = 'none';
+        iconCheck.style.display = 'block';
+      }
+
+      setTimeout(function () {
+        button.classList.remove('article-share__button--copied');
+        if (iconCopy && iconCheck) {
+          iconCopy.style.display = 'block';
+          iconCheck.style.display = 'none';
+        }
+      }, 2000);
+    }
+
+    // Initialize on DOMContentLoaded or immediately if already loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initShareButtons);
+    } else {
+      initShareButtons();
+    }
+  })();
+</script>

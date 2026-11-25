@@ -1,0 +1,94 @@
+{%- liquid
+  assign pagination_nav_target_id = pagination_nav_target_id
+-%}
+
+{%- stylesheet -%}
+  .pagination-nav {
+    font-family: var(--font-heading--family);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 80px;
+    padding: 0;
+  }
+
+  .pagination-nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: var(--pagination-nav-border-radius, 10px);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+
+  .pagination-nav-button:hover {
+    background-color: var(--color-pagination-nav-hover-background);
+    color: var(--color-pagination-nav-hover-foreground);
+  }
+
+  .pagination-nav-button svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .pagination-nav-button.current-page {
+    background-color: var(--color-pagination-nav-background);
+    color: var(--color-pagination-nav-foreground);
+    border: var(--pagination-nav-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+  }
+{%- endstylesheet -%}
+
+{%- if paginate.pages > 1 -%}
+  <pagination-nav
+    class="pagination-nav"
+    data-pagination-nav-target-id="{{ pagination_nav_target_id }}"
+    data-section-id="{{ section.id }}"
+  >
+    {%- if paginate.previous -%}
+      <a
+        href="{{ paginate.previous.url }}"
+        data-href="{{ paginate.previous.url }}"
+        class="pagination-nav-button"
+        data-pagination-nav-button
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10.8284 12.0007L15.7782 16.9504L14.364 18.3646L8 12.0007L14.364 5.63672L15.7782 7.05093L10.8284 12.0007Z"></path>
+        </svg>
+      </a>
+    {%- endif -%}
+    {%- for part in paginate.parts -%}
+      {%- if part.is_link -%}
+        <a href="{{ part.url }}" data-href="{{ part.url }}" class="pagination-nav-button" data-pagination-nav-button>
+          {{- part.title -}}
+        </a>
+      {%- else -%}
+        {%- if part.title == paginate.current_page -%}
+          <span class="pagination-nav-button current-page" data-pagination-nav-button>
+            {{- part.title -}}
+          </span>
+        {%- else -%}
+          <span class="pagination-nav-button" data-pagination-nav-button>{{ part.title }}</span>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if paginate.next -%}
+      <a
+        href="{{ paginate.next.url }}"
+        data-href="{{ paginate.next.url }}"
+        class="pagination-nav-button"
+        data-pagination-nav-button
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13.1717 12.0007L8.22192 7.05093L9.63614 5.63672L16.0001 12.0007L9.63614 18.3646L8.22192 16.9504L13.1717 12.0007Z"></path>
+        </svg>
+      </a>
+    {%- endif -%}
+  </pagination-nav>
+{%- endif -%}

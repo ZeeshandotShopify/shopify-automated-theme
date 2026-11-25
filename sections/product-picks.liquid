@@ -1,0 +1,948 @@
+{%- liquid
+  assign section_id = section.id
+
+  comment
+    A row of product cards on a tinted contrast band — three at the default
+    card width, with a dot-indicated single-card carousel on mobile.
+
+    THE SPLIT — the required setting is a RESOLVED PRODUCT SOURCE and nothing
+    else. Blank heading skips the heading and closes its 48px gap with it; no
+    products at all means the theme editor gets a placeholder naming the two
+    settings that fill it, and preview and live get no markup.
+  endcomment
+  assign product_source = section.settings.product_source
+  assign max_products = section.settings.max_products | default: 3
+
+  if product_source == 'collection'
+    assign picked_products = section.settings.collection.products
+  else
+    assign picked_products = section.settings.product_list
+  endif
+
+  assign products_count = picked_products.size | default: 0
+  if products_count > max_products
+    assign products_count = max_products
+  endif
+
+  assign show_section = false
+  assign show_placeholder = false
+  if products_count > 0
+    assign show_section = true
+  elsif request.design_mode
+    assign show_placeholder = true
+  endif
+
+  assign heading = section.settings.heading | strip
+  assign atc_label = section.settings.atc_label | default: 'Add To Cart'
+
+  comment
+    Colour resolves through a mode select rather than a schema default, because
+    a `color` setting cannot default to a CSS variable. `inherit` hands back the
+    theme token; `custom` hands back the merchant's swatch. Same shape as
+    snippets/pdp-testimonial.liquid.
+  endcomment
+  if section.settings.color_mode == 'custom'
+    assign pp_heading_color = section.settings.heading_color
+    assign pp_title_color = section.settings.title_color
+    assign pp_star_color = section.settings.star_color
+    assign pp_review_count_color = section.settings.review_count_color
+    assign pp_image_placeholder_color = section.settings.image_placeholder_color
+  else
+    assign pp_heading_color = 'var(--color-foreground)'
+    assign pp_title_color = 'var(--color-foreground)'
+    assign pp_star_color = 'var(--color-star-rating-foreground)'
+    assign pp_review_count_color = 'var(--color-muted-foreground)'
+    assign pp_image_placeholder_color = 'var(--color-muted-background)'
+  endif
+
+  comment
+    The dots inherit the progressbar tokens, not the primary ones: this theme
+    already paints its other carousel indicator with them, so both indicators
+    stay one colour system. --color-primary-background is a CTA colour.
+  endcomment
+  if section.settings.carousel_color_mode == 'custom'
+    assign pp_dot_active_color = section.settings.dot_active_color
+    assign pp_dot_inactive_color = section.settings.dot_inactive_color
+  else
+    assign pp_dot_active_color = 'var(--color-progressbar-fill)'
+    assign pp_dot_inactive_color = 'var(--color-progressbar-background)'
+  endif
+
+  comment
+    The section is a tinted contrast band, so `inherit` resolves to the theme's
+    muted ground rather than the page ground, which would erase it.
+  endcomment
+  assign pp_bg_color = section.settings.bg_color
+  if section.settings.bg_color_mode != 'custom'
+    assign pp_bg_color = 'var(--color-muted-background)'
+  endif
+-%}
+
+{%- if show_section or show_placeholder -%}
+  {%- style -%}
+    #product-picks-{{ section_id }} {
+      /* The Add To Cart fill, its hover, its label colour and the pill radius
+         are NOT restated here — they come from --color-add-to-cart-* and
+         --button-border-radius via snippets/add-to-cart.liquid, so the button
+         matches every other Add To Cart in the theme. */
+      --pp-bg-color: {{ pp_bg_color }};
+
+      --pp-heading-color: {{ pp_heading_color }};
+      --pp-heading-font-size: {{ section.settings.mobile_heading_font_size }};
+      --pp-heading-white-space: normal;
+
+      --pp-card-width: {{ section.settings.card_width }};
+      --pp-card-gap: {{ section.settings.card_gap }}px;
+      --pp-card-padding-block: 24px;
+
+      --pp-image-radius: {{ section.settings.image_border_radius }};
+      --pp-image-placeholder-color: {{ pp_image_placeholder_color }};
+
+      --pp-title-color: {{ pp_title_color }};
+      --pp-title-font-size: {{ section.settings.title_font_size }};
+      --pp-title-line-clamp: {{ section.settings.title_line_clamp }};
+
+      --pp-star-color: {{ pp_star_color }};
+      --pp-review-count-color: {{ pp_review_count_color }};
+
+      --pp-dot-active-color: {{ pp_dot_active_color }};
+      --pp-dot-inactive-color: {{ pp_dot_inactive_color }};
+
+      --pp-padding-top: {{ section.settings.mobile_padding_top }}px;
+      --pp-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+      --pp-padding-left: {{ section.settings.mobile_padding_left }}px;
+      --pp-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+      position: relative;
+    }
+
+    #product-picks-{{ section_id }} {
+      background: var(--pp-bg-color);
+    }
+
+    /* gap 48 between the heading and the card row, and again
+       between the card row and the mobile dots. `gap` rather than margins so a
+       blank heading takes its own air with it. */
+    #product-picks-{{ section_id }} .product-picks__inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+      padding-top: var(--pp-padding-top);
+      padding-bottom: var(--pp-padding-bottom);
+      padding-left: var(--pp-padding-left);
+      padding-right: var(--pp-padding-right);
+    }
+
+    #product-picks-{{ section_id }} .product-picks__placeholder {
+      margin: 0;
+    }
+
+    /* ---------- 1. Heading ---------- */
+
+    #product-picks-{{ section_id }} .product-picks__heading {
+      margin: 0;
+      width: 100%;
+      font-family: var(--font-heading--family);
+      font-size: var(--pp-heading-font-size);
+      font-weight: 400;
+      line-height: 1.4;
+      letter-spacing: 0;
+      text-align: center;
+      text-transform: capitalize;
+      white-space: var(--pp-heading-white-space);
+      color: var(--pp-heading-color);
+    }
+
+    /* ---------- 2. Card row ---------- */
+
+    /* Mobile is a scroll-snap carousel, desktop a centred row of fixed-width
+       cards. Swiper drives the theme's ten other carousels, but it is not used
+       here: `centeredSlides` is what puts the single mobile card at x=39, and
+       that same option pushes the desktop group off the 116px centre the design
+       measures. Scroll-snap gets both geometries from one rule set, needs no
+       teardown at the breakpoint, and cannot be left dead by a theme-editor
+       re-render. */
+    #product-picks-{{ section_id }} .product-picks__list {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      gap: var(--pp-card-gap);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      width: 100%;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+
+      /* The scrollport is the content measure (358 on a 390 frame), so an
+         inline pad of half the leftover is what lets the first and last card
+         reach the centre snap position — 23px at the design's width, matching
+         the measured card x of 39 once the section's own 16px is added. */
+      padding-inline: max(0px, calc((100% - var(--pp-card-width)) / 2));
+    }
+
+    #product-picks-{{ section_id }} .product-picks__list::-webkit-scrollbar {
+      display: none;
+    }
+
+    #product-picks-{{ section_id }} .product-picks__slide {
+      flex: 0 0 var(--pp-card-width);
+      max-width: var(--pp-card-width);
+      scroll-snap-align: center;
+    }
+
+    /* ---------- 3. Card ---------- */
+
+    /* The form element IS the card, the way snippets/product-card.liquid does
+       it, so the Add To Cart button needs no separate wrapper form. */
+    #product-picks-{{ section_id }} .product-picks__card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      margin: 0;
+      padding-block: var(--pp-card-padding-block);
+      width: 100%;
+    }
+
+    #product-picks-{{ section_id }} .product-picks__upper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      width: 100%;
+    }
+
+    /* 312 x 312, radius 20. Square at every width, so the
+       ratio is set here rather than exposed. */
+    #product-picks-{{ section_id }} .product-picks__media {
+      display: block;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: var(--pp-image-radius);
+    }
+
+    #product-picks-{{ section_id }} .product-picks__image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* A product with no image gets a flat tinted rectangle so the row stays
+       aligned instead of collapsing. The theme's own `.image-placeholder` is
+       not reused: it carries min-width/min-height 150px and paints
+       --color-primary-background, which is a CTA colour, not a slot tint. */
+    #product-picks-{{ section_id }} .product-picks__media-placeholder {
+      width: 100%;
+      height: 100%;
+      background-color: var(--pp-image-placeholder-color);
+    }
+
+    #product-picks-{{ section_id }} .product-picks__text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* The product-title face. --font-product-title--family is optional: a
+       theme that defines it gets it, everything else falls back to the body
+       face, which is what snippets/product-card.liquid uses.
+       design pins the box to ONE line (nowrap at 202 wide); a real product
+       title is longer than 312, so it is clamped to that same one line rather
+       than allowed to reflow the card. */
+    #product-picks-{{ section_id }} .product-picks__title {
+      margin: 0;
+      width: 100%;
+      font-family: var(--font-product-title--family, var(--font-body--family));
+      font-size: var(--pp-title-font-size);
+      font-weight: 500;
+      line-height: 1.4;
+      letter-spacing: 0;
+      text-transform: capitalize;
+      color: var(--pp-title-color);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: var(--pp-title-line-clamp);
+    }
+
+    /* The anchor carries the accessible name AND, through this pseudo-element,
+       the image's hit area too — so there is no empty overlay link. It stops
+       short of the Add To Cart button, which is a submit inside the same form. */
+    #product-picks-{{ section_id }} .product-picks__title a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    #product-picks-{{ section_id }} .product-picks__title a::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* Judge.me ships the badge markup pre-rendered in
+       `product.metafields.judgeme.badge`, with an inline `display: none` on
+       `.jdgm-prev-badge` that its own script clears once it has set up. The
+       override therefore has to be `!important`, the same way
+       snippets/product-card.liquid and snippets/pdp-ratings.liquid do it. */
+    #product-picks-{{ section_id }} .jdgm-prev-badge {
+      display: flex !important;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 0;
+    }
+
+    #product-picks-{{ section_id }} .jdgm-preview-badge .jdgm-prev-badge__stars {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #product-picks-{{ section_id }} .jdgm-preview-badge .jdgm-star.jdgm-star {
+      display: inline-block !important;
+      color: var(--pp-star-color);
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    #product-picks-{{ section_id }} .jdgm-star.jdgm--on:before,
+    #product-picks-{{ section_id }} .jdgm-star.jdgm--half:before,
+    #product-picks-{{ section_id }} .jdgm-star.jdgm--off:before {
+      font-size: 15px;
+    }
+
+    #product-picks-{{ section_id }} .jdgm-prev-badge .jdgm-prev-badge__text {
+      font-family: var(--font-body--family);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--pp-review-count-color);
+      margin: 0;
+    }
+
+    #product-picks-{{ section_id }} .product-picks__upper {
+      position: relative;
+    }
+
+    #product-picks-{{ section_id }} .product-picks__atc {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+    }
+
+    /* 42 tall from 22.4 of line plus 10 top and bottom, and
+       a 64px inline pad that only ever matters if the label runs long. */
+    #product-picks-{{ section_id }} .product-picks__atc add-to-cart button {
+      padding-block: 10px;
+      padding-inline: 64px;
+    }
+
+    /* ---------- 4. Dots ---------- */
+
+    /* 10px circles 6px apart, centred, first one active. The
+       count follows the number of products rather than the design's four
+       against three cards (spec OPEN QUESTION 4). */
+    #product-picks-{{ section_id }} .product-picks__dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #product-picks-{{ section_id }} .product-picks__dot {
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background-color: var(--pp-dot-inactive-color);
+      cursor: pointer;
+      transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #product-picks-{{ section_id }} .product-picks__dot[aria-current='true'] {
+      background-color: var(--pp-dot-active-color);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #product-picks-{{ section_id }} .product-picks__dot {
+        transition: none;
+      }
+    }
+
+    /* ---------- 5. Desktop ---------- */
+
+    @media (width >= 64rem) {
+      #product-picks-{{ section_id }} {
+        --pp-heading-font-size: {{ section.settings.heading_font_size }};
+        {%- if section.settings.heading_nowrap -%}
+          --pp-heading-white-space: nowrap;
+        {%- endif -%}
+
+        --pp-padding-top: {{ section.settings.desktop_padding_top }}px;
+        --pp-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+        --pp-padding-left: {{ section.settings.desktop_padding_left }}px;
+        --pp-padding-right: {{ section.settings.desktop_padding_right }}px;
+      }
+
+      /* 3 x 312 + 2 x 48 = 1032 centred in the 1264 measure — the design's
+         116px each side. A fourth card wraps onto a second row rather than
+         squeezing the group. */
+      #product-picks-{{ section_id }} .product-picks__list {
+        flex-wrap: wrap;
+        justify-content: center;
+        row-gap: 48px;
+        overflow-x: visible;
+        scroll-snap-type: none;
+        padding-inline: 0;
+      }
+
+      #product-picks-{{ section_id }} .product-picks__dots {
+        display: none;
+      }
+    }
+  {%- endstyle -%}
+
+  <div
+    id="product-picks-{{ section_id }}"
+    class="product-picks"
+    data-bg-mode="{{ section.settings.bg_color_mode }}"
+  >
+    <div class="shopify-page-width shopify-page-padding">
+      <div class="product-picks__inner">
+        {%- if show_placeholder -%}
+          <p class="product-picks__placeholder">Product Picks — add Collection or Product list to show this section</p>
+        {%- else -%}
+          {%- if heading != blank -%}
+            <h2 class="product-picks__heading">{{ heading }}</h2>
+          {%- endif -%}
+
+          <ul class="product-picks__list" data-product-picks-list>
+            {%- for product in picked_products limit: max_products -%}
+              {%- liquid
+                assign form_id = 'product-picks-' | append: section_id | append: '-' | append: product.id
+                assign rating_count = product.metafields.reviews.rating_count | default: 0 | plus: 0
+              -%}
+              <li class="product-picks__slide" data-product-picks-slide>
+                {%- form 'product', product, id: form_id, class: 'product-picks__card', novalidate: 'novalidate' -%}
+                  <div class="product-picks__upper">
+                    <a
+                      class="product-picks__media"
+                      href="{{ product.url }}"
+                      tabindex="-1"
+                      aria-hidden="true"
+                    >
+                      {%- if product.featured_image != blank -%}
+                        {{
+                          product.featured_image
+                          | image_url: width: 936
+                          | image_tag:
+                            class: 'product-picks__image',
+                            widths: '312, 468, 624, 936',
+                            sizes: '312px',
+                            loading: 'lazy',
+                            alt: product.featured_image.alt
+                          | default: product.title
+                        }}
+                      {%- else -%}
+                        <span class="product-picks__media-placeholder"></span>
+                      {%- endif -%}
+                    </a>
+
+                    <div class="product-picks__text">
+                      <h3 class="product-picks__title">
+                        <a href="{{ product.url }}">{{- product.title -}}</a>
+                      </h3>
+
+                      {%- if section.settings.show_rating and rating_count > 0 and product.metafields.judgeme.badge -%}
+                        {%- comment -%}
+                          `jdgm-*` are Judge.me's own classes, styled here only
+                          to override the app. ValidScopedCSSClass is right that
+                          they are defined elsewhere — that is the point.
+                        {%- endcomment -%}
+                        {% # theme-check-disable ValidScopedCSSClass %}
+                        <div
+                          class="jdgm-widget jdgm-preview-badge"
+                          data-id="{{ product.id }}"
+                          data-auto-install="false"
+                        >
+                          {{ product.metafields.judgeme.badge }}
+                        </div>
+                        {% # theme-check-enable ValidScopedCSSClass %}
+                      {%- endif -%}
+                    </div>
+                  </div>
+
+                  {%- if section.settings.show_add_to_cart -%}
+                    <div class="product-picks__atc">
+                      {%- render 'add-to-cart',
+                        product: product,
+                        form_id: form_id,
+                        add_to_cart_text: atc_label,
+                        label_case: 'none'
+                      -%}
+                    </div>
+                  {%- endif -%}
+                {%- endform -%}
+              </li>
+            {%- endfor -%}
+          </ul>
+
+          {%- if products_count > 1 -%}
+            <div class="product-picks__dots" data-product-picks-dots>
+              {%- for i in (1..products_count) -%}
+                <button
+                  type="button"
+                  class="product-picks__dot"
+                  data-product-picks-dot
+                  aria-current="{% if forloop.first %}true{% else %}false{% endif %}"
+                  aria-label="Go to product {{ forloop.index }} of {{ products_count }}"
+                ></button>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  {%- unless show_placeholder -%}
+    <script>
+      (function () {
+        var sectionId = 'product-picks-{{ section_id }}';
+
+        function init() {
+          var section = document.getElementById(sectionId);
+          if (!section) return;
+
+          var list = section.querySelector('[data-product-picks-list]');
+          var dots = section.querySelectorAll('[data-product-picks-dot]');
+          if (!list || !dots.length) return;
+
+          /* Idempotent: the theme editor re-renders a section on every setting
+             change and this runs again each time. */
+          if (list.dataset.ppBound === 'true') return;
+          list.dataset.ppBound = 'true';
+
+          var slides = list.querySelectorAll('[data-product-picks-slide]');
+          var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          var frame = null;
+
+          function activeIndex() {
+            var mid = list.scrollLeft + list.clientWidth / 2;
+            var best = 0;
+            var bestGap = Infinity;
+
+            for (var i = 0; i < slides.length; i++) {
+              var slide = slides[i];
+              var gap = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - mid);
+              if (gap < bestGap) {
+                bestGap = gap;
+                best = i;
+              }
+            }
+            return best;
+          }
+
+          function sync() {
+            var index = activeIndex();
+            for (var i = 0; i < dots.length; i++) {
+              dots[i].setAttribute('aria-current', i === index ? 'true' : 'false');
+            }
+          }
+
+          list.addEventListener(
+            'scroll',
+            function () {
+              if (frame) return;
+              frame = window.requestAnimationFrame(function () {
+                frame = null;
+                sync();
+              });
+            },
+            { passive: true },
+          );
+
+          for (var d = 0; d < dots.length; d++) {
+            (function (index) {
+              dots[index].addEventListener('click', function () {
+                var slide = slides[index];
+                if (!slide) return;
+                slide.scrollIntoView({
+                  behavior: reduceMotion ? 'auto' : 'smooth',
+                  inline: 'center',
+                  block: 'nearest',
+                });
+              });
+            })(d);
+          }
+
+          sync();
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
+        }
+
+        /* A section re-rendered by the theme editor never re-runs this file's
+           DOMContentLoaded handler, which would leave the dots dead on every
+           setting change. */
+        document.addEventListener('shopify:section:load', function (event) {
+          if (event.detail && event.detail.sectionId && sectionId.indexOf(event.detail.sectionId) === -1) {
+            return;
+          }
+          init();
+        });
+      })();
+    </script>
+  {%- endunless -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:section.product_picks.name",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:heading.label",
+      "default": "Get Started With These"
+    },
+    {
+      "type": "select",
+      "id": "product_source",
+      "label": "t:product_source.label",
+      "options": [
+        {
+          "value": "collection",
+          "label": "t:product_source.options.collection"
+        },
+        {
+          "value": "product_list",
+          "label": "t:product_source.options.product_list"
+        }
+      ],
+      "default": "collection"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "t:collection.label"
+    },
+    {
+      "type": "product_list",
+      "id": "product_list",
+      "label": "t:product_list.label",
+      "limit": 12
+    },
+    {
+      "type": "range",
+      "id": "max_products",
+      "label": "t:section.product_picks.max_products.label",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "header",
+      "content": "t:section.product_picks.card.content"
+    },
+    {
+      "type": "text",
+      "id": "card_width",
+      "label": "t:size.width.label",
+      "default": "312px"
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "t:section.product_picks.card_gap.label",
+      "min": 0,
+      "max": 96,
+      "step": 2,
+      "default": 48
+    },
+    {
+      "type": "text",
+      "id": "image_border_radius",
+      "label": "t:size.border_radius.label",
+      "default": "20px"
+    },
+    {
+      "type": "range",
+      "id": "title_line_clamp",
+      "label": "t:title.label",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "t:product_rating.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_add_to_cart",
+      "label": "t:add_to_cart.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "atc_label",
+      "label": "t:section.product_picks.atc_label.label",
+      "default": "Add To Cart"
+    },
+    {
+      "type": "header",
+      "content": "t:typography.name"
+    },
+    {
+      "type": "text",
+      "id": "heading_font_size",
+      "label": "t:typography.font_size.desktop.label",
+      "default": "2.5rem"
+    },
+    {
+      "type": "text",
+      "id": "mobile_heading_font_size",
+      "label": "t:typography.font_size.mobile.label",
+      "default": "2.5rem"
+    },
+    {
+      "type": "checkbox",
+      "id": "heading_nowrap",
+      "label": "t:section.product_picks.heading_nowrap.label",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "title_font_size",
+      "label": "t:title.label",
+      "default": "1.25rem"
+    },
+    {
+      "type": "header",
+      "content": "t:colors.name"
+    },
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "t:heading.label",
+      "default": "#111111",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "t:title.label",
+      "default": "#111111",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "t:section.product_picks.star_color.label",
+      "info": "Inherits the theme's global star rating color.",
+      "default": "#facc15",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "review_count_color",
+      "label": "t:section.product_picks.review_count_color.label",
+      "default": "#737373",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "image_placeholder_color",
+      "label": "t:image.label",
+      "default": "#f5f5f5",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:section.product_picks.carousel.content"
+    },
+    {
+      "type": "select",
+      "id": "carousel_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "dot_active_color",
+      "label": "t:section.product_picks.dot_active_color.label",
+      "default": "#6B7280",
+      "visible_if": "{{ section.settings.carousel_color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "dot_inactive_color",
+      "label": "t:section.product_picks.dot_inactive_color.label",
+      "default": "#E5E7EB",
+      "visible_if": "{{ section.settings.carousel_color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "bg_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#f5f5f5"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 88
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 88
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:section.product_picks.name"
+    }
+  ]
+}
+{% endschema %}

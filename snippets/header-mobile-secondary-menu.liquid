@@ -1,0 +1,27 @@
+<style>
+  .secondary-menu {
+    padding: 1rem;
+  }
+
+  .secondary-menu .menu-item {
+    width: 100%;
+    padding: 0.75rem 0.75rem;
+  }
+
+  .secondary-menu .menu-item a {
+    display: block;
+    width: 100%;
+  }
+</style>
+
+<div class="secondary-menu">
+  {% render 'menu',
+    id: block.id,
+    menu: linklists[block.settings.secondary_menu].links,
+    mobile_gap: 12,
+    desktop_gap: 12,
+    mobile_direction: 'column',
+    desktop_direction: 'column',
+    shopify_attributes: block.shopify_attributes
+  %}
+</div>

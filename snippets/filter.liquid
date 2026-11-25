@@ -1,0 +1,316 @@
+{% stylesheet %}
+  .filter-disclosure {
+    position: relative;
+    display: none;
+  }
+
+  /* Remove default marker */
+  .filter-disclosure summary {
+    list-style: none;
+  }
+  .filter-disclosure summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* Style summary to match current trigger button */
+  .filter-disclosure-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    min-height: 3rem;
+    padding: 0.5rem 1.5rem;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    background: var(--color-dropdown-trigger-background);
+    color: var(--color-dropdown-trigger-foreground);
+    border: var(--dropdown-trigger-border-thickness, 1px) solid var(--color-dropdown-trigger-border, transparent);
+    border-radius: var(--dropdown-trigger-border-radius, 0);
+    white-space: nowrap;
+  }
+
+  .filter-disclosure-trigger:hover {
+    background: var(--color-dropdown-trigger-hover-background);
+    color: var(--color-dropdown-trigger-hover-foreground);
+  }
+
+  .filter-disclosure-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    transition: transform 200ms ease;
+  }
+
+  .filter-disclosure-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .filter-disclosure[open] .filter-disclosure-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Dropdown panel */
+  .filter-disclosure-panel {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    z-index: 100;
+    min-width: 14rem;
+    max-height: min(33rem, calc(100vh - 8rem));
+    overflow-y: auto;
+    padding: 0.25rem;
+    background-color: var(--color-popover-background, #ffffff);
+    color: var(--color-popover-foreground, #000000);
+    border: var(--popover-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+    border-radius: var(--popover-border-radius, 0.375rem);
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    /* box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); */
+    z-index: 10001;
+  }
+
+  .filter-content {
+    font-family: var(--font-body--family);
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+    padding: 0;
+  }
+
+  .filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.375rem 0.5rem;
+  }
+
+  .filter-header a {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    margin-left: auto;
+  }
+
+  .filter-form {
+    display: grid;
+  }
+
+  .filter-form-item {
+    padding: 0.375rem 0.5rem;
+  }
+
+  .filter-form li label:hover .filter-value-label {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .filter-accordion {
+    display: block;
+    background-color: transparent;
+    color: inherit;
+    border-radius: 0;
+    border-bottom: 1px solid var(--color-border, #e5e5e5);
+  }
+
+  .filter-accordion-trigger {
+    padding-inline: 1rem;
+  }
+
+  .filter-accordion-content {
+    padding: 0 1rem 1rem 1rem;
+  }
+
+  .filter-accordion-content .filter-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+  }
+
+  .filter-accordion-content .filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .filter-accordion-content .filter-header a {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    margin-left: auto;
+  }
+
+  .filter-accordion-content .filter-form {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .filter-accordion-content .filter-form li label:hover .filter-value-label {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .filter-form-item-input {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  @media (width >= 64rem) {
+    .filter-disclosure {
+      display: block;
+    }
+
+    .filter-accordion {
+      display: none;
+    }
+  }
+{% endstylesheet %}
+
+{% if variant == 'desktop' %}
+  <details id="FilterDesktop-{{ filter.param_name }}" class="filter-disclosure js-filter">
+    <summary class="filter-disclosure-trigger">
+      <span>{{ filter.label }}</span>
+      <span class="filter-disclosure-icon">
+        {{ 'arrow-down.svg' | inline_asset_content }}
+      </span>
+    </summary>
+    <div class="filter-disclosure-panel">
+      <div class="filter-content">
+        <div class="filter-header">
+          <a href="{{ filter.url_to_remove }}">Reset</a>
+        </div>
+
+        <ul class="filter-form">
+          {%- for filter_value in filter.values -%}
+            <li class="filter-form-item">
+              <label
+                for="Filter-{{ filter.param_name }}-desktop-{{ forloop.index }}"
+                class="filter-form-item-input"
+              >
+                <input
+                  type="checkbox"
+                  name="{{ filter_value.param_name }}"
+                  value="{{ filter_value.value }}"
+                  id="Filter-{{ filter.param_name }}-desktop-{{ forloop.index }}"
+                  {% if filter_value.active -%}
+                    checked
+                  {%- endif %}
+                  {% if filter_value.count == 0 and filter_value.active == false -%}
+                    disabled
+                  {%- endif %}
+                >
+                <span>
+                  <span class="filter-value-label">
+                    {{ filter_value.label }}
+                  </span>
+
+                  ({{ filter_value.count }})
+                </span>
+              </label>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    </div>
+  </details>
+{% endif %}
+
+{% if variant == 'mobile' %}
+  <accordion-item id="FilterMobile-{{ filter.param_name }}" icon="caret" class="filter-accordion js-filter">
+    <accordion-trigger class="filter-accordion-trigger">{{- filter.label -}}</accordion-trigger>
+    <accordion-content>
+      <div class="filter-accordion-content">
+        <div class="filter-content">
+          <div class="filter-header">
+            <a href="{{ filter.url_to_remove }}">Reset</a>
+          </div>
+
+          <ul class="filter-form">
+            {%- for filter_value in filter.values -%}
+              <li>
+                <label
+                  for="Filter-{{ filter.param_name }}-mobile-{{ forloop.index }}"
+                  class="filter-form-item-input"
+                >
+                  <input
+                    type="checkbox"
+                    name="{{ filter_value.param_name }}"
+                    value="{{ filter_value.value }}"
+                    id="Filter-{{ filter.param_name }}-mobile-{{ forloop.index }}"
+                    {% if filter_value.active -%}
+                      checked
+                    {%- endif %}
+                    {% if filter_value.count == 0 and filter_value.active == false -%}
+                      disabled
+                    {%- endif %}
+                  >
+                  <span>
+                    <span class="filter-value-label">
+                      {{ filter_value.label }}
+                    </span>
+
+                    ({{ filter_value.count }})
+                  </span>
+                </label>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      </div>
+    </accordion-content>
+  </accordion-item>
+{% endif %}
+
+{% javascript %}
+  // Close-outside handling for the filter/sort disclosures. A transparent
+  // full-viewport backdrop used to do this, but it swallowed touch scrolling
+  // and made the page feel frozen while a dropdown was open, so the page is
+  // left fully scrollable and outside clicks are detected here instead.
+  var DISCLOSURE_SELECTOR = '.filter-disclosure[open], .sort-disclosure[open]';
+
+  document.addEventListener('pointerdown', function (e) {
+    var open = document.querySelectorAll(DISCLOSURE_SELECTOR);
+
+    for (var i = 0; i < open.length; i++) {
+      if (!open[i].contains(e.target)) {
+        open[i].removeAttribute('open');
+      }
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+
+    var open = document.querySelectorAll(DISCLOSURE_SELECTOR);
+
+    for (var i = 0; i < open.length; i++) {
+      open[i].removeAttribute('open');
+    }
+  });
+
+  // Only one disclosure open at a time
+  document.addEventListener(
+    'toggle',
+    function (e) {
+      if (!e.target.classList.contains('filter-disclosure') && !e.target.classList.contains('sort-disclosure')) return;
+      if (!e.target.open) return;
+
+      var open = document.querySelectorAll(DISCLOSURE_SELECTOR);
+
+      for (var i = 0; i < open.length; i++) {
+        if (open[i] !== e.target) {
+          open[i].removeAttribute('open');
+        }
+      }
+    },
+    true,
+  );
+{% endjavascript %}

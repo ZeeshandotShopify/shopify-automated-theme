@@ -1,0 +1,108 @@
+{%- comment -%}
+  Renders an "Order A Sample" link button that adds the sample variant
+  directly to cart via AJAX, separate from the main ATC form.
+
+  Expects: block (with block.settings.label, padding_top, padding_bottom)
+  Expects: product
+{%- endcomment -%}
+
+{%- liquid
+  assign sample_variant = null
+  for variant in product.variants
+    assign variant_title_downcase = variant.title | downcase
+    if variant_title_downcase contains 'sample'
+      assign sample_variant = variant
+      break
+    endif
+  endfor
+-%}
+
+{%- if sample_variant != null and sample_variant.available -%}
+  {% style %}
+    .pdp-order-sample {
+      padding-top: {{ block.settings.padding_top }}px;
+      padding-bottom: {{ block.settings.padding_bottom }}px;
+    }
+
+    .pdp-order-sample button {
+      color: var(--color-destructive-background);
+      padding: 0;
+    }
+
+    .pdp-order-sample button:hover {
+      color: var(--color-destructive-background);
+      opacity: 0.8;
+    }
+  {% endstyle %}
+
+  <div class="pdp-order-sample" {{ block.shopify_attributes }}>
+    <order-sample data-variant-id="{{ sample_variant.id }}">
+      {%- render 'button', type: 'button', label: block.settings.label, variant: 'link', size: 'sm' -%}
+    </order-sample>
+  </div>
+
+  <script>
+    if (!customElements.get('order-sample')) {
+      class OrderSample extends HTMLElement {
+        constructor() {
+          super();
+          this.button = null;
+          this.isLoading = false;
+        }
+
+        connectedCallback() {
+          this.button = this.querySelector('button, a');
+          if (this.button) {
+            this.button.addEventListener('click', this.handleClick.bind(this));
+          }
+        }
+
+        handleClick(event) {
+          event.preventDefault();
+          if (this.isLoading) return;
+          this.isLoading = true;
+
+          const variantId = this.dataset.variantId;
+          const payload = {
+            items: [{ id: variantId, quantity: 1 }],
+            sections: 'cart-drawer,cart-icon',
+          };
+
+          fetch(window.Shopify.routes.root + 'cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+            .then(async (response) => {
+              const data = await response.json();
+              if (!response.ok) {
+                const msg = (data && data.description) || 'Could not add sample to cart.';
+                if (typeof showToast === 'function') {
+                  showToast(msg);
+                } else {
+                  alert(msg);
+                }
+              } else {
+                document.documentElement.dispatchEvent(
+                  new CustomEvent('cart:rerender', { detail: data, bubbles: true })
+                );
+              }
+            })
+            .catch(() => {
+              const msg = 'An unexpected error occurred.';
+              if (typeof showToast === 'function') {
+                showToast(msg);
+              } else {
+                alert(msg);
+              }
+            })
+            .finally(() => {
+              this.isLoading = false;
+            });
+        }
+      }
+
+      customElements.define('order-sample', OrderSample);
+    }
+  </script>
+{%- endif -%}

@@ -1,0 +1,145 @@
+{% style %}
+  #pdp-extra-content-{{ block.id }} {
+    --heading-font-size: {{ block.settings.heading_font_size }};
+    --heading-line-height: {{ block.settings.heading_line_height }};
+    --heading-font-weight: {{ block.settings.heading_font_weight }};
+
+    --padding-top: {{ block.settings.padding_top }}px;
+    --padding-bottom: {{ block.settings.padding_bottom }}px;
+
+    padding-top: var(--padding-top);
+    padding-bottom: var(--padding-bottom);
+  }
+
+  /* Typography */
+  .pdp-extra-content-heading {
+    font-family: var(--font-heading--family);
+    font-size: var(--heading-font-size);
+    line-height: var(--heading-line-height);
+    font-weight: var(--heading-font-weight);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Expandable Logic */
+  .pdp-extra-content-text {
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+
+    /* Default State: Clamped */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4; /* Mobile default: 4 lines */
+    overflow: hidden;
+  }
+
+  /* Expanded State */
+  .pdp-extra-content-text.expanded {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+
+  /* Button Styles */
+  .read-more-btn {
+    display: none; /* Hidden by default, JS toggles this */
+    font-family: var(--button-font-family);
+    align-items: center;
+    font-weight: 500;
+    gap: 0.25rem;
+    cursor: pointer;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--button-border-radius);
+    padding-block: 0.5rem;
+    padding-inline: 1rem;
+    color: inherit;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+
+  .read-more-btn:hover { opacity: 1; }
+
+  /* Icon Rotation */
+  .read-more-btn .icon-chevron-down {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 0.2s ease;
+  }
+  .read-more-btn.expanded .icon-chevron-down { transform: rotate(180deg); }
+
+  /* Text Toggling */
+  .read-more-text, .read-less-text { display: none; }
+  .read-more-btn:not(.expanded) .read-more-text { display: inline; }
+  .read-more-btn.expanded .read-less-text { display: inline; }
+{% endstyle %}
+
+<div id="pdp-extra-content-{{ block.id }}" {{ block.shopify_attributes }}>
+  {%- if block.settings.heading != blank -%}
+    <h2 class="pdp-extra-content-heading">{{- block.settings.heading -}}</h2>
+  {%- endif -%}
+
+  {%- if block.settings.content != blank -%}
+    <div class="pdp-extra-content-text" data-expandable-content>
+      {{- block.settings.content -}}
+    </div>
+
+    <div class="pdp-extra-content-action">
+      <button type="button" class="read-more-btn" data-toggle-btn aria-expanded="false">
+        <span class="read-more-text">Read More</span>
+        <span class="read-less-text">Read Less</span>
+        <svg
+          class="icon-chevron-down"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </div>
+  {%- endif -%}
+</div>
+
+<script>
+  (function () {
+    const container = document.getElementById('pdp-extra-content-{{ block.id }}');
+    if (!container) return;
+
+    const content = container.querySelector('[data-expandable-content]');
+    const btn = container.querySelector('[data-toggle-btn]');
+
+    if (!content || !btn) return;
+
+    // 1. Check if text is actually cut off
+    function checkOverflow() {
+      // If scrollHeight (actual content) is bigger than clientHeight (visible box),
+      // then text is clamped and we need the button.
+      if (content.scrollHeight > content.clientHeight) {
+        btn.style.display = 'inline-flex';
+      } else {
+        // Only hide if we aren't already expanded.
+        // If expanded, scrollHeight will equal clientHeight naturally.
+        if (!content.classList.contains('expanded')) {
+          btn.style.display = 'none';
+        }
+      }
+    }
+
+    // 2. Toggle Logic
+    btn.addEventListener('click', function () {
+      const isExpanded = content.classList.toggle('expanded');
+      btn.classList.toggle('expanded', isExpanded);
+      btn.setAttribute('aria-expanded', isExpanded);
+    });
+
+    // 3. Initialize
+    // Small timeout ensures CSS styles/fonts are loaded before measuring
+    setTimeout(checkOverflow, 100);
+    window.addEventListener('resize', checkOverflow);
+  })();
+</script>

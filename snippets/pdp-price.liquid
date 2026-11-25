@@ -1,0 +1,108 @@
+{%- liquid
+  if block.settings.text_color_mode == 'inherit'
+    assign text_color = 'var(--color-foreground)'
+  else
+    assign text_color = block.settings.color | default: '#111111'
+  endif
+
+  assign variant = product.selected_or_first_available_variant
+  assign on_sale = false
+  if variant.compare_at_price > variant.price
+    assign on_sale = true
+  endif
+-%}
+
+<style>
+  #price-{{ block.id }} {
+    --text-color: {{ text_color }};
+    --font-family: {{ block.settings.font_family }};
+    --font-weight: {{ block.settings.font_weight }};
+    --font-size: {{ block.settings.font_size }};
+    --line-height: {{ block.settings.line_height }};
+    --text-transform: {{ block.settings.text_transform }};
+    --width: {{ block.settings.width }};
+    --max-width: {{ block.settings.max_width }};
+    --text-align: {{ block.settings.text_align }};
+
+    display: flex;
+    align-items: center;
+    color: var(--text-color);
+    font-family: var(--font-family);
+    font-weight: var(--font-weight);
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    text-transform: var(--text-transform);
+    width: var(--width);
+    max-width: var(--max-width);
+    text-align: var(--text-align);
+
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+  }
+
+  #price-{{ block.id }} .pdp-original-price {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+  }
+
+  #price-{{ block.id }} .pdp-price-compare-at-price {
+    color: var(--color-compare-at-price-foreground);
+    font-size: 1rem;
+    line-height: calc(1.5 / 1);
+    margin-left: 0.5rem;
+  }
+
+  #price-{{ block.id }} .pdp-price-saving-badge {
+    background: var(--color-price-foreground);
+    color: var(--color-price-background);
+    font-size: 0.875rem;
+    line-height: calc(1.25 / 0.875);
+    font-weight: 700;
+    padding-inline: 0.5rem;
+    margin-left: 0.625rem;
+    border-radius: 0.25rem;
+  }
+
+  #price-{{ block.id }} .pdp-price-currency-code {
+    margin-left: 0.25rem;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+  }
+</style>
+
+<div id="price-{{ block.id }}" {{ block.shopify_attributes }}>
+  {%- if on_sale -%}
+    <span
+      class="pdp-original-price"
+      style="color: var(--color-price-foreground);"
+    >
+      {{- variant.price | money -}}
+      {%- if block.settings.show_currency_code == 'show' -%}
+        <span class="pdp-price-currency-code">{{ cart.currency.iso_code }}</span>
+      {%- endif -%}
+    </span>
+    <s class="pdp-price-compare-at-price">
+      {{- variant.compare_at_price | money -}}
+      {%- if block.settings.show_currency_code == 'show' -%}
+        <span class="pdp-price-currency-code">{{ cart.currency.iso_code }}</span>
+      {%- endif -%}
+    </s>
+
+    {%- assign saving = variant.compare_at_price | minus: variant.price -%}
+    {%- assign discount = saving
+      | times: 100
+      | divided_by: variant.compare_at_price
+    -%}
+    <span class="pdp-price-saving-badge"> {{ discount | round }}% Off </span>
+  {%- else -%}
+    <span class="pdp-original-price">
+      {{- variant.price | money -}}
+      {%- if block.settings.show_currency_code == 'show' -%}
+        <span class="pdp-price-currency-code">{{ cart.currency.iso_code }}</span>
+      {%- endif -%}
+    </span>
+  {%- endif -%}
+</div>

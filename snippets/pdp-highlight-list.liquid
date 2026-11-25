@@ -1,0 +1,212 @@
+{% doc %}
+  Renders an unbounded check-icon + text list in the product information column.
+
+  Figma reference: 2013:19 / 2013:25 (desktop), 2013:66 (mobile).
+  Column gap 16, per-row icon/text gap 10, rows top-aligned so wrapped text
+  keeps the icon on the first line. Text is Body M/Regular 16 / 1.4 in #3F3F3F
+  (a raw hex in the design — deliberately one shade off Neutral/700 #424242).
+
+  Content comes from a single rich text block setting (`text`), which the
+  merchant can also connect to a rich text metafield via a dynamic source.
+
+  The rich text runs through the row splitter below: one row per bullet /
+  paragraph / line break, whatever the editor produces. No separator character
+  for the client to remember.
+
+  The text supplies row TEXT ONLY. The icon comes from block settings and is the
+  same for every row — `icon_type` picks image picker or pasted SVG, and the
+  bundled check is the fallback. There is no per-row icon override.
+
+  @param {object} block - Product section block settings and attributes.
+
+  @example
+  {% render 'pdp-highlight-list', block: block, product: product %}
+{% enddoc %}
+
+{%- liquid
+  comment
+    Rich text row splitting. Row breaks come from the MARKUP the rich text editor
+    already emits — `</li>` (bullet or numbered list), `</p>` (enter = new
+    paragraph), `<br>` (shift+enter) — all normalised to one internal delimiter
+    before the split. The client never types a separator character; they press
+    enter or click the bullet button.
+
+    The delimiter is deliberately `||PDPROW||` rather than something typeable:
+    any literal token would split rows when it appeared in real copy.
+
+    `strip_html` runs AFTER the delimiters are injected, otherwise the block
+    boundaries are gone and the whole field collapses into a single row. Inline
+    formatting (bold, italic, links) is intentionally stripped — rows are plain
+    text so the check-icon layout stays intact.
+  endcomment
+  assign richtext_items = ''
+  assign richtext_count = 0
+  assign richtext_html = block.settings.text
+
+  if richtext_html != blank
+    assign richtext_normalized = richtext_html
+    assign richtext_normalized = richtext_normalized | replace: '</li>', '||PDPROW||'
+    assign richtext_normalized = richtext_normalized | replace: '</p>', '||PDPROW||'
+    assign richtext_normalized = richtext_normalized | replace: '<br>', '||PDPROW||'
+    assign richtext_normalized = richtext_normalized | replace: '<br/>', '||PDPROW||'
+    assign richtext_normalized = richtext_normalized | replace: '<br />', '||PDPROW||'
+    assign richtext_normalized = richtext_normalized | strip_html
+    assign richtext_items = richtext_normalized | split: '||PDPROW||'
+
+    for richtext_text in richtext_items
+      assign trimmed_richtext = richtext_text | strip
+      if trimmed_richtext != blank
+        assign richtext_count = richtext_count | plus: 1
+      endif
+    endfor
+  endif
+
+  assign render_source = 'none'
+  if richtext_count > 0
+    assign render_source = 'richtext'
+  endif
+
+  comment
+    Empty content: hold the spot in the theme editor so the block stays
+    findable and clickable, but emit nothing at all on preview links and live.
+  endcomment
+  assign show_block = false
+  assign is_placeholder = false
+  if render_source != 'none'
+    assign show_block = true
+  elsif request.design_mode
+    assign show_block = true
+    assign is_placeholder = true
+  endif
+-%}
+
+{%- if show_block -%}
+  {%- style -%}
+    #pdp-highlight-list-{{ block.id }} {
+      padding-top: {{ block.settings.padding_top }}px;
+      padding-bottom: {{ block.settings.padding_bottom }}px;
+    }
+
+    /* Figma 2013:25 "Frame 745" — column, gap 16 */
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list {
+      display: flex;
+      flex-direction: column;
+      gap: {{ block.settings.row_gap }}px;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    /* Figma 2013:27 "Frame 740" — row, gap 10, align-items flex-start */
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list__item {
+      display: flex;
+      align-items: flex-start;
+      gap: {{ block.settings.icon_gap }}px;
+    }
+
+    /* Figma 2013:28 "mingcute:check-fill" — 24x24 */
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list__icon {
+      width: {{ block.settings.icon_size }}px;
+      height: {{ block.settings.icon_size }}px;
+      flex-shrink: 0;
+      display: block;
+    }
+
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list__icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Figma 2013:32 — Body M/Regular 16 / 1.4, #3F3F3F, wraps to fill the column */
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list__text {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-family: {{ block.settings.font_family }};
+      font-size: {{ block.settings.font_size }};
+      font-weight: {{ block.settings.font_weight }};
+      line-height: {{ block.settings.line_height }};
+      letter-spacing: 0;
+      {%- if block.settings.text_color_mode == 'custom' %}
+        color: {{ block.settings.color | default: '#3F3F3F' }};
+      {%- endif %}
+      overflow-wrap: anywhere;
+    }
+
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list__text p {
+      margin: 0;
+    }
+
+    /* Theme editor only — never reaches preview or live. */
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list--placeholder .pdp-highlight-list__text {
+      opacity: 0.5;
+    }
+
+    #pdp-highlight-list-{{ block.id }} .pdp-highlight-list__note {
+      margin: 0 0 {{ block.settings.row_gap }}px;
+      font-family: {{ block.settings.font_family }};
+      font-size: 0.8125rem;
+      line-height: 1.4;
+      color: #6B6B6B;
+    }
+  {%- endstyle -%}
+
+  {%- comment -%}
+    `icon_type` decides which icon setting is read; the other one is hidden in
+    the editor, so falling back across them would resurrect a value the client
+    can no longer see. The bundled check covers an empty pick either way.
+  {%- endcomment -%}
+  {%- capture default_icon -%}
+    {%- if block.settings.icon_type == 'image' and block.settings.icon_image != blank -%}
+      {{-
+        block.settings.icon_image
+        | image_url: width: 96
+        | image_tag: alt: '', widths: '24, 48, 96', loading: 'lazy'
+      -}}
+    {%- elsif block.settings.icon_type != 'image' and block.settings.icon != blank -%}
+      {{- block.settings.icon -}}
+    {%- else -%}
+      {{- 'pdp-check.svg' | inline_asset_content -}}
+    {%- endif -%}
+  {%- endcapture -%}
+
+  <div id="pdp-highlight-list-{{ block.id }}" {{ block.shopify_attributes }}>
+    {%- if is_placeholder -%}
+      <p class="pdp-highlight-list__note">
+        <strong>Highlight List — nothing to show yet.</strong>
+        Type your list in the <em>Items</em> field in this block — press enter for each new row — or connect that field
+        to a rich text metafield. This note and the sample rows below are visible only to you in the theme editor.
+        Nothing at all is output on the live storefront while this block is empty.
+      </p>
+    {%- endif -%}
+
+    <ul
+      class="pdp-highlight-list{% if is_placeholder %} pdp-highlight-list--placeholder{% endif %}"
+      role="list"
+    >
+      {%- if is_placeholder -%}
+        {%- for i in (1..3) -%}
+          <li class="pdp-highlight-list__item">
+            <span class="pdp-highlight-list__icon" aria-hidden="true">
+              {{- default_icon -}}
+            </span>
+            <span class="pdp-highlight-list__text">Sample row {{ i }} — your text will replace this</span>
+          </li>
+        {%- endfor -%}
+      {%- elsif render_source == 'richtext' -%}
+        {%- for item_text in richtext_items -%}
+          {%- assign trimmed_text = item_text | strip -%}
+          {%- if trimmed_text != blank -%}
+            <li class="pdp-highlight-list__item">
+              <span class="pdp-highlight-list__icon" aria-hidden="true">
+                {{- default_icon -}}
+              </span>
+              <span class="pdp-highlight-list__text">{{ trimmed_text }}</span>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+    </ul>
+  </div>
+{%- endif -%}

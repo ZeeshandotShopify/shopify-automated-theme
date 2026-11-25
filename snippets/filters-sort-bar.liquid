@@ -1,0 +1,75 @@
+{%- liquid
+  assign filter_target_id = filter_target_id
+  assign filters = filters
+  assign sort_options = sort_options
+  assign collection = collection
+  assign current_sort = sort_by | default: 'manual'
+-%}
+
+{%- style -%}
+  .filters-sort-bar {
+    display: grid;
+    gap: 0;
+  }
+
+  .filters-sort-bar-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  /* The mobile "Filters" trigger is a theme button, not a disclosure, so it is
+     shaped here to match the filter/sort chips: 48px tall, square, label left and
+     a 20px funnel right. */
+  .filters-sort-bar sheet-menu .btn--default {
+    --btn-bg: var(--color-dropdown-trigger-background);
+    --btn-hover-bg: var(--color-dropdown-trigger-hover-background);
+    --icon-size: 1.25rem;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3rem;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--color-dropdown-trigger-foreground);
+    border: var(--dropdown-trigger-border-thickness, 1px) solid var(--color-dropdown-trigger-border, transparent);
+    border-radius: var(--dropdown-trigger-border-radius, 0);
+  }
+
+  .filters-sort-bar sheet-menu .btn--default:hover {
+    color: var(--color-dropdown-trigger-hover-foreground);
+  }
+
+  @media (width >= 64rem) {
+    .filters-sort-bar-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+  }
+{%- endstyle -%}
+
+<dynamic-filters
+  class="filters-sort-bar"
+  data-filter-target-id="{{ filter_target_id }}"
+  data-section-id="{{ section.id }}"
+>
+  <div class="filters-sort-bar-controls">
+    <div class="filters-sort-bar-filters">
+      {%- render 'filters', filter_target_id: filter_target_id, filters: filters -%}
+    </div>
+    <div class="filters-sort-bar-sort" id="SortContainer">
+      <form id="FacetSortForm">
+        {%- render 'sort', sort_options: sort_options, sort_by: current_sort -%}
+      </form>
+    </div>
+  </div>
+
+  <div id="ActiveFiltersContainer">
+    {%- render 'active-filters', filters: filters, collection: collection -%}
+  </div>
+</dynamic-filters>

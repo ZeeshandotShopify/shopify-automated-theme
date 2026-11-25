@@ -1,0 +1,162 @@
+{% render 'icon',
+  id: block.id,
+  icon_mode: block.settings.icon_mode,
+  icon_select: block.settings.icon_select,
+  icon_custom: block.settings.icon,
+  icon_size: block.settings.icon_size,
+  shopify_attributes: block.shopify_attributes
+%}
+
+{% schema %}
+{
+  "name": "t:block.icon.name",
+  // This will prevent add extra div element wrapper
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "icon_mode",
+      "label": "t:icon_mode.label",
+      "options": [
+        {
+          "value": "select",
+          "label": "t:icon_mode.options.select"
+        },
+        {
+          "value": "custom",
+          "label": "t:icon_mode.options.custom"
+        }
+      ],
+      "default": "select"
+    },
+    {
+      "type": "select",
+      "id": "icon_select",
+      "label": "t:icon.label",
+      "options": [
+        {
+          "value": "arrow-right",
+          "label": "Arrow Right"
+        },
+        {
+          "value": "arrow-down",
+          "label": "Arrow Down"
+        },
+        {
+          "value": "arrow-left-long",
+          "label": "Arrow Left Long"
+        },
+        {
+          "value": "arrow-right-long",
+          "label": "Arrow Right Long"
+        },
+        {
+          "value": "arrow-up-long",
+          "label": "Arrow Up Long"
+        },
+        {
+          "value": "arrow-down-long",
+          "label": "Arrow Down Long"
+        },
+        {
+          "value": "arrow-right-up-long",
+          "label": "Arrow Right Up Long"
+        },
+        {
+          "value": "plus",
+          "label": "Plus"
+        },
+        {
+          "value": "minus",
+          "label": "Minus"
+        },
+        {
+          "value": "check",
+          "label": "Check"
+        },
+        {
+          "value": "close",
+          "label": "Close"
+        },
+        {
+          "value": "menu",
+          "label": "Menu"
+        },
+        {
+          "value": "search",
+          "label": "Search"
+        },
+        {
+          "value": "copy",
+          "label": "Copy"
+        },
+        {
+          "value": "download",
+          "label": "Download"
+        },
+        {
+          "value": "upload",
+          "label": "Upload"
+        },
+        {
+          "value": "share",
+          "label": "Share"
+        },
+        {
+          "value": "gear",
+          "label": "Gear"
+        },
+        {
+          "value": "filter",
+          "label": "Filter"
+        },
+        {
+          "value": "edit",
+          "label": "Edit"
+        },
+        {
+          "value": "trash",
+          "label": "Trash"
+        },
+        {
+          "value": "cart",
+          "label": "Cart"
+        },
+        {
+          "value": "bag",
+          "label": "Bag"
+        },
+        {
+          "value": "lock",
+          "label": "Lock"
+        }
+      ],
+      "visible_if": "{{ block.settings.icon_mode == 'select' }}"
+    },
+    {
+      "type": "html",
+      "id": "icon",
+      "label": "t:icon.label",
+      "info": "Paste SVG code here",
+      "visible_if": "{{ block.settings.icon_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "label": "t:size.label",
+      "info": "Icon size in pixels",
+      "min": 12,
+      "max": 128,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.icon.name",
+      "category": "t:block.icon.category"
+    }
+  ]
+}
+{% endschema %}

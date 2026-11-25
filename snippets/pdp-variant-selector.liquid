@@ -1,0 +1,246 @@
+{% doc %}
+  Renders the product page variant picker.
+
+  @param {object} block - Product section block settings and attributes.
+  @param {product} product - Product object used for options and variant data.
+  @param {string} product_form_id - Product form id used by option controls.
+  @param {string} section_id - Section id used for DOM ids and variant update targeting.
+
+  @example
+  {% render 'pdp-variant-selector', block: block, product: product, product_form_id: product_form_id, section_id: section.id %}
+{% enddoc %}
+
+{% style %}
+  .pdp__variant-selector--wrapper {
+     padding-top: {{ block.settings.padding_top }}px;
+     padding-bottom: {{ block.settings.padding_bottom }}px
+  }
+
+  .pdp__variant-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* Per-option corner shape applied to each option's chip container.
+     Re-declares the radius tokens the chips read (swatch / pill / dropdown),
+     so a "square" option overrides only its own controls via the cascade. */
+  .pdp__variant-selector .variant-shape--rounded {
+    --swatch-input--border-radius: 50%;
+  }
+
+  .pdp__variant-selector .variant-shape--square {
+    --swatch-input--border-radius: 0;
+    --button-border-radius: 0;
+    --input-border-radius: 0;
+  }
+
+  /* Let fieldsets shrink to the column so option pills never overflow */
+  .product-form__input {
+    min-width: 0;
+  }
+
+  .product-form__input input[type='radio'] {
+    clip: rect(0, 0, 0, 0);
+    overflow: hidden;
+    position: absolute;
+    height: 1px;
+    width: 1px;
+  }
+
+  .product-form__input input[type='radio']:not(.disabled):not(.visually-disabled) + label > .label-unavailable {
+    display: none;
+  }
+
+  .product-form__input.product-form__input--swatch .product-form__input--variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .product-form__input.product-form__input--pill .product-form__input--variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Custom styles for Swatch  */
+  .product-form__input--swatch .swatch-input__input + .swatch-input__label {
+    --swatch-input--size: 30px;
+  }
+
+  .product-form__input .dropdown-select {
+    /* max-width: 16rem; */
+  }
+
+  .product-form__input .dropdown-select__select {
+    height: auto;
+    padding-left: 1rem;
+    padding-block: 1.125rem;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+    background-color: var(--color-variant-background);
+    color: var(--color-variant-foreground);
+    transition: background-color 300ms ease, color 300ms ease;
+  }
+
+  .product-form__input .dropdown-select__select:hover {
+    background-color: var(--color-variant-hover-background);
+    color: var(--color-variant-hover-foreground);
+  }
+
+  .product-form__input .svg-wrapper {
+    right: 1rem;
+  }
+
+  .form__label {
+    width: 100%;
+    font-family: var(--font-body--family);
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+{% endstyle %}
+
+{%- liquid
+  assign swatch_shape = settings.swatch_shape | default: 'rounded'
+  if swatch_shape != 'rounded' and swatch_shape != 'square'
+    assign swatch_shape = 'rounded'
+  endif
+
+  assign option_shape = settings.option_shape | default: 'rounded'
+  if option_shape != 'rounded' and option_shape != 'square'
+    assign option_shape = 'rounded'
+  endif
+-%}
+
+{% if product != blank
+  and product_form_id != blank
+  and section_id != blank
+  and product.has_only_default_variant == false
+%}
+  <div class="pdp__variant-selector--wrapper" {{ block.shopify_attributes }}>
+    <variant-selector
+      class="pdp__variant-selector"
+      data-product-url="{{ product.url }}"
+      data-section-id="{{ section_id }}"
+    >
+      {%- for option in product.options_with_values -%}
+        {%- liquid
+          assign option_name_downcase = option.name | downcase
+
+          comment
+            Size chart logic:
+            - Case-insensitive because we compare against option_name_downcase
+            - Uses substring matching so it works for "Size" and also "Roll Size", "Tshirt Size", etc.
+          endcomment
+          assign should_render_size_chart = false
+          assign size_chart_source = block.settings.size_chart_source | default: 'page'
+          if option_name_downcase contains 'size' and block.settings.enable_size_chart == true
+            if size_chart_source == 'url'
+              if block.settings.size_chart_url != blank
+                assign should_render_size_chart = true
+              endif
+            else
+              if block.settings.size_chart_page != blank
+                assign should_render_size_chart = true
+              endif
+            endif
+          endif
+
+          comment
+            Pick the settings group for this option:
+            - color/colour options -> Swatches group (swatch_shape + swatch_picker_type)
+            - everything else       -> Other options group (option_shape + picker_type)
+          endcomment
+          assign is_color_option = false
+          if option_name_downcase contains 'color' or option_name_downcase contains 'colour'
+            assign is_color_option = true
+          endif
+
+          if is_color_option
+            assign current_picker = settings.swatch_picker_type | default: 'swatch'
+            assign current_shape = swatch_shape
+          else
+            assign current_picker = settings.picker_type | default: 'button'
+            assign current_shape = option_shape
+          endif
+        -%}
+
+        {%- case current_picker -%}
+          {%- when 'dropdown' -%}
+            <div class="product-form__input product-form__input--dropdown">
+              <label class="form__label" for="Option-{{ section_id }}-{{ forloop.index0 }}">
+                {{- option.name -}}
+                :
+                {%- if should_render_size_chart -%}
+                  {%- render 'pdp-size-chart', block: block -%}
+                {%- endif -%}
+              </label>
+
+              <div class="dropdown-select variant-shape--{{ current_shape }}">
+                <select
+                  id="Option-{{ section_id }}-{{ forloop.index0 }}"
+                  class="dropdown-select__select"
+                  name="options[{{ option.name | escape }}]"
+                  form="{{ product_form_id }}"
+                >
+                  {% render 'product-variant-options',
+                    option: option,
+                    picker_type: 'dropdown',
+                    product_form_id: product_form_id
+                  %}
+                </select>
+
+                <span class="svg-wrapper">
+                  {{- 'arrow-down.svg' | inline_asset_content -}}
+                </span>
+              </div>
+            </div>
+          {%- when 'swatch' -%}
+            <fieldset class="product-form__input product-form__input--swatch">
+              <legend class="form__label">
+                {{- option.name -}}
+                :
+                {%- if should_render_size_chart -%}
+                  {%- render 'pdp-size-chart', block: block -%}
+                {%- endif -%}
+              </legend>
+
+              <div class="product-form__input--variants variant-shape--{{ current_shape }}">
+                {% render 'product-variant-options',
+                  option: option,
+                  picker_type: 'swatch',
+                  product_form_id: product_form_id
+                %}
+              </div>
+            </fieldset>
+          {%- else -%}
+            <fieldset class="product-form__input product-form__input--pill">
+              <legend class="form__label">
+                {{- option.name -}}
+                :
+                {%- if should_render_size_chart -%}
+                  {%- render 'pdp-size-chart', block: block -%}
+                {%- endif -%}
+              </legend>
+
+              <div class="product-form__input--variants variant-shape--{{ current_shape }}">
+                {% render 'product-variant-options',
+                  option: option,
+                  picker_type: 'button',
+                  product_form_id: product_form_id
+                %}
+              </div>
+            </fieldset>
+        {%- endcase -%}
+      {%- endfor -%}
+
+      <script type="application/json">
+        {{ product.variants | json }}
+      </script>
+    </variant-selector>
+  </div>
+{% endif %}

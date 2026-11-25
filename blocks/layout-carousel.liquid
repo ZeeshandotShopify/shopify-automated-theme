@@ -1,0 +1,128 @@
+{%- liquid
+  assign block_id = block.id
+  # carousel_dom_id is passed from the parent section (sections/carousel.liquid) via content_for
+  # theme-check-disable UndefinedObject
+  assign carousel_dom_id = carousel_dom_id
+  # theme-check-enable UndefinedObject
+  assign carousel_id = 'swiper-' | append: carousel_dom_id
+-%}
+
+{%- style -%}
+  #layout-carousel-{{ block_id }} {
+    display: none;
+  }
+
+  #layout-carousel-{{ block_id }}:has(> *) {
+    display: block;
+  }
+
+  #layout-carousel-{{ block_id }} .carousel-progressbar {
+    display: block;
+    width: 100%;
+    height: 4px;
+    background: var(--color-progressbar-background);
+    border-radius: 2px;
+    margin-top: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #layout-carousel-{{ block_id }} .carousel-progressbar .swiper-pagination-progressbar-fill {
+    background: var(--color-progressbar-fill);
+    height: 100%;
+  }
+
+  @media (width >= 64rem) {
+    #layout-carousel-{{ block_id }} .carousel-progressbar {
+      display: none;
+    }
+  }
+{%- endstyle -%}
+
+<div id="layout-carousel-{{ block_id }}" {{ block.shopify_attributes }}>
+  <div id="{{ carousel_id }}" class="swiper">
+    <ul class="swiper-wrapper">
+      {% content_for 'blocks' %}
+    </ul>
+
+    <div class="carousel-progressbar"></div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Find the section first
+    const section = document.querySelector('#{{ carousel_dom_id }}');
+
+    if (!section) {
+      console.error('Section not found: #{{ carousel_dom_id }}');
+      return;
+    }
+
+    // Find elements within the section
+    const swiperContainer = section.querySelector('#{{ carousel_id }}');
+    const prevButton = section.querySelector('.carousel-button-prev');
+    const nextButton = section.querySelector('.carousel-button-next');
+    const paginationEl = section.querySelector('.carousel-progressbar');
+
+    if (!swiperContainer) {
+      console.error('Swiper not found: #{{ carousel_id }}');
+      return;
+    }
+
+    if (typeof Swiper === 'undefined') {
+      console.error('Swiper library not loaded');
+      return;
+    }
+
+    // Initialize Swiper
+    new Swiper(swiperContainer, {
+      slidesPerView: {{ block.settings.mobile_slides_per_view }},
+      spaceBetween: 24,
+      navigation: {
+        nextEl: nextButton,
+        prevEl: prevButton,
+      },
+      pagination: {
+        el: paginationEl,
+        type: 'progressbar',
+      },
+      breakpoints: {
+        768: {
+          slidesPerView: 2.3,
+        },
+        1024: {
+          slidesPerView: {{ block.settings.desktop_slides_per_view }},
+        },
+      },
+    });
+  });
+</script>
+
+{%- schema -%}
+{
+  "name": "Carousel",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "desktop_slides_per_view",
+      "label": "Desktop Slides Per View",
+      "default": "4",
+      "info": "Enter a number (whole or decimal, e.g., 1, 2, 1.5). Decimals let you show partial slides (e.g., 1.4 shows one slide plus 40% of the next)."
+    },
+    {
+      "type": "text",
+      "id": "mobile_slides_per_view",
+      "label": "Mobile Slides Per View",
+      "default": "1.3",
+      "info": "Enter a number (whole or decimal, e.g., 1, 2, 1.5). Decimals let you show partial slides (e.g., 1.4 shows one slide plus 40% of the next)."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "carousel-slide"
+    }
+  ]
+}
+{%- endschema -%}

@@ -1,0 +1,621 @@
+{% comment %}
+  IMPORTANT: WHEN USING THE SWIPERJS
+
+  1. When a Swiper sits inside a flex container with flex-direction: row, its children can shrink or grow horizontally.
+     Solution: You should give the Swiper container/wrapper a fixed size (using width, max-width, or flex: 0 0 <width>) to keep slide sizing stable.
+              In a flex column or a normal block layout the element naturally fills the available width, so explicit width is usually not needed.
+
+  2. When a swiper is inside a block container and that block container is inside a grid container.
+    CSS Grid stretches its children by default, so even if the Swiper sits inside a block-level wrapper,
+    the grid cell will stretch and allow the Swiper (and its images) to expand.
+    Also, Swiper slides/images themselves can grow if their intrinsic size or Swiper settings allow it.
+
+    Solution: You should give the Swiper container/wrapper a fixed size (using width or max-width) or add (grid-template-columns: repeat(1, minmax(0, 1fr))) on the grid container.
+
+    NOTE: OR JUST ADD A (MIN-WIDTH: 0) OF THE PARENT ELEMENT THAT INSIDE OF THAT FLEX OR GRID ELEMENT.
+    WHY THIS WORK: FLEX ITEMS HAVE A DEFAULT (MIN-WIDTH: AUTO), WHICH PREVENTS THEM FROM SHRINKING BELOW THEIR CONTENT SIZE. SETTING (MIN-WIDTH: 0) ALLOWS THE FLEX ITEM TO SHRINK PROPERLY.
+{% endcomment %}
+
+{{ 'photoswipe.min.css' | asset_url | stylesheet_tag }}
+{{ 'photoswipe.css' | asset_url | stylesheet_tag }}
+
+<style>
+  .pdp .swiper-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .pdp .swiper-slide {
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--image-border-radius);
+    overflow: hidden;
+  }
+
+  .pdp-gallery-carousel__swiper--main {
+    width: 100%;
+    margin-bottom: 1rem;
+    height: 416px;
+  }
+
+  .pdp-gallery-carousel__swiper--thumbs.slides-center {
+    display: none;
+  }
+
+  /* Center thumbnails when there are only 1-2 images */
+  .pdp-gallery-carousel__swiper--thumbs.slides-center .swiper-wrapper {
+    justify-content: center;
+  }
+
+  .pdp-gallery-carousel__swiper--thumbs .swiper-slide {
+    opacity: 0.4;
+  }
+
+  .pdp-gallery-carousel__swiper--thumbs .swiper-slide-thumb-active {
+    opacity: 1;
+  }
+
+  /* Height for 3 or fewer slides */
+  .pdp-gallery-carousel__swiper--thumbs.slides-3 {
+    height: 112px;
+  }
+
+  /* Height for 4 or more slides */
+  .pdp-gallery-carousel__swiper--thumbs.slides-4 {
+    height: 80px;
+  }
+
+  .pdp-gallery-carousel__swiper--main .swiper-button-next,
+  .pdp-gallery-carousel__swiper--main .swiper-button-prev {
+    display: none !important;
+  }
+
+  @media (width >= 48rem) {
+    .pdp-gallery-carousel {
+      /*!
+      When a Swiper sits inside a flex container with flex-direction: row, its children can shrink or grow horizontally,
+      so you should give the Swiper a fixed size (using width, max-width, or flex: 0 0 <width>) to keep slide sizing stable.
+      In a flex column or a normal block layout the element naturally fills the available width, so explicit width is usually not needed.
+
+      That's why we only add max-width on desktop breakpoint because we only use flex container in desktop view
+
+      NOTE: OR JUST ADD A (MIN-WIDTH: 0) OF THE PARENT ELEMENT THAT INSIDE OF THAT FLEX OR GRID ELEMENT.
+      WHY THIS WORK: FLEX ITEMS HAVE A DEFAULT (MIN-WIDTH: AUTO), WHICH PREVENTS THEM FROM SHRINKING BELOW THEIR CONTENT SIZE. SETTING (MIN-WIDTH: 0) ALLOWS THE FLEX ITEM TO SHRINK PROPERLY.
+      */
+      {% comment %} max-width: 598px; {% endcomment %}
+    }
+
+    .pdp-gallery-carousel__swiper--main {
+      height: 624px;
+    }
+
+    .pdp-gallery-carousel__swiper--thumbs.slides-3 {
+      height: 172px;
+    }
+
+    .pdp-gallery-carousel__swiper--thumbs.slides-4 {
+      height: 152px;
+    }
+  }
+
+  @media (width >= 48rem) and (width < 64rem) {
+    .pdp-gallery-carousel__swiper--main {
+      height: auto;
+      aspect-ratio: 1 / 1;
+    }
+
+    .pdp-gallery-carousel__swiper--main .swiper-slide img,
+    .pdp-gallery-carousel__swiper--main .swiper-slide video,
+    .pdp-gallery-carousel__swiper--main .swiper-slide .responsive-video,
+    .pdp-gallery-carousel__swiper--main .swiper-slide [data-target='video-source'] {
+      object-fit: contain;
+    }
+
+    .pdp-gallery-carousel__swiper--thumbs .swiper-slide img,
+    .pdp-gallery-carousel__swiper--thumbs .swiper-slide video,
+    .pdp-gallery-carousel__swiper--thumbs .swiper-slide .responsive-video,
+    .pdp-gallery-carousel__swiper--thumbs .swiper-slide [data-target='video-source'] {
+      object-fit: contain;
+      object-position: center;
+    }
+  }
+</style>
+
+<div id="MediaGallery-{{ section.id }}" class="pdp-gallery-carousel">
+  <!-- Main Swiper -->
+  <div class="swiper pdp-gallery-carousel__swiper--main">
+    <div class="swiper-wrapper">
+      {%- for media in product.media -%}
+        <div class="swiper-slide" data-media-id="{{ media.id }}">
+          {%- case media.media_type -%}
+            {%- when 'image' -%}
+              <a
+                href="{{ media.preview_image | image_url: width: media.preview_image.width }}"
+                class="pswp-link"
+                data-pswp-width="{{ media.preview_image.width }}"
+                data-pswp-height="{{ media.preview_image.height }}"
+                aria-label="Open full-screen gallery"
+                aria-haspopup="dialog"
+              >
+                {% render 'responsive-image',
+                  image: media,
+                  desktop_aspect_ratio: 'adapt',
+                  desktop_enable_custom_dimension: true,
+                  desktop_custom_height: '100%',
+                  desktop_custom_width: '100%'
+                %}
+              </a>
+            {%- when 'video', 'external_video' -%}
+              {% comment %} {{ media | media_tag: image_size: '1000x' }} {% endcomment %}
+              {% render 'responsive-video',
+                video: media,
+                desktop_aspect_ratio: 'adapt',
+                desktop_enable_custom_dimension: true,
+                desktop_custom_height: '100%',
+                desktop_custom_width: '100%'
+              %}
+            {%- when 'model' -%}
+              {{ media | media_tag: image_size: '1000x' }}
+          {%- endcase -%}
+        </div>
+      {%- endfor -%}
+    </div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+  </div>
+
+  <!-- Thumbs Swiper -->
+  <div thumbsSlider="" class="swiper pdp-gallery-carousel__swiper--thumbs">
+    <div class="swiper-wrapper">
+      {%- for media in product.media -%}
+        <div class="swiper-slide" data-media-id="{{ media.id }}">
+          {%- case media.media_type -%}
+            {%- when 'image' -%}
+              {{ media | image_url: width: 200 | image_tag }}
+            {%- when 'video', 'external_video' -%}
+              {{ media | media_tag: image_size: '200x' }}
+            {%- when 'model' -%}
+              {{ media.preview_image | image_url: width: 200 | image_tag }}
+          {%- endcase -%}
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+{% comment %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const section = document.querySelector('#MediaGallery-{{ section.id }}');
+      if (!section) return;
+
+      const swiperThumbs = section.querySelector('.pdp-gallery-carousel__swiper--thumbs');
+      const swiperMain = section.querySelector('.pdp-gallery-carousel__swiper--main');
+
+      const slideCount = swiperThumbs.querySelectorAll('.swiper-slide').length;
+
+      if (slideCount <= 2) {
+        swiperThumbs.classList.add('slides-center');
+      }
+
+      if (slideCount <= 3) {
+        swiperThumbs.classList.add('slides-3');
+      } else {
+        swiperThumbs.classList.add('slides-4');
+      }
+
+      // Store instances globally with section-specific names
+      window[`swiperThumbs_{{ section.id }}`] = new Swiper(swiperThumbs, {
+        spaceBetween: 12,
+        slidesPerView: 4,
+        watchSlidesProgress: true,
+        breakpoints: {
+          1024: {
+            spaceBetween: 16,
+          }
+        }
+      });
+
+      window[`swiperMain_{{ section.id }}`] = new Swiper(swiperMain, {
+        spaceBetween: 0,
+        slidesPerView: 1,
+        effect: 'fade',
+        fadeEffect: {
+          crossFade: true
+        },
+        allowTouchMove: false,
+        thumbs: {
+          swiper: window[`swiperThumbs_{{ section.id }}`],
+        },
+      });
+    });
+  </script>
+{% endcomment %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const section = document.querySelector('#MediaGallery-{{ section.id }}');
+    if (!section) return;
+
+    const swiperThumbs = section.querySelector('.pdp-gallery-carousel__swiper--thumbs');
+    const swiperMain = section.querySelector('.pdp-gallery-carousel__swiper--main');
+
+    const slideCount = swiperThumbs.querySelectorAll('.swiper-slide').length;
+
+    if (slideCount == 1) {
+      swiperThumbs.classList.add('slides-1');
+    }
+    
+    if (slideCount <= 2) {
+      swiperThumbs.classList.add('slides-center');
+    }
+
+    if (slideCount <= 3) {
+      swiperThumbs.classList.add('slides-3');
+    } else {
+      swiperThumbs.classList.add('slides-4');
+    }
+
+    let slidesPerView;
+
+    if (slideCount >= 4) {
+      slidesPerView = 4;
+    } else {
+      slidesPerView = 3;
+    }
+
+    // ========================================================================
+    // DETERMINE INITIAL SLIDE FROM URL
+    // ========================================================================
+    let initialSlide = 0;
+
+    // Get variant ID from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const variantId = urlParams.get('variant');
+
+    if (variantId) {
+      // Find which variant matches the URL
+      const variants = {{ product.variants | json }};
+      const selectedVariant = variants.find(v => v.id == variantId);
+
+      if (selectedVariant && selectedVariant.featured_media) {
+        // Find the slide index that matches this variant's media
+        const allSlides = swiperMain.querySelectorAll('.swiper-slide');
+        const targetSlide = swiperMain.querySelector(`[data-media-id="${selectedVariant.featured_media.id}"]`);
+        
+        if (targetSlide) {
+          initialSlide = Array.from(allSlides).indexOf(targetSlide);
+        }
+      }
+    }
+
+    // ========================================================================
+    // INITIALIZE SWIPER WITH CORRECT STARTING SLIDE
+    // ========================================================================
+    window[`swiperThumbs_{{ section.id }}`] = new Swiper(swiperThumbs, {
+      spaceBetween: 12,
+      slidesPerView: slidesPerView,
+      watchSlidesProgress: true,
+      breakpoints: {
+        1024: {
+          spaceBetween: 16,
+        }
+      }
+    });
+
+    window[`swiperMain_{{ section.id }}`] = new Swiper(swiperMain, {
+      spaceBetween: 0,
+      slidesPerView: 1,
+      initialSlide: initialSlide,  // ← Start at the correct slide!
+      effect: 'fade',
+      fadeEffect: {
+        crossFade: true
+      },
+      allowTouchMove: false,
+      thumbs: {
+        swiper: window[`swiperThumbs_{{ section.id }}`],
+      },
+    });
+  });
+</script>
+
+<script type="module">
+  import PhotoSwipeLightbox from '{{ "photoswipe-lightbox.esm.min.js" | asset_url }}';
+
+  const sectionId = '{{ section.id }}';
+  const existing = window.__pdpPswpLightboxInstances || (window.__pdpPswpLightboxInstances = {});
+  if (!existing[sectionId]) {
+    const lightbox = new PhotoSwipeLightbox({
+      gallery: `#MediaGallery-${sectionId}`,
+      children: 'a.pswp-link',
+      mainClass: 'pswp-theme-pdp',
+      pswpModule: () => import('{{ "photoswipe.esm.min.js" | asset_url }}'),
+      bgOpacity: 1,
+      wheelToZoom: true,
+      arrowPrevSVG:
+        '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><title>Previous</title><path d="M15 18l-6-6 6-6"/></svg>',
+      arrowNextSVG:
+        '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><title>Next</title><path d="M9 18l6-6-6-6"/></svg>',
+      closeSVG:
+        '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><title>Close</title><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+      zoomSVG:
+        '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><title>Zoom</title><path d="M21 21l-4.35-4.35"></path><circle cx="10" cy="10" r="6"></circle><path d="M10 7v6"></path><path d="M7 10h6"></path></svg>',
+    });
+
+    lightbox.init();
+    existing[sectionId] = lightbox;
+  }
+</script>
+
+{% comment %}
+  {% comment %}
+    IMPORTANT: WHEN USING THE SWIPERJS
+
+    1. When a Swiper sits inside a flex container with flex-direction: row, its children can shrink or grow horizontally.
+       Solution: You should give the Swiper container/wrapper a fixed size (using width, max-width, or flex: 0 0 <width>) to keep slide sizing stable.
+                In a flex column or a normal block layout the element naturally fills the available width, so explicit width is usually not needed.
+
+    2. When a swiper is inside a block container and that block container is inside a grid container.
+      CSS Grid stretches its children by default, so even if the Swiper sits inside a block-level wrapper,
+      the grid cell will stretch and allow the Swiper (and its images) to expand.
+      Also, Swiper slides/images themselves can grow if their intrinsic size or Swiper settings allow it.
+
+      Solution: You should give the Swiper container/wrapper a fixed size (using width or max-width) or add (grid-template-columns: repeat(1, minmax(0, 1fr))) on the grid container.
+
+      NOTE: OR JUST ADD A (MIN-WIDTH: 0) OF THE PARENT ELEMENT THAT INSIDE OF THAT FLEX OR GRID ELEMENT.
+      WHY THIS WORK: FLEX ITEMS HAVE A DEFAULT (MIN-WIDTH: AUTO), WHICH PREVENTS THEM FROM SHRINKING BELOW THEIR CONTENT SIZE. SETTING (MIN-WIDTH: 0) ALLOWS THE FLEX ITEM TO SHRINK PROPERLY.
+  {% endcomment %}
+
+  <style>
+    .pdp .swiper-slide img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .pdp .swiper-slide {
+      background-size: cover;
+      background-position: center;
+      border-radius: var(--image-border-radius);
+      overflow: hidden;
+    }
+
+    .pdp-gallery-carousel__swiper--main {
+      width: 100%;
+      margin-bottom: 1rem;
+      height: 325px;
+    }
+
+    /* Center thumbnails when there are only 1-2 images */
+    .pdp-gallery-carousel__swiper--thumbs.slides-center .swiper-wrapper {
+      justify-content: center;
+    }
+
+    .pdp-gallery-carousel__swiper--thumbs .swiper-slide {
+      opacity: 0.4;
+    }
+
+    .pdp-gallery-carousel__swiper--thumbs .swiper-slide-thumb-active {
+      opacity: 1;
+    }
+
+    /* Height for 3 or fewer slides */
+    .pdp-gallery-carousel__swiper--thumbs.slides-3 {
+      height: 108px;
+    }
+
+    /* Height for 4 or more slides */
+    .pdp-gallery-carousel__swiper--thumbs.slides-4 {
+      height: 80px;
+    }
+
+    .pdp-gallery-carousel__swiper--main .swiper-button-next,
+    .pdp-gallery-carousel__swiper--main .swiper-button-prev {
+      display: none !important;
+    }
+
+    @media (width >= 48rem) {
+      .pdp-gallery-carousel {
+        /*!
+        When a Swiper sits inside a flex container with flex-direction: row, its children can shrink or grow horizontally,
+        so you should give the Swiper a fixed size (using width, max-width, or flex: 0 0 <width>) to keep slide sizing stable.
+        In a flex column or a normal block layout the element naturally fills the available width, so explicit width is usually not needed.
+
+        That's why we only add max-width on desktop breakpoint because we only use flex container in desktop view
+
+        NOTE: OR JUST ADD A (MIN-WIDTH: 0) OF THE PARENT ELEMENT THAT INSIDE OF THAT FLEX OR GRID ELEMENT.
+        WHY THIS WORK: FLEX ITEMS HAVE A DEFAULT (MIN-WIDTH: AUTO), WHICH PREVENTS THEM FROM SHRINKING BELOW THEIR CONTENT SIZE. SETTING (MIN-WIDTH: 0) ALLOWS THE FLEX ITEM TO SHRINK PROPERLY.
+        */
+        {% comment %} max-width: 598px; {% endcomment %}
+      }
+
+      .pdp-gallery-carousel__swiper--main {
+        height: 544px;
+      }
+
+      .pdp-gallery-carousel__swiper--thumbs.slides-3 {
+        height: 172px;
+      }
+
+      .pdp-gallery-carousel__swiper--thumbs.slides-4 {
+        height: 138px;
+      }
+    }
+  </style>
+
+  <div id="MediaGallery-{{ section.id }}" class="pdp-gallery-carousel">
+    <!-- Main Swiper -->
+    <div class="swiper pdp-gallery-carousel__swiper--main">
+      <div class="swiper-wrapper">
+        {%- for media in product.media -%}
+          <div class="swiper-slide" data-media-id="{{ media.id }}">
+            {%- case media.media_type -%}
+              {%- when 'image' -%}
+                {% comment %} {{ media | image_url: width: 1000 | image_tag }} {% endcomment %}
+                 {% render 'responsive-image', image: media, desktop_aspect_ratio: 'adapt', desktop_enable_custom_dimension: true, desktop_custom_height: '100%', desktop_custom_width: '100%' %}
+              {%- when 'video' or 'external_video' -%}
+                {% comment %} {{ media | media_tag: image_size: '1000x' }} {% endcomment %}
+                 {% render 'responsive-video', video: media, desktop_aspect_ratio: 'adapt', desktop_enable_custom_dimension: true, desktop_custom_height: '100%', desktop_custom_width: '100%' %}
+              {%- when 'model' -%}
+                {{ media | media_tag: image_size: '1000x' }}
+            {%- endcase -%}
+          </div>
+        {%- endfor -%}
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+    </div>
+
+    <!-- Thumbs Swiper -->
+    <div thumbsSlider="" class="swiper pdp-gallery-carousel__swiper--thumbs">
+      <div class="swiper-wrapper">
+        {%- for media in product.media -%}
+          <div class="swiper-slide" data-media-id="{{ media.id }}">
+            {%- case media.media_type -%}
+              {%- when 'image' -%}
+                {{ media | image_url: width: 200 | image_tag }}
+              {%- when 'video' or 'external_video' -%}
+                {{ media | media_tag: image_size: '200x' }}
+              {%- when 'model' -%}
+                {{ media.preview_image | image_url: width: 200 | image_tag }}
+            {%- endcase -%}
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+
+  {% comment %} <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const section = document.querySelector('#MediaGallery-{{ section.id }}');
+      if (!section) return;
+
+      const swiperThumbs = section.querySelector('.pdp-gallery-carousel__swiper--thumbs');
+      const swiperMain = section.querySelector('.pdp-gallery-carousel__swiper--main');
+
+      const slideCount = swiperThumbs.querySelectorAll('.swiper-slide').length;
+
+      if (slideCount <= 2) {
+        swiperThumbs.classList.add('slides-center');
+      }
+
+      if (slideCount <= 3) {
+        swiperThumbs.classList.add('slides-3');
+      } else {
+        swiperThumbs.classList.add('slides-4');
+      }
+
+      // Store instances globally with section-specific names
+      window[`swiperThumbs_{{ section.id }}`] = new Swiper(swiperThumbs, {
+        spaceBetween: 12,
+        slidesPerView: 4,
+        watchSlidesProgress: true,
+        breakpoints: {
+          1024: {
+            spaceBetween: 16,
+          }
+        }
+      });
+
+      window[`swiperMain_{{ section.id }}`] = new Swiper(swiperMain, {
+        spaceBetween: 0,
+        slidesPerView: 1,
+        effect: 'fade',
+        fadeEffect: {
+          crossFade: true
+        },
+        allowTouchMove: false,
+        thumbs: {
+          swiper: window[`swiperThumbs_{{ section.id }}`],
+        },
+      });
+    });
+  </script> {% endcomment %}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const section = document.querySelector('#MediaGallery-{{ section.id }}');
+      if (!section) return;
+
+      const swiperThumbs = section.querySelector('.pdp-gallery-carousel__swiper--thumbs');
+      const swiperMain = section.querySelector('.pdp-gallery-carousel__swiper--main');
+
+      const slideCount = swiperThumbs.querySelectorAll('.swiper-slide').length;
+
+      if (slideCount <= 2) {
+        swiperThumbs.classList.add('slides-center');
+      }
+
+      if (slideCount <= 3) {
+        swiperThumbs.classList.add('slides-3');
+      } else {
+        swiperThumbs.classList.add('slides-4');
+      }
+
+      let slidesPerView;
+
+      if (slideCount >= 4) {
+        slidesPerView = 4;
+      } else {
+        slidesPerView = 3;
+      }
+
+      // ========================================================================
+      // DETERMINE INITIAL SLIDE FROM URL
+      // ========================================================================
+      let initialSlide = 0;
+
+      // Get variant ID from URL parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const variantId = urlParams.get('variant');
+
+      if (variantId) {
+        // Find which variant matches the URL
+        const variants = {{ product.variants | json }};
+        const selectedVariant = variants.find(v => v.id == variantId);
+
+        if (selectedVariant && selectedVariant.featured_media) {
+          // Find the slide index that matches this variant's media
+          const allSlides = swiperMain.querySelectorAll('.swiper-slide');
+          const targetSlide = swiperMain.querySelector(`[data-media-id="${selectedVariant.featured_media.id}"]`);
+
+          if (targetSlide) {
+            initialSlide = Array.from(allSlides).indexOf(targetSlide);
+            console.log(`Initializing gallery at slide ${initialSlide} for variant ${variantId}`);
+          }
+        }
+      }
+
+      // ========================================================================
+      // INITIALIZE SWIPER WITH CORRECT STARTING SLIDE
+      // ========================================================================
+      window[`swiperThumbs_{{ section.id }}`] = new Swiper(swiperThumbs, {
+        spaceBetween: 12,
+        slidesPerView: slidesPerView,
+        watchSlidesProgress: true,
+        breakpoints: {
+          1024: {
+            spaceBetween: 16,
+          }
+        }
+      });
+
+      window[`swiperMain_{{ section.id }}`] = new Swiper(swiperMain, {
+        spaceBetween: 0,
+        slidesPerView: 1,
+        initialSlide: initialSlide,  // ← Start at the correct slide!
+        effect: 'fade',
+        fadeEffect: {
+          crossFade: true
+        },
+        allowTouchMove: false,
+        thumbs: {
+          swiper: window[`swiperThumbs_{{ section.id }}`],
+        },
+      });
+    });
+  </script>
+{% endcomment %}

@@ -1,0 +1,186 @@
+{%- liquid
+  assign quote = block.settings.quote
+  assign author = block.settings.author
+
+  assign show_block = true
+
+  if block.settings.content_source == 'metafield_testimonial'
+    assign mf = product.metafields.custom.testimonial.value
+
+    if mf == blank
+      assign show_block = false
+    else
+      if mf.quote != blank
+        assign quote = mf.quote | metafield_tag
+      endif
+      if mf.author.value != blank
+        assign author = mf.author.value
+      endif
+    endif
+  endif
+
+  if block.settings.color_mode == 'custom'
+    assign testimonial_bg = block.settings.bg_color
+    assign testimonial_quote_color = block.settings.quote_color
+    assign testimonial_author_color = block.settings.author_color
+  else
+    assign testimonial_bg = 'var(--color-background)'
+    assign testimonial_quote_color = 'var(--color-foreground)'
+    assign testimonial_author_color = 'var(--color-foreground)'
+  endif
+-%}
+
+{%- comment -%}
+  =============================================================================
+  Metafield diagnostic panel (DISABLED - wrapped in a Liquid comment block)
+  =============================================================================
+  To re-enable: delete the opening Liquid comment tag on the line above and the
+  matching closing Liquid comment tag at the end of this block (just before the
+  show_block wrapper). Do NOT write a literal closing-comment tag anywhere inside
+  these notes — Liquid's parser would treat it as the real closing tag and end
+  the comment block prematurely, causing all the debug markup below to render.
+
+  This panel renders ONLY when: Content source = Metafield AND request.design_mode
+  (i.e. only inside the theme editor, never on the live storefront).
+
+  Useful when rendering goes wrong for metafield-backed blocks. It dumps:
+    - Whether the top-level metaobject resolved at all (and its handle)
+    - The raw JSON of the metaobject (shows actual field keys Shopify stored)
+    - Per-field probes: blank check, type, rendered output
+    - For rich_text fields, the `| metafield_tag` filter output (escaped for
+      visibility, so you can read the produced HTML as text)
+
+  Common metafield gotchas this panel surfaces:
+    1. rich_text_field values render as a raw Ruby-hash AST string unless you
+       pipe them through `| metafield_tag` (wraps in
+       <div class="metafield-rich_text_field"><p>...</p></div>). Accessing with
+       just `.value` or the bare field does NOT auto-invoke the HTML renderer
+       on metaobject fields, even though it sometimes does on product metafields.
+    2. Field keys are auto-handleized from field names, but if a field was renamed
+       the key may not match the new name. The raw JSON dump reveals actual keys.
+    3. Metaobject entries default to Draft status. Drafts don't reach storefront.
+    4. Referencing a metaobject on a product requires creating a metaobject ENTRY
+       first (Content > Metaobjects), then referencing it from the product.
+
+  Adapt variable names (mf), the content_source value, and field keys (quote,
+  author) when copying this panel into other metafield-driven snippets.
+
+  {%- if block.settings.content_source == 'metafield_testimonial' and request.design_mode -%}
+    <div style="margin:0 0 1rem;padding:0.75rem 1rem;background:#fff9e5;border:1px dashed #d4a017;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:0.75rem;color:#3a2e00;line-height:1.5;white-space:normal;word-break:break-word;">
+      <strong>Testimonial metafield debug (visible in theme editor only)</strong><br>
+      Metaobject resolved: {% if mf == blank %}<span style="color:#b00">NO</span>{% else %}yes ({{ mf.system.handle | default: mf.handle | default: '(no handle)' }}){% endif %}<br>
+      {%- if mf != blank -%}
+        <br><strong>--- Raw metaobject JSON (shows actual field keys) ---</strong><br>
+        <code style="display:block;white-space:pre-wrap;background:#fff;padding:0.5rem;border:1px solid #e5d798;max-height:260px;overflow:auto;">{{ mf | json }}</code>
+        <br><strong>--- Quote field probes ---</strong><br>
+        mf.quote != blank: {% if mf.quote != blank %}yes{% else %}<span style="color:#b00">NO</span>{% endif %}<br>
+        mf.quote.type: {{ mf.quote.type | default: '(no type)' }}<br>
+        mf.quote | metafield_tag: <code style="display:block;white-space:pre-wrap;background:#fff;padding:0.5rem;border:1px solid #e5d798;">{{ mf.quote | metafield_tag | escape }}</code>
+        <br><strong>--- Author field probes ---</strong><br>
+        mf.author != blank: {% if mf.author != blank %}yes{% else %}<span style="color:#b00">NO</span>{% endif %}<br>
+        mf.author.value: {% if mf.author.value != blank %}"{{ mf.author.value | escape }}"{% else %}<span style="color:#b00">(blank)</span>{% endif %}<br>
+        mf.author.type: {{ mf.author.type | default: '(no type)' }}
+      {%- endif -%}
+      <em style="display:block;margin-top:0.5rem;">If any value is blank or unexpected: compare the raw JSON keys to the ones the snippet reads. Confirm the metaobject entry is Active (not Draft).</em>
+    </div>
+  {%- endif -%}
+{%- endcomment -%}
+
+{%- if show_block -%}
+{%- style -%}
+  #pdp-testimonial-{{ block.id }} {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+
+    --pdp-testimonial-bg: {{ testimonial_bg }};
+    --pdp-testimonial-quote-color: {{ testimonial_quote_color }};
+    --pdp-testimonial-author-color: {{ testimonial_author_color }};
+  }
+
+  #pdp-testimonial-{{ block.id }} .pdp-testimonial__card {
+    background: var(--pdp-testimonial-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  #pdp-testimonial-{{ block.id }} .pdp-testimonial__icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #pdp-testimonial-{{ block.id }} .pdp-testimonial__icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #pdp-testimonial-{{ block.id }} .pdp-testimonial__quote {
+    font-family: var(--font-body--family);
+    font-size: 14px;
+    line-height: 22px;
+    letter-spacing: 0.2px;
+    font-weight: 500;
+    color: var(--pdp-testimonial-quote-color);
+  }
+
+  #pdp-testimonial-{{ block.id }} .pdp-testimonial__quote p {
+    margin: 0;
+  }
+
+  #pdp-testimonial-{{ block.id }} .pdp-testimonial__quote p + p {
+    margin-top: 0.5rem;
+  }
+
+  #pdp-testimonial-{{ block.id }} .pdp-testimonial__author {
+    font-family: var(--font-body--family);
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 600;
+    color: var(--pdp-testimonial-author-color);
+    margin: 0;
+  }
+
+  @media (min-width: 64rem) {
+    #pdp-testimonial-{{ block.id }} .pdp-testimonial__card {
+      gap: 24px;
+      padding: 32px;
+    }
+
+    #pdp-testimonial-{{ block.id }} .pdp-testimonial__icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    #pdp-testimonial-{{ block.id }} .pdp-testimonial__quote {
+      font-size: 16px;
+    }
+
+    #pdp-testimonial-{{ block.id }} .pdp-testimonial__author {
+      font-size: 16px;
+    }
+  }
+{%- endstyle -%}
+
+<div id="pdp-testimonial-{{ block.id }}" {{ block.shopify_attributes }}>
+  <div class="pdp-testimonial__card">
+    {%- if block.settings.icon != blank -%}
+      <div class="pdp-testimonial__icon">{{ block.settings.icon }}</div>
+    {%- endif -%}
+
+    {%- if quote != blank -%}
+      <div class="pdp-testimonial__quote">{{ quote }}</div>
+    {%- endif -%}
+
+    {%- if author != blank -%}
+      <p class="pdp-testimonial__author">{{ author }}</p>
+    {%- endif -%}
+  </div>
+</div>
+{%- endif -%}

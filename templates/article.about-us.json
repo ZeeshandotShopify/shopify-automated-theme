@@ -1,0 +1,191 @@
+{
+  "sections": {
+    "main": {
+      "type": "article",
+      "blocks": {
+        "title_p6JB7V": {
+          "type": "title",
+          "settings": {
+            "image": "shopify://shop_images/about-us.webp",
+            "show_breadcrumb": true,
+            "show_author": true,
+            "show_date": true,
+            "title_font_size": "2.5rem",
+            "mobile_title_font_size": "2.5rem",
+            "title_capitalize": true,
+            "content_gap": 16,
+            "desktop_padding_block": 56,
+            "desktop_padding_inline": 88,
+            "mobile_image_height": "300px",
+            "mobile_padding_block": 56,
+            "mobile_padding_inline": 16
+          }
+        },
+        "content_naLc7N": {
+          "type": "content",
+          "settings": {
+            "content_max_width": "90rem",
+            "heading_font_size": "2rem",
+            "mobile_heading_font_size": "2rem",
+            "group_gap": 64,
+            "inner_gap": 16,
+            "desktop_padding_top": 64,
+            "desktop_padding_bottom": 64,
+            "desktop_padding_inline": 88,
+            "mobile_padding_top": 64,
+            "mobile_padding_bottom": 64,
+            "mobile_padding_inline": 16
+          }
+        }
+      },
+      "block_order": ["title_p6JB7V", "content_naLc7N"],
+      "settings": {
+        "color_mode": "inherit",
+        "fg_color": "#ffffff",
+        "bg_color": "#ffffff"
+      }
+    },
+    "section_d7RaqN": {
+      "type": "section",
+      "blocks": {
+        "media_VnTdfX": {
+          "type": "media",
+          "name": "Media",
+          "settings": {
+            "media_type": "image",
+            "video_autoplay": false,
+            "video_loop": false,
+            "video_mute": false,
+            "desktop_aspect_ratio": "auto",
+            "enable_mobile_size": true,
+            "border_mode": "inherit",
+            "desktop_border_top_left_radius": "0",
+            "desktop_border_top_right_radius": "0",
+            "desktop_border_bottom_left_radius": "0",
+            "desktop_border_bottom_right_radius": "0",
+            "mobile_border_top_left_radius": "0",
+            "mobile_border_top_right_radius": "0",
+            "mobile_border_bottom_left_radius": "0",
+            "mobile_border_bottom_right_radius": "0"
+          },
+          "blocks": {}
+        },
+        "media_wwN3hq": {
+          "type": "media",
+          "name": "Media",
+          "settings": {
+            "media_type": "image",
+            "video_autoplay": false,
+            "video_loop": false,
+            "video_mute": false,
+            "desktop_aspect_ratio": "auto",
+            "enable_mobile_size": true,
+            "border_mode": "inherit",
+            "desktop_border_top_left_radius": "0",
+            "desktop_border_top_right_radius": "0",
+            "desktop_border_bottom_left_radius": "0",
+            "desktop_border_bottom_right_radius": "0",
+            "mobile_border_top_left_radius": "0",
+            "mobile_border_top_right_radius": "0",
+            "mobile_border_bottom_left_radius": "0",
+            "mobile_border_bottom_right_radius": "0"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": ["media_VnTdfX", "media_wwN3hq"],
+      "disabled": true,
+      "name": "Bento Images",
+      "settings": {
+        "width": "default",
+        "bg_color_mode": "inherit",
+        "bg_type": "color",
+        "bg_color": "#ffffff",
+        "overlay_color": "#000000",
+        "overlay_opacity": 50,
+        "enabled_noise": true,
+        "noise_size": 8,
+        "noise_density": 90,
+        "noise_opacity": 5,
+        "noise_color": "#000000",
+        "desktop_grid_columns": 5,
+        "desktop_gap": "1rem",
+        "desktop_width": "auto",
+        "desktop_custom_width": "",
+        "desktop_height": "auto",
+        "desktop_custom_height": "",
+        "desktop_padding_top": 64,
+        "desktop_padding_bottom": 64,
+        "desktop_padding_left": 64,
+        "desktop_padding_right": 64,
+        "mobile_grid_columns": 1,
+        "mobile_gap": "0.5rem",
+        "mobile_width": "auto",
+        "mobile_custom_width": "",
+        "mobile_height": "auto",
+        "mobile_custom_height": "",
+        "mobile_padding_top": 64,
+        "mobile_padding_bottom": 64,
+        "mobile_padding_left": 16,
+        "mobile_padding_right": 16
+      }
+    },
+    "product_picks": {
+      "type": "product-picks",
+      "settings": {
+        "heading": "Get Started With These",
+        "max_products": 3,
+        "card_width": "312px",
+        "card_gap": 48,
+        "image_border_radius": "20px",
+        "title_line_clamp": 1,
+        "show_rating": true,
+        "show_add_to_cart": true,
+        "atc_label": "Add To Cart",
+        "heading_font_size": "2.5rem",
+        "mobile_heading_font_size": "2.5rem",
+        "heading_nowrap": true,
+        "title_font_size": "1.25rem",
+        "desktop_padding_top": 64,
+        "desktop_padding_bottom": 64,
+        "desktop_padding_left": 88,
+        "desktop_padding_right": 88,
+        "mobile_padding_top": 64,
+        "mobile_padding_bottom": 64,
+        "mobile_padding_left": 16,
+        "mobile_padding_right": 16
+      }
+    },
+    "related_articles": {
+      "type": "related-articles",
+      "settings": {
+        "heading": "You May Also Like",
+        "articles_to_show": 2,
+        "show_image": true,
+        "show_date": true,
+        "show_author": false,
+        "title_line_clamp": 2,
+        "desktop_excerpt_line_clamp": 2,
+        "mobile_excerpt_line_clamp": 3,
+        "desktop_image_size": "208px",
+        "mobile_image_height": "208px",
+        "image_border_radius": "20px",
+        "heading_font_size": "2.5rem",
+        "mobile_heading_font_size": "2.5rem",
+        "heading_nowrap": false,
+        "card_gap": 16,
+        "card_row_gap": 80,
+        "desktop_column_gap": 80,
+        "desktop_padding_top": 64,
+        "desktop_padding_bottom": 64,
+        "desktop_padding_left": 88,
+        "desktop_padding_right": 88,
+        "mobile_padding_top": 64,
+        "mobile_padding_bottom": 64,
+        "mobile_padding_left": 16,
+        "mobile_padding_right": 16
+      }
+    }
+  },
+  "order": ["main", "product_picks", "related_articles", "section_d7RaqN"]
+}

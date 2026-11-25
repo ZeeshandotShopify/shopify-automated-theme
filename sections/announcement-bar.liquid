@@ -1,0 +1,216 @@
+<style>
+  .announcement-bar {
+    --announcement-bar-background: {{ section.settings.background_color | default: '#ffffff' }};
+
+    background: var(--announcement-bar-background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .announcement-bar-blocks {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  {% if section.settings.transition_effect == 'slide' %}
+  /* Slide effect styles */
+  .announcement-bar-slider {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: calc(100% * {{ section.blocks.size }});
+    will-change: transform;
+  }
+
+  .announcement-bar-block {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  {% else %}
+  /* Fade effect styles */
+  .announcement-bar-slider {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .announcement-bar-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+  }
+
+  .announcement-bar-block.active {
+    opacity: 1;
+    position: relative;
+  }
+  {% endif %}
+</style>
+
+<div class="shopify-page-width shopify-page-padding">
+  <div class="announcement-bar-blocks">
+    <div class="announcement-bar-slider" id="announcement-bar-slider">
+      {% for block in section.blocks %}
+        <div class="announcement-bar-block" data-block-id="{{ block.id }}">
+          {% render block %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const slider = document.getElementById('announcement-bar-slider');
+  const blocks = slider.querySelectorAll('.announcement-bar-block');
+  const totalBlocks = blocks.length;
+  const transitionEffect = '{{ section.settings.transition_effect }}';
+  
+  if (totalBlocks <= 1) {
+    return;
+  }
+  
+  let currentIndex = 0;
+  const autoplayInterval = {{ section.settings.autoplay_speed | times: 1000 }};
+  
+  // Initialize fade effect if selected
+  if (transitionEffect === 'fade') {
+    blocks.forEach((block, index) => {
+      if (index === 0) {
+        block.classList.add('active');
+      } else {
+        block.classList.remove('active');
+      }
+    });
+  }
+  
+  function slideToNext() {
+    const nextIndex = (currentIndex + 1) % totalBlocks;
+    
+    if (transitionEffect === 'slide') {
+      const translateX = -nextIndex * 100;
+      slider.style.transform = `translateX(${translateX}%)`;
+    } else if (transitionEffect === 'fade') {
+      blocks[currentIndex].classList.remove('active');
+      blocks[nextIndex].classList.add('active');
+    }
+    
+    currentIndex = nextIndex;
+  }
+  
+  let autoplayTimer;
+  
+  function startAutoplay() {
+    autoplayTimer = setInterval(slideToNext, autoplayInterval);
+  }
+  
+  function stopAutoplay() {
+    if (autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+  }
+  
+  // Initialize autoplay
+  startAutoplay();
+  
+  // Pause autoplay when user interacts with the slider
+  slider.addEventListener('mouseenter', function() {
+    stopAutoplay();
+  });
+  
+  slider.addEventListener('mouseleave', function() {
+    startAutoplay();
+  });
+  
+  slider.addEventListener('touchstart', function() {
+    stopAutoplay();
+  });
+  
+  slider.addEventListener('touchend', function() {
+    setTimeout(startAutoplay, 2000);
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "t:section.announcement_bar.name",
+  "tag": "section",
+  "class": "announcement-bar",
+  "enabled_on": {
+    "groups": ["header"]
+  },
+  "blocks": [
+    {
+      "type": "announcement"
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "color_background",
+      "id": "background_color",
+      "label": "t:colors.background_color.label",
+      "default": "#B32A22"
+    },
+    {
+      "type": "header",
+      "content": "Auto-Slider Settings"
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "label": "Autoplay Speed (seconds)",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "transition_effect",
+      "label": "Transition Effect",
+      "options": [
+        {
+          "value": "slide",
+          "label": "Slide"
+        },
+        {
+          "value": "fade",
+          "label": "Fade"
+        }
+      ],
+      "default": "slide"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:section.announcement_bar.name",
+      "category": "t:section.announcement_bar.category",
+      "blocks": [
+        {
+          "type": "announcement"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

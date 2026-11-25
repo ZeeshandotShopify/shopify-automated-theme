@@ -1,0 +1,47 @@
+{% stylesheet %}
+  .cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .cart-empty h2 {
+    font-family: var(--font-heading--family);
+    font-size: 2rem;
+    line-height: 140%;
+  }
+
+  .cart-empty-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .cart-empty-inner p,
+  .cart-empty-inner span {
+    font-size: 14px;
+    line-height: 140%;
+    text-align: center;
+  }
+
+  .cart-empty-inner a {
+    text-decoration: underline;
+    text-underline-offset: 2;
+  }
+{% endstylesheet %}
+
+<div class="cart-empty">
+  <h2>Your cart is empty</h2>
+
+  <div class="cart-empty-inner">
+    <p>Have an account?</p>
+
+    <span> <a href="{{ routes.login_url }}">Login</a>&nbsp;to check out faster. </span>
+
+    {% render 'button', label: 'Continue Shopping', url: routes.all_products_collection_url %}
+  </div>
+</div>

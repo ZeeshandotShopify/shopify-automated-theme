@@ -1,0 +1,282 @@
+{%- liquid
+  # Background image detection
+  assign has_bg_image = false
+  if block.settings.bg_type == 'image' and block.settings.bg_image != blank
+    assign has_bg_image = true
+  endif
+-%}
+
+<style>
+  .contact-form-{{ block.id }} {
+    --block-{{ block.id }}-bg-color: {{ block.settings.bg_color | default: '#ffffff' }};
+    --block-{{ block.id }}-overlay-color: {{ block.settings.overlay_color | default: '#000000' }};
+    --block-{{ block.id }}-overlay-opacity: {{ block.settings.overlay_opacity | default: 30 | divided_by: 100.0 }};
+
+     /* Padding Variables */
+    --block-{{ block.id }}-mobile-padding-top: {{ block.settings.mobile_padding_top }}px;
+    --block-{{ block.id }}-mobile-padding-bottom: {{ block.settings.mobile_padding_bottom }}px;
+    --block-{{ block.id }}-mobile-padding-left: {{ block.settings.mobile_padding_left }}px;
+    --block-{{ block.id }}-mobile-padding-right: {{ block.settings.mobile_padding_right }}px;
+    --block-{{ block.id }}-desktop-padding-top: {{ block.settings.desktop_padding_top }}px;
+    --block-{{ block.id }}-desktop-padding-bottom: {{ block.settings.desktop_padding_bottom }}px;
+    --block-{{ block.id }}-desktop-padding-left: {{ block.settings.desktop_padding_left }}px;
+    --block-{{ block.id }}-desktop-padding-right: {{ block.settings.desktop_padding_right }}px;
+
+    /* Border Variables */
+    --block-{{ block.id }}-border-thickness: {{ block.settings.border_thickness }}px;
+    --block-{{ block.id }}-border-radius: {{ block.settings.border_radius }};
+
+    max-width: 37.5rem;
+    width: 100%;
+    height: 100%;
+  }
+
+  .contact-form-{{ block.id }}.contact-form-bg {
+    position: relative;
+    {%- case block.settings.bg_type -%}
+      {%- when 'color' -%}
+        background: var(--block-{{ block.id }}-bg-color);
+      {%- when 'image' -%}
+        background-image: url('{{ block.settings.bg_image | image_url: width: 3840 }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    {%- endcase -%}
+
+    border: var(--block-{{ block.id }}-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+    border-radius: var(--block-{{ block.id }}-border-radius, 0.5rem);
+    overflow: hidden;
+  }
+
+  .contact-form-{{ block.id }} .contact-form-bg__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: var(--block-{{ block.id }}-overlay-color);
+    opacity: var(--block-{{ block.id }}-overlay-opacity);
+    pointer-events: none;
+  }
+
+  .contact-form-{{ block.id }} .contact-form-container {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+    padding: var(--block-{{ block.id }}-mobile-padding-top) var(--block-{{ block.id }}-mobile-padding-right) var(--block-{{ block.id }}-mobile-padding-bottom) var(--block-{{ block.id }}-mobile-padding-left);
+  }
+
+  .contact-form .form-success {
+    color: #155724;
+    background: #d4edda;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .contact-form .form-error {
+    color: #721c24;
+    background: #f8d7da;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  @media (width >= 64rem) {
+    .contact-form-{{ block.id }} .contact-form-bg__container {
+      padding: var(--block-{{ block.id }}-desktop-padding-top) var(--block-{{ block.id }}-desktop-padding-right) var(--block-{{ block.id }}-desktop-padding-bottom) var(--block-{{ block.id }}-desktop-padding-left);
+    }
+  }
+</style>
+
+<div class="contact-form-{{ block.id }} contact-form-bg" {{ block.shopify_attributes }}>
+  {%- if block.settings.bg_type == 'image'
+    and has_bg_image
+    and block.settings.overlay_color != blank
+    and block.settings.overlay_opacity > 0
+  -%}
+    <div class="group-bg__overlay"></div>
+  {%- endif -%}
+
+  {% form 'contact' %}
+    <div class="contact-form-container">
+      <div class="input-container">
+        <input
+          type="text"
+          id="ContactForm-name"
+          name="contact[name]"
+          placeholder="Enter your name"
+          value="{{ form.name }}"
+        >
+        <label for="ContactForm-name">Name</label>
+      </div>
+
+      <div class="input-container">
+        <input
+          type="email"
+          id="ContactForm-email"
+          name="contact[email]"
+          placeholder="Enter your email"
+          value="{{ form.email }}"
+          required
+          {% if form.errors contains 'email' %}
+            aria-invalid="true" aria-describedby="ContactForm-email-error"
+          {% endif %}
+        >
+        <label for="ContactForm-email">Email *</label>
+      </div>
+
+      {% if form.errors contains 'email' %}
+        <div class="form-error" id="ContactForm-email-error">Please enter a valid email address.</div>
+      {% endif %}
+
+      <div class="input-container">
+        <input
+          type="tel"
+          id="ContactForm-phone"
+          name="contact[phone]"
+          placeholder="Enter your phone number"
+          value="{{ form.phone }}"
+        >
+        <label for="ContactForm-phone">Phone</label>
+      </div>
+
+      <div class="input-container">
+        <textarea id="ContactForm-body" name="contact[body]" placeholder="Enter your message">{{ form.body }}</textarea>
+        <label for="ContactForm-body">Message</label>
+      </div>
+
+      {% render 'button', label: 'Send', type: 'submit' %}
+
+      {% if form.posted_successfully? %}
+        <div class="form-success" tabindex="-1" autofocus>Thank you for your message! We'll get back to you soon.</div>
+      {% elsif form.errors %}
+        <div class="form-error" role="alert" tabindex="-1" autofocus>
+          Please correct the errors below and try again.
+        </div>
+      {% endif %}
+    </div>
+  {% endform %}
+</div>
+
+{% schema %}
+{
+  "name": "t:block.contact_form.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "bg_type",
+      "label": "t:background_type.label",
+      "options": [
+        {
+          "value": "color",
+          "label": "t:background_type.options.color"
+        },
+        {
+          "value": "image",
+          "label": "t:background_type.options.image"
+        }
+      ],
+      "default": "color"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "transparent",
+      "info": "Choose a solid background color",
+      "visible_if": "{{ block.settings.bg_type == 'color' }}"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "t:image.label",
+      "info": "Choose a background image",
+      "visible_if": "{{ block.settings.bg_type == 'image' }}"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "t:colors.overlay_color.label",
+      "default": "#000000",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'image' and section.settings.bg_image != blank }}"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "t:opacity.label",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 30,
+      "unit": "%",
+      "info": "Opacity of the overlay color (0% = transparent, 100% = solid)",
+      "visible_if": "{{ section.settings.bg_color_mode == 'custom' and section.settings.bg_type == 'image' and section.settings.bg_image != blank }}"
+    },
+    {
+      "type": "range",
+      "id": "border_thickness",
+      "label": "t:size.border_thickness.label",
+      "min": 0,
+      "max": 8,
+      "step": 1,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "border_radius",
+      "label": "t:size.border_radius.label",
+      "options": [
+        {
+          "value": "0",
+          "label": "t:size.options.border_radius.0"
+        },
+        {
+          "value": "0.125rem",
+          "label": "t:size.options.border_radius.2"
+        },
+        {
+          "value": "0.25rem",
+          "label": "t:size.options.border_radius.4"
+        },
+        {
+          "value": "0.375rem",
+          "label": "t:size.options.border_radius.6"
+        },
+        {
+          "value": "0.5rem",
+          "label": "t:size.options.border_radius.8"
+        },
+        {
+          "value": "0.75rem",
+          "label": "t:size.options.border_radius.12"
+        },
+        {
+          "value": "1rem",
+          "label": "t:size.options.border_radius.16"
+        },
+        {
+          "value": "1.5rem",
+          "label": "t:size.options.border_radius.24"
+        },
+        {
+          "value": "9999",
+          "label": "t:size.options.border_radius.9999"
+        }
+      ],
+      "default": "0.5rem"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.contact_form.name"
+    }
+  ]
+}
+{% endschema %}

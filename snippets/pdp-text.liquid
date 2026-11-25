@@ -1,0 +1,66 @@
+{%- liquid
+  if block.settings.text_color_mode == 'inherit'
+    assign text_color = 'var(--color-foreground)'
+  else
+    assign text_color = block.settings.color | default: '#111111'
+  endif
+
+  assign metafield_content = product.metafields.custom.pdp_subheader
+  assign text_style = block.settings.text_style | default: 'default'
+  assign text_tag = block.settings.text_tag | default: 'p'
+
+  assign has_content = false
+  if metafield_content != blank
+    assign has_content = true
+  elsif text_style == 'richtext' and block.settings.richtext != blank
+    assign has_content = true
+  elsif text_style == 'default' and block.settings.text != blank
+    assign has_content = true
+  endif
+-%}
+
+{%- if has_content -%}
+  <style>
+    #text-{{ block.id }} {
+      --text-color: {{ text_color }};
+      --font-family: {{ block.settings.font_family }};
+      --font-weight: {{ block.settings.font_weight }};
+      --font-size: {{ block.settings.font_size }};
+      --line-height: {{ block.settings.line_height }};
+      --text-transform: {{ block.settings.text_transform }};
+      --width: {{ block.settings.width }};
+      --max-width: {{ block.settings.max_width }};
+      --text-align: {{ block.settings.text_align }};
+
+      color: var(--text-color);
+      font-family: var(--font-family);
+      font-weight: var(--font-weight);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+      text-transform: var(--text-transform);
+      width: var(--width);
+      max-width: var(--max-width);
+      text-align: var(--text-align);
+      overflow-wrap: anywhere;
+
+      padding-top: {{ block.settings.padding_top }}px;
+      padding-bottom: {{ block.settings.padding_bottom }}px;
+    }
+  </style>
+
+  {%- if metafield_content != blank -%}
+    <div id="text-{{ block.id }}" {{ block.shopify_attributes }}>
+      {{ metafield_content }}
+    </div>
+  {%- elsif text_style == 'richtext' -%}
+    <div id="text-{{ block.id }}" class="rte" {{ block.shopify_attributes }}>
+      {{- block.settings.richtext -}}
+    </div>
+  {%- else -%}
+    <div id="text-{{ block.id }}" {{ block.shopify_attributes }}>
+      <{{ text_tag }}>
+        {{- block.settings.text | newline_to_br -}}
+      </{{ text_tag }}>
+    </div>
+  {%- endif -%}
+{%- endif -%}

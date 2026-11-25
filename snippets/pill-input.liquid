@@ -1,0 +1,97 @@
+{% stylesheet %}
+  .pill-input__input + .pill-input__label {
+    position: relative;
+    min-width: 40px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-variant-background, rgb(var(--color-background-rgb)));
+    color: var(--color-variant-foreground, rgba(var(--color-foreground-rgb)));
+    border-radius: var(--button-border-radius);
+    border: 1px solid var(--color-border);
+    font-size: 1rem;
+    line-height: 140%;
+    text-align: center;
+    text-transform: capitalize;
+    transition:
+      border 300ms ease,
+      background-color 300ms ease,
+      color 300ms ease;
+    padding-inline: 0.5rem;
+    cursor: pointer;
+  }
+
+  .pill-input__input + .pill-input__label:before {
+    content: '';
+    position: absolute;
+    top: calc(1px * -1);
+    right: calc(1px * -1);
+    bottom: calc(1px * -1);
+    left: calc(1px * -1);
+    z-index: -1;
+    border-radius: var(--button-border-radius);
+    box-shadow: 0 4px 5px rgba(var(18, 18, 18), 0);
+  }
+
+  .pill-input__input + .pill-input__label:hover {
+    background-color: var(--color-variant-hover-background, rgb(var(--color-foreground-rgb)));
+    color: var(--color-variant-hover-foreground, rgb(var(--color-background-rgb)));
+    border-color: var(--color-variant-hover-background, rgb(var(--color-foreground-rgb)));
+  }
+
+  .pill-input__input:checked + .pill-input__label {
+    background-color: var(--color-variant-hover-background, rgb(var(--color-foreground-rgb)));
+    color: var(--color-variant-hover-foreground, rgb(var(--color-background-rgb)));
+    border-color: var(--color-variant-hover-background, rgb(var(--color-foreground-rgb)));
+  }
+
+  .pill-input__input:checked + .pill-input__label::selection {
+    background-color: rgba(var(--color-background-rgb-selection));
+  }
+
+  .pill-input__input:disabled + .pill-input__label,
+  .pill-input__input.visually-disabled + .pill-input__label {
+    border-color: rgba(var(--color-foreground-rgb), 0.1);
+    color: rgba(var(--color-foreground-rgb), 0.6);
+    text-decoration: line-through;
+  }
+
+  .pill-input__input.visually-disabled:checked + .pill-input__label,
+  .pill-input__input:disabled:checked + .pill-input__label {
+    color: rgba(var(--color-background-rgb), 0.6);
+  }
+  .pill-input__input:focus-visible + .pill-input__label {
+    box-shadow:
+      0 0 0 3px rgb(var(--color-background-rgb)),
+      0 0 0 5px rgba(var(--color-foreground-rgb), 0.55);
+  }
+
+  /* Fallback */
+  .pill-input__input.focused + .pill-input__label {
+    box-shadow:
+      0 0 0 3px rgb(var(--color-background-rgb)),
+      0 0 0 5px rgba(var(--color-foreground-rgb), 0.55);
+  }
+{% endstylesheet %}
+
+<input
+  type="radio"
+  id="{{ id }}"
+  name="{{ name | escape }}"
+  value="{{ value | escape }}"
+  class="pill-input__input{% if visually_disabled %} visually-disabled{% endif %}"
+  {% if checked %}
+    checked
+  {% endif %}
+  {% if disabled %}
+    disabled
+  {% endif %}
+  {% if additional_props %}
+    {{ additional_props }}
+  {% endif %}
+>
+<label for="{{ id }}" class="pill-input__label">
+  {{ value }}
+  {{ label_unavailable }}
+</label>

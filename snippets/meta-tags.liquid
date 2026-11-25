@@ -1,0 +1,321 @@
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+{%- liquid
+  assign noindex_types = 'search,cart,captcha,password' | split: ','
+  assign should_noindex = false
+  if noindex_types contains request.page_type
+    assign should_noindex = true
+  endif
+  if request.path contains '/account'
+    assign should_noindex = true
+  endif
+-%}
+{%- if should_noindex -%}
+  <meta name="robots" content="noindex,nofollow">
+{%- else -%}
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+{%- endif -%}
+
+{%- liquid
+  assign og_title = page_title | default: shop.name
+  assign og_url = canonical_url | default: request.origin
+  assign og_type = 'website'
+  assign og_description = page_description | default: shop.description | default: shop.name | strip_html | strip_newlines | truncate: 160
+
+  if request.page_type == 'product'
+    assign og_type = 'product'
+  elsif request.page_type == 'article'
+    assign og_type = 'article'
+  elsif request.page_type == 'password'
+    assign og_url = request.origin
+  endif
+%}
+
+<meta
+  property="og:site_name"
+  content="{{ shop.name }}"
+>
+<meta
+  property="og:url"
+  content="{{ og_url }}"
+>
+<meta
+  property="og:title"
+  content="{{ og_title | escape }}"
+>
+<meta
+  property="og:type"
+  content="{{ og_type }}"
+>
+<meta
+  property="og:description"
+  content="{{ og_description | escape }}"
+>
+
+{%- if page_image -%}
+  <meta
+    property="og:image"
+    content="https:{{ page_image | image_url }}"
+  >
+  <meta
+    property="og:image:secure_url"
+    content="https:{{ page_image | image_url }}"
+  >
+  <meta
+    property="og:image:width"
+    content="{{ page_image.width }}"
+  >
+  <meta
+    property="og:image:height"
+    content="{{ page_image.height }}"
+  >
+  <meta
+    property="og:image:alt"
+    content="{{ page_image.alt | default: og_title | escape }}"
+  >
+{%- elsif settings.logo -%}
+  <meta
+    property="og:image"
+    content="https:{{ settings.logo | image_url: width: 1200 }}"
+  >
+  <meta
+    property="og:image:alt"
+    content="{{ shop.name | escape }}"
+  >
+{%- endif -%}
+
+{%- if request.page_type == 'product' -%}
+  <script type="application/ld+json">
+    {{ product | structured_data }}
+  </script>
+
+  <meta
+    property="og:price:amount"
+    content="{{ product.price | money_without_currency | strip_html }}"
+  >
+  <meta
+    property="og:price:currency"
+    content="{{ cart.currency.iso_code }}"
+  >
+{%- endif -%}
+
+{%- if request.page_type == 'collection' -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": {{ collection.title | json }},
+      "url": {{ collection.url | prepend: shop.url | json }},
+      {%- if collection.description != blank -%}
+        "description": {{ collection.description | strip_html | truncate: 160 | json }},
+      {%- endif -%}
+      "numberOfItems": {{ collection.all_products_count }},
+      "mainEntity": {
+        "@type": "ItemList",
+        "numberOfItems": {{ collection.all_products_count }}
+      }
+    }
+  </script>
+{%- endif -%}
+
+<meta
+  name="twitter:card"
+  content="summary_large_image"
+>
+<meta
+  name="twitter:title"
+  content="{{ og_title | escape }}"
+>
+<meta
+  name="twitter:description"
+  content="{{ og_description | escape }}"
+>
+{%- if page_image -%}
+  <meta
+    name="twitter:image"
+    content="https:{{ page_image | image_url }}"
+  >
+{%- endif -%}
+
+<title>
+  {%- liquid
+    capture full_title
+      echo page_title
+      if current_tags
+        echo ' – tagged "' | append: current_tags | join: ', ' | append: '"'
+      endif
+      if current_page != 1
+        echo ' – Page ' | append: current_page
+      endif
+      unless page_title contains shop.name
+        echo ' | ' | append: shop.name
+      endunless
+    endcapture
+    assign full_title = full_title | strip
+    echo full_title
+  -%}
+</title>
+
+<link rel="canonical" href="{{ canonical_url }}">
+
+{%- comment -%} Hreflang tags for multi-language stores {%- endcomment -%}
+{%- if shop.published_locales.size > 1 -%}
+  {%- for locale in shop.published_locales -%}
+    <link rel="alternate" hreflang="{{ locale.iso_code }}" href="{{ canonical_url | replace: request.locale.root_url, locale.root_url }}">
+  {%- endfor -%}
+  <link rel="alternate" hreflang="x-default" href="{{ canonical_url }}">
+{%- endif -%}
+{% if page_description %}
+  <meta
+    name="description"
+    content="{{ page_description | strip_html | strip_newlines | truncate: 160 }}"
+  >
+{% endif %}
+
+{%- comment -%} WebSite schema with SearchAction for sitelinks search box {%- endcomment -%}
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": {{ shop.name | json }},
+    "url": {{ shop.url | json }},
+    "potentialAction": {
+      "@type": "SearchAction",
+      {%- capture search_action_target -%}{{ shop.url }}/search?q={search_term_string}{%- endcapture -%}
+      "target": {{ search_action_target | json }},
+      "query-input": "required name=search_term_string"
+    }
+  }
+</script>
+
+{%- comment -%} E-E-A-T: Structured data for organization {%- endcomment -%}
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": {{ shop.name | json }},
+    "url": {{ shop.url | json }},
+    {%- if shop.description != blank -%}
+      "description": {{ shop.description | strip_html | truncate: 250 | json }},
+    {%- endif -%}
+    {%- if settings.logo -%}
+      "logo": {{ settings.logo | image_url: width: 600 | prepend: 'https:' | json }},
+    {%- endif -%}
+    {%- liquid
+      assign social_links = '' | split: ''
+      if settings.social_facebook_link != blank
+        assign temp = settings.social_facebook_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_twitter_link != blank
+        assign temp = settings.social_twitter_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_instagram_link != blank
+        assign temp = settings.social_instagram_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_pinterest_link != blank
+        assign temp = settings.social_pinterest_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_tiktok_link != blank
+        assign temp = settings.social_tiktok_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_youtube_link != blank
+        assign temp = settings.social_youtube_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_vimeo_link != blank
+        assign temp = settings.social_vimeo_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_linkedin_link != blank
+        assign temp = settings.social_linkedin_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_snapchat_link != blank
+        assign temp = settings.social_snapchat_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_wechat_link != blank
+        assign temp = settings.social_wechat_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_reddit_link != blank
+        assign temp = settings.social_reddit_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+      if settings.social_telegram_link != blank
+        assign temp = settings.social_telegram_link | split: '|||'
+        assign social_links = social_links | concat: temp
+      endif
+    -%}
+    {%- if social_links.size > 0 -%}
+      "sameAs": {{ social_links | json }},
+    {%- endif -%}
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": {{ shop.email | json }},
+      "contactType": "customer service"
+    }
+  }
+</script>
+
+{%- comment -%} LocalBusiness schema for stores with physical locations {%- endcomment -%}
+{%- if settings.store_street_address != blank -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": {{ shop.name | json }},
+      "url": {{ shop.url | json }},
+      {%- if settings.logo -%}
+        "image": {{ settings.logo | image_url: width: 600 | prepend: 'https:' | json }},
+      {%- endif -%}
+      {%- if settings.store_phone != blank -%}
+        "telephone": {{ settings.store_phone | json }},
+      {%- endif -%}
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": {{ settings.store_street_address | json }},
+        "addressLocality": {{ settings.store_city | json }},
+        "addressRegion": {{ settings.store_state | json }},
+        "postalCode": {{ settings.store_postal_code | json }},
+        "addressCountry": {{ settings.store_country | json }}
+      }
+    }
+  </script>
+{%- endif -%}
+
+{%- if request.page_type == 'article' -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": {{ article.title | json }},
+      "description": {{ article.excerpt_or_content | strip_html | truncate: 160 | json }},
+      "url": {{ article.url | prepend: shop.url | json }},
+      "datePublished": {{ article.published_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
+      "dateModified": {{ article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z' | json }},
+      "author": {
+        "@type": "Person",
+        "name": {{ article.author | json }}
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": {{ shop.name | json }},
+        "url": {{ shop.url | json }}
+      }
+      {%- if article.image -%}
+        ,"image": {
+          "@type": "ImageObject",
+          "url": {{ article.image | image_url: width: 1200 | prepend: 'https:' | json }},
+          "width": {{ article.image.width }},
+          "height": {{ article.image.height }}
+        }
+      {%- endif -%}
+    }
+  </script>
+{%- endif -%}

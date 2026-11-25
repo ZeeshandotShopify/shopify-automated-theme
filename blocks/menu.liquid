@@ -1,0 +1,112 @@
+{% render 'menu',
+  id: block.id,
+  menu: linklists[block.settings.menu].links,
+  text_color_mode: block.settings.text_color_mode,
+  text_color: block.settings.text_color,
+  mobile_direction: block.settings.mobile_direction,
+  desktop_direction: block.settings.desktop_direction,
+  mobile_gap: block.settings.mobile_gap,
+  desktop_gap: block.settings.desktop_gap,
+  shopify_attributes: block.shopify_attributes
+%}
+
+{% schema %}
+{
+  "name": "t:block.menu.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "t:menu.label"
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "text_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        { "value": "inherit", "label": "t:color_mode.options.inherit" },
+        { "value": "custom", "label": "t:color_mode.options.custom" }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#111111",
+      "visible_if": "{{ block.settings.text_color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "select",
+      "id": "desktop_direction",
+      "label": "t:layout.direction.label",
+      "options": [
+        {
+          "value": "row",
+          "label": "t:layout.direction.options.horizontal"
+        },
+        {
+          "value": "column",
+          "label": "t:layout.direction.options.vertical"
+        }
+      ],
+      "default": "column"
+    },
+    {
+      "type": "range",
+      "id": "desktop_gap",
+      "label": "t:size.gap.label",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "select",
+      "id": "mobile_direction",
+      "label": "t:layout.direction.label",
+      "options": [
+        {
+          "value": "row",
+          "label": "t:layout.direction.options.horizontal"
+        },
+        {
+          "value": "column",
+          "label": "t:layout.direction.options.vertical"
+        }
+      ],
+      "default": "column"
+    },
+    {
+      "type": "range",
+      "id": "mobile_gap",
+      "label": "t:size.gap.label",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.menu.name",
+      "category": "t:block.menu.category"
+    }
+  ]
+}
+{% endschema %}

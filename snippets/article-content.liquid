@@ -1,0 +1,173 @@
+{% doc %}
+  Renders the article body.
+
+  The design shows four heading + paragraph groups at the full 1264 content
+  measure, 64px between groups and 16px inside one. That is not four settings:
+  it is `article.content`, the merchant's rich text, so the rhythm is expressed
+  as `.rte` typography rather than as repeated blocks — an `h2` opens a group,
+  everything after it belongs to that group.
+
+  The region paints its own background rather than inheriting the page ground,
+  so an article body stays legible whatever the page background is set to.
+
+  No required settings: `article.content` always exists on an article template.
+
+  @param {object} block - The `content` block of `sections/article.liquid`
+
+  @example
+  {% render 'article-content', block: block %}
+{% enddoc %}
+
+{%- liquid
+  assign body_id = 'article-body-' | append: block.id
+
+  comment
+    Colour resolves through a mode select rather than a schema default, because
+    a `color` setting cannot default to a CSS variable. `inherit` hands back the
+    theme token; `custom` hands back the merchant's swatch. Same shape as
+    snippets/pdp-testimonial.liquid.
+  endcomment
+  if block.settings.color_mode == 'custom'
+    assign ab_background = block.settings.background
+    assign ab_text_color = block.settings.text_color
+  else
+    assign ab_background = 'var(--color-article-background)'
+    assign ab_text_color = 'var(--color-article-foreground)'
+  endif
+-%}
+
+{%- style -%}
+  #{{ body_id }} {
+    /* Both type families map to theme globals and are read from them below;
+       the two fills resolve through the block's own `color_mode`. */
+    --ab-background: {{ ab_background }};
+    --ab-text-color: {{ ab_text_color }};
+    --ab-content-max-width: {{ block.settings.content_max_width }};
+
+    --ab-heading-font-size: {{ block.settings.mobile_heading_font_size }};
+    --ab-group-gap: {{ block.settings.group_gap }}px;
+    --ab-inner-gap: {{ block.settings.inner_gap }}px;
+
+    --ab-padding-top: {{ block.settings.mobile_padding_top }}px;
+    --ab-padding-bottom: {{ block.settings.mobile_padding_bottom }}px;
+    --ab-padding-inline: {{ block.settings.mobile_padding_inline }}px;
+
+    background: var(--ab-background);
+    color: var(--ab-text-color);
+  }
+
+  #{{ body_id }} .article-body {
+    max-width: var(--ab-content-max-width);
+    margin-inline: auto;
+    padding-top: var(--ab-padding-top);
+    padding-bottom: var(--ab-padding-bottom);
+    padding-inline: var(--ab-padding-inline);
+  }
+
+  /* ---------- Rich-text rhythm ---------- */
+
+  /* every group is `flex-col gap-[16px]`, and the groups sit
+     64 apart. In flowing rich text that is: 16 between any two siblings, and 64
+     above a heading because a heading is what starts a new group. Margins
+     rather than `gap`, because the merchant's `article.content` is one blob
+     and its children are not a flex container's items.
+
+     These selectors are id-scoped, which is what lets them outrank the `.rte`
+     typography in assets/critical.css — including `.rte :is(ul, ol)`, which
+     outranks any plain class. */
+  #{{ body_id }} .article-body__rte > * {
+    margin-top: var(--ab-inner-gap);
+    margin-bottom: 0;
+  }
+
+  #{{ body_id }} .article-body__rte > :first-child {
+    margin-top: 0;
+  }
+
+  #{{ body_id }} .article-body__rte > :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: var(--ab-group-gap);
+    margin-bottom: 0;
+    font-family: var(--font-heading--family);
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--ab-text-color);
+    /* carries NO text-transform, unlike the page's section
+       headings. */
+    text-transform: none;
+  }
+
+  #{{ body_id }} .article-body__rte > :is(h1, h2) {
+    font-size: var(--ab-heading-font-size);
+  }
+
+  /* The design shows one heading level. Levels below it step down from it so a
+     merchant using h3/h4 gets a sensible hierarchy rather than the theme's
+     default one. */
+  #{{ body_id }} .article-body__rte > h3 {
+    font-size: calc(var(--ab-heading-font-size) * 0.75);
+  }
+
+  #{{ body_id }} .article-body__rte > :is(h4, h5, h6) {
+    font-size: calc(var(--ab-heading-font-size) * 0.625);
+  }
+
+  #{{ body_id }} .article-body__rte > :is(h1, h2, h3, h4, h5, h6):first-child {
+    margin-top: 0;
+  }
+
+  /* Open Sans 16 / 1.4 at the full measure. */
+  #{{ body_id }} .article-body__rte,
+  #{{ body_id }} .article-body__rte > :is(p, ul, ol, blockquote, table) {
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--ab-text-color);
+  }
+
+  #{{ body_id }} .article-body__rte > :is(ul, ol) {
+    padding-inline-start: 1.5rem;
+  }
+
+  #{{ body_id }} .article-body__rte li + li {
+    margin-top: 0.5rem;
+  }
+
+  /* critical.css repaints `.rte a` in a link colour no setting reaches. The
+     design gives no link treatment at all (spec OPEN QUESTION 15), so the
+     safest reading is the surrounding text plus an underline — no invented
+     colour. */
+  #{{ body_id }} .article-body__rte a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  #{{ body_id }} .article-body__rte :is(img, video, iframe) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (width >= 64rem) {
+    #{{ body_id }} {
+      --ab-heading-font-size: {{ block.settings.heading_font_size }};
+      --ab-padding-top: {{ block.settings.desktop_padding_top }}px;
+      --ab-padding-bottom: {{ block.settings.desktop_padding_bottom }}px;
+      --ab-padding-inline: {{ block.settings.desktop_padding_inline }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div
+  id="{{ body_id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="article-body">
+    <div class="article-body__rte rte">
+      {{ article.content }}
+    </div>
+  </div>
+</div>

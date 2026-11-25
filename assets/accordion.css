@@ -1,0 +1,56 @@
+/* ── Layout defaults ── */
+accordion-item {
+  display: block;
+}
+
+accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 1rem 0;
+  user-select: none;
+}
+
+accordion-content {
+  display: block;
+  overflow: hidden;
+  height: 0;
+  transition: height 200ms ease-out;
+}
+
+.accordion-content-inner {
+  padding-bottom: 1rem;
+}
+
+/* ── Icon base ── */
+.accordion-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  transition: transform 200ms ease-out;
+  pointer-events: none;
+}
+
+/* ── Chevron rotation ── */
+accordion-item[data-state="open"]
+  > accordion-trigger
+  .accordion-icon.icon-chevron {
+  transform: rotate(180deg);
+}
+
+/* ── Plus-to-minus morph ── */
+.accordion-icon.icon-plus line {
+  transition:
+    transform 200ms ease-out,
+    opacity 200ms ease-out;
+  transform-origin: 12px 12px;
+}
+
+accordion-item[data-state="open"]
+  > accordion-trigger
+  .accordion-icon.icon-plus
+  .vertical {
+  opacity: 0;
+  transform: rotate(90deg);
+}

@@ -1,0 +1,321 @@
+{% comment %}
+  Estimated Delivery Timeline Block
+  Displays a configurable timeline with dynamic date calculations and active states
+{% endcomment %}
+
+{%- liquid
+  assign current_timestamp = 'now' | date: '%s' | plus: 0
+  assign current_date = 'now' | date: '%d, %b'
+  assign seconds_per_day = 86400
+
+  comment
+    Calculate dates for each timeline item
+  endcomment
+
+  assign item1_active = false
+  assign item2_active = false
+  assign item3_active = false
+  assign item1_is_current = false
+  assign item2_is_current = false
+  assign item3_is_current = false
+
+  if block.settings.item1_title != blank and block.settings.item1_start_day >= 0
+    assign item1_active = true
+    assign days_in_seconds = block.settings.item1_start_day | times: seconds_per_day
+    assign item1_start_timestamp = current_timestamp | plus: days_in_seconds
+    assign item1_start_date = item1_start_timestamp | date: '%d, %b'
+
+    if block.settings.item1_end_day >= 0 and block.settings.item1_end_day > block.settings.item1_start_day
+      assign end_days_in_seconds = block.settings.item1_end_day | times: seconds_per_day
+      assign item1_end_timestamp = current_timestamp | plus: end_days_in_seconds
+      assign item1_end_date = item1_end_timestamp | date: '%d, %b'
+      assign item1_display = item1_start_date | append: ' - ' | append: item1_end_date
+      assign item1_final_start_date = item1_start_date
+      assign item1_final_end_date = item1_end_date
+      assign item1_has_range = true
+
+      comment
+        Check if current date matches start or end date
+      endcomment
+      if current_date == item1_start_date or current_date == item1_end_date
+        assign item1_is_current = true
+      endif
+    else
+      assign item1_display = item1_start_date
+      assign item1_final_start_date = ''
+      assign item1_final_end_date = item1_start_date
+      assign item1_has_range = false
+
+      comment
+        Check if current date matches start date
+      endcomment
+      if current_date == item1_start_date
+        assign item1_is_current = true
+      endif
+    endif
+  endif
+
+  if block.settings.item2_title != blank and block.settings.item2_start_day >= 0
+    assign item2_active = true
+    assign days_in_seconds = block.settings.item2_start_day | times: seconds_per_day
+    assign item2_start_timestamp = current_timestamp | plus: days_in_seconds
+    assign item2_start_date = item2_start_timestamp | date: '%d, %b'
+
+    if block.settings.item2_end_day >= 0 and block.settings.item2_end_day > block.settings.item2_start_day
+      assign end_days_in_seconds = block.settings.item2_end_day | times: seconds_per_day
+      assign item2_end_timestamp = current_timestamp | plus: end_days_in_seconds
+      assign item2_end_date = item2_end_timestamp | date: '%d, %b'
+      assign item2_display = item2_start_date | append: ' - ' | append: item2_end_date
+      assign item2_final_start_date = item2_start_date
+      assign item2_final_end_date = item2_end_date
+      assign item2_has_range = true
+
+      comment
+        Check if current date matches start or end date
+      endcomment
+      if current_date == item2_start_date or current_date == item2_end_date
+        assign item2_is_current = true
+      endif
+    else
+      assign item2_display = item2_start_date
+      assign item2_final_start_date = ''
+      assign item2_final_end_date = item2_start_date
+      assign item2_has_range = false
+
+      comment
+        Check if current date matches start date
+      endcomment
+      if current_date == item2_start_date
+        assign item2_is_current = true
+      endif
+    endif
+  endif
+
+  if block.settings.item3_title != blank and block.settings.item3_start_day >= 0
+    assign item3_active = true
+    assign days_in_seconds = block.settings.item3_start_day | times: seconds_per_day
+    assign item3_start_timestamp = current_timestamp | plus: days_in_seconds
+    assign item3_start_date = item3_start_timestamp | date: '%d, %b'
+
+    if block.settings.item3_end_day >= 0 and block.settings.item3_end_day > block.settings.item3_start_day
+      assign end_days_in_seconds = block.settings.item3_end_day | times: seconds_per_day
+      assign item3_end_timestamp = current_timestamp | plus: end_days_in_seconds
+      assign item3_end_date = item3_end_timestamp | date: '%d, %b'
+      assign item3_display = item3_start_date | append: ' - ' | append: item3_end_date
+      assign item3_final_start_date = item3_start_date
+      assign item3_final_end_date = item3_end_date
+      assign item3_has_range = true
+
+      comment
+        Check if current date matches start or end date
+      endcomment
+      if current_date == item3_start_date or current_date == item3_end_date
+        assign item3_is_current = true
+      endif
+    else
+      assign item3_display = item3_start_date
+      assign item3_final_start_date = ''
+      assign item3_final_end_date = item3_start_date
+      assign item3_has_range = false
+
+      comment
+        Check if current date matches start date
+      endcomment
+      if current_date == item3_start_date
+        assign item3_is_current = true
+      endif
+    endif
+  endif
+
+  comment
+    Determine heading date from last active item
+  endcomment
+
+  if item3_active
+    assign heading_start_date = item3_final_start_date
+    assign heading_end_date = item3_final_end_date
+    assign heading_has_range = item3_has_range
+  elsif item2_active
+    assign heading_start_date = item2_final_start_date
+    assign heading_end_date = item2_final_end_date
+    assign heading_has_range = item2_has_range
+  elsif item1_active
+    assign heading_start_date = item1_final_start_date
+    assign heading_end_date = item1_final_end_date
+    assign heading_has_range = item1_has_range
+  endif
+-%}
+
+{%- style -%}
+  .estimated-delivery-timeline-wrapper {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+  }
+
+  .estimated-delivery-timeline-heading {
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    line-height: 140%;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .estimated-delivery-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .estimated-delivery-timeline-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .estimated-delivery-timeline-item:first-of-type {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .estimated-delivery-timeline-item:last-of-type {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .estimated-delivery-timeline-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-muted-background);
+    color: var(--color-muted-foreground);
+    border-radius: calc(infinity * 1px);
+  }
+
+  .estimated-delivery-timeline-icon.is-current {
+    background-color: var(--color-primary-background);
+    color: var(--color-primary-foreground);
+  }
+
+  .estimated-delivery-timeline-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+
+  .estimated-delivery-timeline-content {
+    font-family: var(--font-body--family);
+    font-size: 0.75rem;
+    line-height: 140%;
+  }
+
+  .estimated-delivery-timeline-divider {
+    width: 1.5rem;
+    height: 1px;
+    background-color: var(--color-border);
+  }
+
+  @media (width >= 64rem) {
+    .estimated-delivery-timeline-heading {
+      font-size: 1.125rem;
+    }
+
+    .estimated-delivery-timeline-icon {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    .estimated-delivery-timeline-icon svg {
+      width: 1.5rem !important;
+      height: 1.5rem !important;
+    }
+
+    .estimated-delivery-timeline-content {
+      font-size: 0.875rem;
+    }
+
+    .estimated-delivery-timeline-divider {
+      width: 4rem;
+    }
+  }
+{%- endstyle -%}
+
+<div class="estimated-delivery-timeline-wrapper" {{ block.shopify_attributes }}>
+  {%- if block.settings.heading_label != blank and heading_end_date -%}
+    <h3 class="estimated-delivery-timeline-heading">
+      {%- if heading_has_range -%}
+        {{ heading_start_date }} - {{ heading_end_date }}
+        {{ block.settings.heading_label }}
+      {%- else -%}
+        {{ heading_end_date }}
+        {{ block.settings.heading_label }}
+      {%- endif -%}
+    </h3>
+  {%- endif -%}
+
+  <div class="estimated-delivery-timeline">
+    {%- if item1_active -%}
+      <div class="estimated-delivery-timeline-item">
+        <div class="estimated-delivery-timeline-icon{% if item1_is_current %} is-current{% endif %}">
+          {%- if block.settings.item1_icon != blank -%}
+            {% render 'icon', icon_mode: 'custom', icon_custom: block.settings.item1_icon %}
+          {%- else -%}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          {%- endif -%}
+        </div>
+        <div class="estimated-delivery-timeline-content">
+          <div class="estimated-delivery-timeline-date">{{- item1_display -}}</div>
+          <div class="estimated-delivery-timeline-title">{{- block.settings.item1_title -}}</div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if item1_active and item2_active -%}
+      <div class="estimated-delivery-timeline-divider"></div>
+    {%- endif -%}
+
+    {%- if item2_active -%}
+      <div class="estimated-delivery-timeline-item">
+        <div class="estimated-delivery-timeline-icon{% if item2_is_current %} is-current{% endif %}">
+          {%- if block.settings.item2_icon != blank -%}
+            {% render 'icon', icon_mode: 'custom', icon_custom: block.settings.item2_icon %}
+          {%- else -%}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          {%- endif -%}
+        </div>
+        <div class="estimated-delivery-timeline-content">
+          <div class="estimated-delivery-timeline-date">{{- item2_display -}}</div>
+          <div class="estimated-delivery-timeline-title">{{- block.settings.item2_title -}}</div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if item2_active and item3_active -%}
+      <div class="estimated-delivery-timeline-divider"></div>
+    {%- endif -%}
+
+    {%- if item3_active -%}
+      <div class="estimated-delivery-timeline-item">
+        <div class="estimated-delivery-timeline-icon{% if item3_is_current %} is-current{% endif %}">
+          {%- if block.settings.item3_icon != blank -%}
+            {% render 'icon', icon_mode: 'custom', icon_custom: block.settings.item3_icon %}
+          {%- else -%}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+          {%- endif -%}
+        </div>
+        <div class="estimated-delivery-timeline-content">
+          <div class="estimated-delivery-timeline-date">{{- item3_display -}}</div>
+          <div class="estimated-delivery-timeline-title">{{- block.settings.item3_title -}}</div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>

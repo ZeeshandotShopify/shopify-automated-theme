@@ -1,0 +1,306 @@
+{%- liquid
+  assign body_font = settings.body_font
+  assign heading_font = settings.heading_font
+  assign body_font_weight = body_font.weight | append: ''
+  assign heading_font_weight = heading_font.weight | append: ''
+
+  # Define all possible font weights to load
+  # Only load weights that you actually use in your theme to optimize performance
+  assign body_font_weights = '300,400,500,600,700' | split: ','
+  assign heading_font_weights = '400,500,600,700' | split: ','
+
+  # Create font variants for body font with error handling
+  assign body_font_variants = ''
+  for weight in body_font_weights
+    assign font_variant = body_font | font_modify: 'weight', weight
+    if font_variant != blank
+      assign body_font_variants = body_font_variants | append: weight | append: ','
+    endif
+  endfor
+
+  # Create font variants for heading font with error handling
+  assign heading_font_variants = ''
+  for weight in heading_font_weights
+    assign font_variant = heading_font | font_modify: 'weight', weight
+    if font_variant != blank
+      assign heading_font_variants = heading_font_variants | append: weight | append: ','
+    endif
+  endfor
+%}
+
+{% style %}
+  {%- comment -%}
+    Load font faces with all available weights
+    This ensures that when you apply font-weight in CSS, the actual font files are available
+
+    Performance Note: Each font weight adds ~15-30KB to page load.
+    Only load weights you actually use in your theme.
+  {%- endcomment -%}
+
+  {%- comment -%} Load base body font {%- endcomment -%}
+  {{ body_font | font_face: font_display: 'swap' }}
+
+  {%- comment -%} Load body font weight variants {%- endcomment -%}
+  {% for weight in body_font_weights %}
+    {% assign font_variant = body_font | font_modify: 'weight', weight %}
+    {% if font_variant != blank and weight != body_font_weight %}
+      {{ font_variant | font_face: font_display: 'swap' }}
+    {% endif %}
+  {% endfor %}
+
+  {%- comment -%} Load base heading font {%- endcomment -%}
+  {{ heading_font | font_face: font_display: 'swap' }}
+
+  {%- comment -%} Load heading font weight variants {%- endcomment -%}
+  {% for weight in heading_font_weights %}
+    {% assign font_variant = heading_font | font_modify: 'weight', weight %}
+    {% if font_variant != blank and weight != heading_font_weight %}
+      {{ font_variant | font_face: font_display: 'swap' }}
+    {% endif %}
+  {% endfor %}
+
+  :root {
+    /* Font Families */
+    --font-body--family: {{ body_font.family }}, {{ body_font.fallback_families }};
+    --font-body--weight: {{ body_font.weight }};
+    --font-body--style: {{ body_font.style }};
+
+    --font-heading--family: {{ heading_font.family }}, {{ heading_font.fallback_families }};
+    --font-heading--weight: {{ heading_font.weight }};
+    --font-heading--style: {{ heading_font.style }};
+
+    /* Button */
+    --button-font-family: var({{ settings.button_font_family }});
+    --button-font-weight: {{ settings.button_font_weight }};
+    --button-text-case: {{ settings.button_text_case }};
+
+    /* Page Layout */
+    --page-width: {{ settings.max_page_width }};
+    --page-padding: {{ settings.min_page_padding }}px;
+
+    /* Button */
+    --button-border-radius: {{ settings.button_border_radius }};
+
+    /* Primary Button */
+    --primary-button-border-thickness: {{ settings.primary_button_border_thickness }}px;
+
+    /* Secondary Button */
+    --secondary-button-border-thickness: {{ settings.secondary_button_border_thickness }}px;
+
+    /* Ghost Button */
+    --ghost-button-border-thickness: {{ settings.ghost_button_border_thickness }}px;
+
+    /* Image */
+    --image-border-thickness: {{ settings.image_border_thickness }}px;
+    --image-border-radius: {{ settings.image_border_radius }};
+
+    /* Input */
+    --input-border-thickness: {{ settings.input_border_thickness }}px;
+    --input-border-radius: {{ settings.input_border_radius }};
+
+    /* Accordion */
+    --accordion-border-thickness: {{ settings.accordion_border_thickness }}px;
+    --accordion-border-radius: {{ settings.accordion_border_radius }};
+
+    /* Toast
+       assets/toast.css falls back to the theme's original literals, so these
+       only ever move the toast when a merchant moves the setting. The anchor
+       block below turns the position choice into the four insets plus the
+       travel direction the enter/exit keyframes read. */
+    --toast-background-color: {{ settings.toast_background_color }};
+    --toast-foreground-color: {{ settings.toast_foreground_color }};
+    --toast-border-color: {{ settings.toast_border_color }};
+    --toast-border-thickness: {{ settings.toast_border_thickness }}px;
+    --toast-border-radius: {{ settings.toast_border_radius }}px;
+    --toast-accent-thickness: {{ settings.toast_accent_thickness }}px;
+    --toast-error-color: {{ settings.toast_error_color }};
+    --toast-success-color: {{ settings.toast_success_color }};
+    --toast-warning-color: {{ settings.toast_warning_color }};
+    --toast-info-color: {{ settings.toast_info_color }};
+    {%- comment -%} Unitless: assets/cart.js parseInt's this for its dismiss timer. {%- endcomment -%}
+    --toast-duration: {{ settings.toast_duration }};
+    {%- if settings.toast_shadow -%}
+      --toast-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    {%- else -%}
+      --toast-shadow: none;
+    {%- endif -%}
+    {%- case settings.toast_position -%}
+      {%- when 'bottom-center' -%}
+        --toast-top: auto;
+        --toast-bottom: 20px;
+        --toast-right: 0;
+        --toast-left: 0;
+        --toast-align: center;
+        --toast-enter-x: 0;
+        --toast-enter-y: 100%;
+      {%- when 'top-right' -%}
+        --toast-top: 20px;
+        --toast-bottom: auto;
+        --toast-right: 20px;
+        --toast-left: auto;
+        --toast-align: stretch;
+        --toast-enter-x: 100%;
+        --toast-enter-y: 0;
+      {%- when 'top-center' -%}
+        --toast-top: 20px;
+        --toast-bottom: auto;
+        --toast-right: 0;
+        --toast-left: 0;
+        --toast-align: center;
+        --toast-enter-x: 0;
+        --toast-enter-y: -100%;
+      {%- else -%}
+        --toast-top: auto;
+        --toast-bottom: 20px;
+        --toast-right: 20px;
+        --toast-left: auto;
+        --toast-align: stretch;
+        --toast-enter-x: 100%;
+        --toast-enter-y: 0;
+    {%- endcase -%}
+
+    /* Sheet Menu */
+    --sheet-menu-width: {{ settings.sheet_menu_width }};
+    --sheet-menu-border-thickness: {{ settings.sheet_menu_border_thickness }}px;
+
+    /* Pagination */
+    --pagination-nav-border-thickness: {{ settings.pagination_nav_border_thickness }}px;
+    --pagination-nav-border-radius: {{ settings.pagination_nav_border_radius }}px;
+
+    /* Dropdown */
+    --dropdown-trigger-border-thickness: {{ settings.dropdown_trigger_border_thickness }}px;
+    --dropdown-trigger-border-radius: {{ settings.dropdown_trigger_border_radius }}px;
+
+    /* Popover */
+    --popover-border-thickness: {{ settings.popover_border_thickness }}px;
+    --popover-border-radius: {{ settings.popover_border_radius }};
+
+    /* Article */
+    --article-border-thickness: {{ settings.article_border_thickness }}px;
+    --article-border-radius: {{ settings.article_border_radius }};
+
+    /* Colors */
+    --color-background: {{ settings.background_color }};
+
+    {% assign rgb = settings.background_color | color_to_rgb %}
+    --color-background-rgb: {{ rgb | remove: 'rgb(' | remove: ')' }};
+    --color-background-rgb-selection: {{ rgb | replace: 'rgb', 'rgba' | replace: ')', ', 0.3)' }};
+
+    --color-foreground: {{ settings.foreground_color }};
+    --color-foreground-rgb: {{ settings.foreground_color.red }},{{ settings.foreground_color.green }},{{ settings.foreground_color.blue }};
+
+    /* Header */
+    --color-header-background: {{ settings.header_background_color }};
+    --color-header-foreground: {{ settings.header_foreground_color }};
+
+    /* Primary */
+    --color-primary-background: {{ settings.primary_background_color }};
+    --color-primary-foreground: {{ settings.primary_foreground_color }};
+    --color-primary-hover-background: {{ settings.primary_hover_background_color }};
+    --color-primary-hover-foreground: {{ settings.primary_hover_foreground_color }};
+
+    /* Secondary */
+    --color-secondary-background: {{ settings.secondary_background_color }};
+    --color-secondary-foreground: {{ settings.secondary_foreground_color }};
+    --color-secondary-hover-background: {{ settings.secondary_hover_background_color }};
+    --color-secondary-hover-foreground: {{ settings.secondary_hover_foreground_color }};
+
+    /* Outline */
+    --color-outline-foreground: {{ settings.outline_foreground_color }};
+    --color-outline-hover-background: {{ settings.outline_hover_background_color }};
+    --color-outline-hover-foreground: {{ settings.outline_hover_foreground_color }};
+
+    /* Ghost */
+    --color-ghost-hover-background: {{ settings.ghost_hover_background_color }};
+    --color-ghost-hover-foreground: {{ settings.ghost_hover_foreground_color }};
+
+    /* Link */
+    --color-link-foreground: {{ settings.link_foreground_color }};
+    --color-link-hover-foreground: {{ settings.link_hover_foreground_color }};
+
+    /* Destructive */
+    --color-destructive-background: {{ settings.destructive_background_color }};
+    --color-destructive-foreground: {{ settings.destructive_foreground_color }};
+
+    /* Slider */
+    --color-progressbar-background: {{ settings.progressbar_background_color }};
+    --color-progressbar-fill: {{ settings.progressbar_fill_color }};
+
+    /* Accordion */
+    --color-accordion-background: {{ settings.accordion_background_color }};
+    --color-accordion-foreground: {{ settings.accordion_foreground_color }};
+
+    /* Dropdown */
+    --color-dropdown-trigger-background: {{ settings.dropdown_trigger_background_color }};
+    --color-dropdown-trigger-foreground: {{ settings.dropdown_trigger_foreground_color }};
+    --color-dropdown-trigger-hover-background: {{ settings.dropdown_trigger_hover_background_color }};
+    --color-dropdown-trigger-hover-foreground: {{ settings.dropdown_trigger_hover_foreground_color }};
+    --color-dropdown-trigger-border: {{ settings.dropdown_trigger_border_color }};
+
+    /* Pagination */
+    --color-pagination-nav-background: {{ settings.pagination_nav_background_color }};
+    --color-pagination-nav-foreground: {{ settings.pagination_nav_foreground_color }};
+    --color-pagination-nav-hover-background: {{ settings.pagination_nav_hover_background_color }};
+    --color-pagination-nav-hover-foreground: {{ settings.pagination_nav_hover_foreground_color }};
+
+    /* Start Rating */
+    --color-star-rating-foreground: {{ settings.star_rating_foreground_color }};
+
+    /* Accent */
+    --color-accent-background: {{ settings.accent_background_color }};
+    --color-accent-foreground: {{ settings.accent_foreground_color }};
+
+    /* Price */
+    --color-price-background: {{ settings.price_background_color }};
+    --color-price-foreground: {{ settings.price_foreground_color }};
+    --color-compare-at-price-foreground: {{ settings.compare_at_price_foreground_color }};
+
+    /* Quantity Selector */
+    --color-quantity-selector-background: {{ settings.quantity_selector_background_color }};
+    --color-quantity-selector-foreground: {{ settings.quantity_selector_foreground_color }};
+
+    /* Add To Cart */
+    --color-add-to-cart-background: {{ settings.add_to_cart_background_color }};
+    --color-add-to-cart-foreground: {{ settings.add_to_cart_foreground_color }};
+    --color-add-to-cart-hover-background: {{ settings.add_to_cart_hover_background_color }};
+    --color-add-to-cart-hover-foreground: {{ settings.add_to_cart_hover_foreground_color }};
+
+    /* Variant Selector */
+    --color-variant-background: {{ settings.variant_background_color }};
+    --color-variant-foreground: {{ settings.variant_foreground_color }};
+    --color-variant-hover-background: {{ settings.variant_hover_background_color }};
+    --color-variant-hover-foreground: {{ settings.variant_hover_foreground_color }};
+
+    /* Popover */
+    --color-popover-header-background: {{ settings.popover_header_background_color }};
+    --color-popover-header-foreground: {{ settings.popover_header_foreground_color }};
+    --color-popover-background: {{ settings.popover_background_color }};
+    --color-popover-foreground: {{ settings.popover_foreground_color }};
+    --color-popover-hover-background: {{ settings.popover_hover_background_color }};
+    --color-popover-hover-foreground: {{ settings.popover_hover_foreground_color }};
+
+    /* Free Shipping Bar */
+    --color-free-shipping-bar-fill: {{ settings.free_shipping_bar_fill_color }};
+    --color-free-shipping-bar-track: {{ settings.free_shipping_bar_track_color }};
+    --free-shipping-bar-thickness: {{ settings.free_shipping_bar_thickness }}px;
+
+    /* Checkout */
+    --color-checkout-background: {{ settings.checkout_background_color }};
+    --color-checkout-foreground: {{ settings.checkout_foreground_color }};
+    --color-checkout-hover-background: {{ settings.checkout_hover_background_color }};
+    --color-checkout-hover-foreground: {{ settings.checkout_hover_foreground_color }};
+
+    /* Muted */
+    --color-muted-background: {{ settings.muted_background_color }};
+    --color-muted-foreground: {{ settings.muted_foreground_color }};
+
+    /* Article */
+    --color-article-background: {{ settings.article_background_color }};
+    --color-article-foreground: {{ settings.article_foreground_color }};
+    --color-article-link-foreground: {{ settings.article_link_foreground_color }};
+
+    --color-border: {{ settings.border_color }};
+    --color-input: {{ settings.input_color }};
+    --color-ring: {{ settings.ring_color }};
+  }
+{% endstyle %}

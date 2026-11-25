@@ -1,0 +1,53 @@
+{%- liquid
+  assign id = id
+  assign link_text = text | default: 'Link Text'
+  assign link_url = url | default: '#'
+  assign text_color = text_color | default: 'inherit'
+  assign font_weight = font_weight | default: '400'
+  assign font_size = font_size | default: '0.875rem'
+  assign line_height = line_height | default: 'calc(1.25 / 0.875)'
+  assign text_transform = text_transform | default: 'none'
+-%}
+
+<style>
+  .link-{{ id }} {
+    --text-color: {{ text_color }};
+    --text-font-size: {{ font_size_value }};
+    --text-line-height: {{ line_height }};
+    --text-font-weight: {{ font_weight }};
+    --text-text-transform: {{ text_transform }};
+
+    display: inline-flex;
+    align-items: center;
+    text-decoration: underline;
+    color: var(--text-color);
+    font-size: var(--text-font-size);
+    line-height: var(--text-line-height);
+    font-weight: var(--text-font-weight);
+    text-transform: var(--text-text-transform);
+    transition: opacity 0.2s ease-in-out;
+    cursor: pointer;
+  }
+
+  .link:hover {
+    opacity: 0.8;
+  }
+
+  /*
+  .link:focus {
+    outline: 2px solid var(--color-ring, #3b82f6);
+    outline-offset: 2px;
+  }
+  */
+</style>
+
+<a
+  href="{{ link_url }}"
+  class="link-{{ id }}"
+  {% if link_url == blank or link_url == '#' %}
+    aria-disabled="true"
+  {% endif %}
+  {{ shopify_attributes }}
+>
+  {{ link_text }}
+</a>

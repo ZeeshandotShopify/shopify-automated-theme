@@ -1,0 +1,123 @@
+{% comment %}
+  product-details-table.liquid
+  Displays dynamic product details from a Metaobject reference list.
+{% endcomment %}
+
+{%- liquid
+  assign details_json = product.metafields.custom.details.value
+
+  assign show_section = false
+  if details_json != blank
+    assign show_section = true
+  elsif request.design_mode
+    assign show_section = true
+    assign is_placeholder = true
+  endif
+-%}
+
+{%- if show_section -%}
+  {% style %}
+    .pdp-details-metafield-wrapper {
+      padding-top: {{ block.settings.padding_top }}px;
+      padding-bottom: {{ block.settings.padding_bottom }}px;
+    }
+
+    .pdp-details-metafield {
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+
+    /* Header Styling */
+    .pdp-details-metafield-header {
+      background: var(--color-primary-background); /* Dark background per your image */
+      color: var(--color-primary-foreground);
+      padding: 0.5rem;
+      text-align: center;
+    }
+
+    .pdp-details-metafield-header h2 {
+      font-size: 1rem;
+      line-height: 140%;
+    }
+
+    /* Table/Row Styling */
+    .pdp-details-metafield-row {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      line-height: 140%;
+      border-bottom: 1px solid var(--color-border);
+      padding-block: 1.125rem;
+      padding-inline: 1.25rem;
+    }
+
+    .pdp-details-metafield-row:last-child {
+      border-bottom: none;
+    }
+
+    .pdp-details-metafield-label {
+      flex: 1;
+    }
+
+    .pdp-details-metafield-label p {
+      max-width: 7.75rem;
+    }
+
+    .pdp-details-metafield-separator {
+      margin: 0 15px;
+      color: var(--color-foreground);
+    }
+
+    .pdp-details-metafield-value {
+      flex: 1; /* Takes up remaining space */
+    }
+
+    .pdp-details-metafield-value p {
+      max-width: 7.75rem;
+      text-align: right;
+      margin-left: auto;
+    }
+  {% endstyle %}
+
+  <div class="pdp-details-metafield-wrapper" {{ block.shopify_attributes }}>
+    <div class="pdp-details-metafield">
+      {%- if block.settings.heading != blank -%}
+        <div class="pdp-details-metafield-header">
+          <h2>{{- block.settings.heading -}}</h2>
+        </div>
+      {%- endif -%}
+
+      <div class="pdp-details-metafield-table">
+        {%- if is_placeholder -%}
+          {%- for i in (1..7) -%}
+            <div class="pdp-details-metafield-row">
+              <div class="pdp-details-metafield-label">
+                <p>Label {{ i }}</p>
+              </div>
+
+              <div class="pdp-details-metafield-separator">|</div>
+
+              <div class="pdp-details-metafield-value">
+                <p>Value {{ i }}</p>
+              </div>
+            </div>
+          {%- endfor -%}
+        {%- else -%}
+          {%- for detail in details_json -%}
+            <div class="pdp-details-metafield-row">
+              <div class="pdp-details-metafield-label">
+                <p>{{- detail.label -}}</p>
+              </div>
+
+              <div class="pdp-details-metafield-separator">|</div>
+
+              <div class="pdp-details-metafield-value">
+                <p>{{- detail.value -}}</p>
+              </div>
+            </div>
+          {%- endfor -%}
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+{%- endif -%}

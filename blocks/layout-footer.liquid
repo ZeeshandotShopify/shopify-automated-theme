@@ -1,0 +1,102 @@
+{%- liquid
+  assign block_id = block.id
+-%}
+
+{%- style -%}
+  #layout-footer-{{ block_id }} {
+    display: none;
+  }
+
+  #layout-footer-{{ block_id }}:has(> *) {
+    display: block;
+    margin-top: 2rem;
+  }
+{%- endstyle -%}
+
+<div id="layout-footer-{{ block_id }}" {{ block.shopify_attributes }}>
+  {% content_for 'blocks' %}
+</div>
+
+{%- schema -%}
+{
+  "name": "Footer",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "accordion"
+    },
+    {
+      "type": "button"
+    },
+    {
+      "type": "contact-form"
+    },
+    {
+      "type": "custom-liquid"
+    },
+    {
+      "type": "dialog"
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "downloadable-attachment"
+    },
+    {
+      "type": "group"
+    },
+    {
+      "type": "highlight-text"
+    },
+    {
+      "type": "icon"
+    },
+    {
+      "type": "link"
+    },
+    {
+      "type": "contact-link"
+    },
+    {
+      "type": "logo"
+    },
+    {
+      "type": "media"
+    },
+    {
+      "type": "menu"
+    },
+    {
+      "type": "newsletter-form"
+    },
+    {
+      "type": "payment-type"
+    },
+    {
+      "type": "product-hotspots"
+    },
+    {
+      "type": "social-accounts"
+    },
+    {
+      "type": "text"
+    },
+    {
+      "type": "youtube-embed"
+    },
+    {
+      "type": "scrapbook-collage"
+    },
+    {
+      "type": "image-comparison-slider"
+    },
+    {
+      "type": "tabs"
+    }
+  ]
+}
+{%- endschema -%}

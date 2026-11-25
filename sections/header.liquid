@@ -1,0 +1,1991 @@
+{% comment %}
+  Header section with responsive layout using CSS Grid Template Areas
+  Desktop: Logo (Left) - Menu (Center) - Search, Account, Cart (Right)
+  Mobile: Hamburger, Search (Left) - Logo (Center) - Account, Cart (Right)
+{% endcomment %}
+
+{% liquid
+  assign logo_id = section.id
+  assign inverse = section.settings.inverse
+  assign size_type = section.settings.size_type
+  assign unit_desktop = section.settings.unit_desktop
+  assign percent_width_desktop = section.settings.percent_width_desktop
+  assign pixel_height_desktop = section.settings.pixel_height_desktop
+  assign unit_mobile = section.settings.unit_mobile
+  assign percent_width_mobile = section.settings.percent_width_mobile
+  assign pixel_height_mobile = section.settings.pixel_height_mobile
+  assign font_family = section.settings.font_family
+  assign padding_block_desktop = section.settings.padding_block_desktop
+  assign padding_block_mobile = section.settings.padding_block_mobile
+  assign shopify_attributes = section.shopify_attributes
+
+  # Icon settings
+  assign show_icon_labels = settings.show_header_icon_labels
+  assign hide_mobile_account = settings.hide_mobile_account_icon
+  assign hide_mobile_search = settings.hide_mobile_search_icon
+  assign custom_menu_icon = settings.custom_menu_icon
+  assign custom_search_icon = settings.custom_search_icon
+  assign custom_account_icon = settings.custom_account_icon
+  assign custom_cart_icon = settings.custom_cart_icon
+
+  # Logic to determine if transparency should be active
+  assign enable_transparency = false
+  if section.settings.enable_transparent_header and request.page_type == 'index'
+    assign enable_transparency = true
+    assign inverse = true
+  endif
+%}
+
+<style>
+  .header-wrapper {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 998;
+    width: 100%;
+  }
+
+  /* Ensure announcement bar or other header group sections stay above */
+  .shopify-section-group-header-group.shopify-section:not(.header-wrapper) {
+    position: relative;
+    z-index: 999;
+  }
+
+  /* But keep the main header at the right level */
+  .shopify-section-group-header-group.header-wrapper {
+    z-index: 998;
+  }
+
+  .header {
+    position: relative;
+    color: var(--color-header-foreground);
+
+    {%- if enable_transparency -%}
+      /* Remove direct background - will use ::before for animation */
+      background: transparent;
+    {%- else -%}
+      background: var(--color-header-background);
+    {%- endif -%}
+
+    {% if section.settings.header_border == true %}
+      border-bottom: 1px solid var(--color-border);
+    {% endif %}
+  }
+
+  /* Ensure all direct children of header are above ::before */
+  .header > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* --- FIRST SECTION OVERLAP WHEN TRANSPARENT --- */
+  {%- if enable_transparency -%}
+    /* Pull the first section up behind the transparent header */
+    main > .shopify-section:first-child {
+      margin-top: calc(var(--header-height, 60px) * -1);
+    }
+  {%- endif -%}
+
+  /* --- ANIMATED BACKGROUND USING ::BEFORE --- */
+  {%- if enable_transparency -%}
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--color-header-background, #ffffff);
+      transform: translateY(-100%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+      pointer-events: none;
+    }
+  {%- endif -%}
+
+  /* When header is NOT transparent (scrolled or hovered), slide background down */
+  .header:not(.header--transparent)::before {
+    transform: translateY(0);
+  }
+
+  /* --- TRANSPARENT HEADER STYLES --- */
+
+  /* Active state: Homepage + Top of page */
+  .header.header--transparent {
+    /* Override CSS variables for text/icons to be white */
+    --color-header-foreground: #ffffff;
+  }
+
+  /* Text and icon color transitions */
+  .header__icon-button,
+  .header__logo,
+  .header__menu {
+    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Grid Container - Mobile First */
+  .header__grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    align-items: center;
+    padding-block: {{ padding_block_mobile }}px;
+    padding-inline: 1rem;
+    {% comment %} column-gap: 1.5rem; {% endcomment %}
+    gap: 0.75rem;
+    grid-template-columns: auto auto 1fr auto auto;
+    grid-template-areas:
+      "mobile-menu search logo account cart";
+  }
+
+  .header__mobile-menu,
+  .header__logo,
+  .header__search,
+  .header__account,
+  .header__cart {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Ensure any custom content/blocks added to header are above ::before */
+  .shopify-page-width {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Individual Grid Items */
+  .header__logo {
+    grid-area: logo;
+    text-decoration: none;
+    justify-self: center;
+    text-align: center;
+  }
+
+  /* Logo Switching Logic */
+  .header__logo--regular,
+  .header__logo--inverse {
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Show regular logo by default */
+  .header__logo--regular {
+    display: block;
+  }
+
+  .header__logo--inverse {
+    display: none;
+  }
+
+  /* When transparent header is active, show inverse logo */
+  .header--transparent .header__logo--regular {
+    display: none;
+  }
+
+  .header--transparent .header__logo--inverse {
+    display: block;
+  }
+
+  .header__menu {
+    height: 100%;
+    grid-area: menu;
+    display: none;
+    align-items: center;
+    justify-self: center;
+  }
+
+  .header__mobile-menu {
+    grid-area: mobile-menu;
+  }
+
+  .header__localization {
+    grid-area: localization;
+    display: none;
+  }
+
+  .header__search {
+    grid-area: search;
+  }
+
+  .header__account {
+    grid-area: account;
+    justify-self: end;
+  }
+
+  /* Hide account icon on mobile if setting is enabled */
+  {% if hide_mobile_account %}
+    @media (width < 64rem) {
+      .header__account {
+        visibility: hidden;
+        pointer-events: none;
+      }
+    }
+  {% endif %}
+
+  /* Hide search icon on mobile if setting is enabled */
+  {% if hide_mobile_search %}
+    @media (width < 64rem) {
+      .header__search dialog-trigger {
+        visibility: hidden;
+        pointer-events: none;
+      }
+    }
+  {% endif %}
+
+  .header__cart {
+    grid-area: cart;
+    justify-self: end;
+  }
+
+  /* Icon Buttons */
+  .header__icon-button {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .header__icon-button:hover {
+    opacity: 0.8;
+  }
+
+  .header__icon-button svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .header__icon-button svg[fill]:not([fill="none"]),
+  .header__icon-button svg [fill]:not([fill="none"]) {
+    fill: currentColor;
+  }
+
+  .header__icon-button svg[stroke]:not([stroke="none"]),
+  .header__icon-button svg [stroke]:not([stroke="none"]) {
+    stroke: currentColor;
+  }
+
+  .header__icon-button span {
+    font-size: 0.5rem;
+    line-height: 100%;
+    font-weight: 500;
+  }
+
+  .header__cart-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #000;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+  }
+
+  /* Desktop Layout - Reposition Elements */
+  @media (width >= 64rem) {
+    .header__grid {
+      padding-block: {{ padding_block_desktop }}px;
+      padding-inline: 4rem;
+      grid-template-columns: auto 1fr auto auto auto auto;
+      grid-template-areas:
+        "logo menu localization search account cart";
+    }
+
+    .header__localization {
+      display: flex;
+      align-items: center;
+    }
+
+    .header__logo {
+      justify-self: start;
+    }
+
+    .header__menu {
+      display: flex;
+    }
+
+    .header__mobile-menu {
+      display: none;
+    }
+
+    .header__localization,
+    .header__search {
+      justify-self: end;
+    }
+  }
+</style>
+
+<div
+  class="header {% if enable_transparency %}header--transparent{% endif %}"
+  data-transparent="{{ enable_transparency }}"
+>
+  <div class="shopify-page-width shopify-page-padding">
+    <div class="header__grid">
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'logo' -%}
+            <a href="{{ routes.root_url }}" class="header__logo">
+              {% comment %} Regular Logo (shown by default and when scrolled) {% endcomment %}
+              <div class="header__logo--regular">
+                {% render 'logo',
+                  id: logo_id,
+                  inverse: false,
+                  size_type: size_type,
+                  unit_desktop: unit_desktop,
+                  percent_width_desktop: percent_width_desktop,
+                  pixel_height_desktop: pixel_height_desktop,
+                  unit_mobile: unit_mobile,
+                  percent_width_mobile: percent_width_mobile,
+                  pixel_height_mobile: pixel_height_mobile,
+                  font_family: font_family,
+                  shopify_attributes: shopify_attributes
+                %}
+              </div>
+
+              {% comment %} Inverse Logo (shown when transparent header is active) {% endcomment %}
+              <div class="header__logo--inverse">
+                {% render 'logo',
+                  id: logo_id,
+                  inverse: true,
+                  size_type: size_type,
+                  unit_desktop: unit_desktop,
+                  percent_width_desktop: percent_width_desktop,
+                  pixel_height_desktop: pixel_height_desktop,
+                  unit_mobile: unit_mobile,
+                  percent_width_mobile: percent_width_mobile,
+                  pixel_height_mobile: pixel_height_mobile,
+                  font_family: font_family,
+                  shopify_attributes: shopify_attributes
+                %}
+              </div>
+            </a>
+
+          {%- when 'menu' -%}
+            <div class="header__menu">
+              {% render 'header-desktop-menu', block: block %}
+            </div>
+
+          {%- when 'localization' -%}
+            {%- if block.settings.show_localization and localization.available_countries.size > 1 -%}
+              <div class="header__localization">
+                {% render 'localization-selector',
+                  show_country_flag: block.settings.show_country_flag,
+                  show_country_name: block.settings.show_country_name
+                %}
+              </div>
+            {%- endif -%}
+
+          {%- when 'mobile_menu' -%}
+            {% assign localization_block = section.blocks | where: 'type', 'localization' | first %}
+            <div class="header__mobile-menu">
+              {% render 'header-mobile-menu',
+                block: block,
+                localization_block: localization_block,
+                inverse: inverse,
+                size_type: size_type,
+                unit_desktop: unit_desktop,
+                percent_width_desktop: percent_width_desktop,
+                pixel_height_desktop: pixel_height_desktop,
+                unit_mobile: unit_mobile,
+                percent_width_mobile: percent_width_mobile,
+                pixel_height_mobile: pixel_height_mobile,
+                font_family: font_family,
+                show_icon_labels: show_icon_labels,
+                custom_menu_icon: custom_menu_icon
+              %}
+            </div>
+
+          {%- when 'search' -%}
+            <div class="header__search">
+              {% render 'header-search', show_icon_labels: show_icon_labels, custom_search_icon: custom_search_icon %}
+            </div>
+
+          {%- when 'account' -%}
+            <div class="header__account">
+              <a href="{{ routes.account_url }}" class="header__icon-button" aria-label="Account">
+                {%- if custom_account_icon != blank -%}
+                  {{- custom_account_icon -}}
+                {%- else -%}
+                  {{ 'profile.svg' | inline_asset_content }}
+                {%- endif -%}
+
+                {%- if show_icon_labels -%}
+                  <span>Account</span>
+                {%- endif -%}
+              </a>
+            </div>
+
+          {%- when 'cart' -%}
+            <div class="header__cart">
+              {% render 'cart', show_icon_labels: show_icon_labels, custom_cart_icon: custom_cart_icon %}
+            </div>
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const header = document.querySelector('.header');
+
+    // Only run logic if transparency is enabled in settings AND we are on homepage
+    if (header && header.dataset.transparent === 'true') {
+      const handleScroll = () => {
+        const scrollPosition = window.scrollY;
+        const threshold = 10; // Pixels to scroll before switching style
+
+        if (scrollPosition > threshold) {
+          // User has scrolled down: Remove transparent effect (return to sticky/white)
+          // This will automatically switch to regular logo and slide background down
+          header.classList.remove('header--transparent');
+        } else {
+          // User is at top: Add transparent effect
+          // This will automatically switch to inverse logo and hide background
+          header.classList.add('header--transparent');
+        }
+      };
+
+      // Handle hover interaction - remove transparency on hover
+      header.addEventListener('mouseenter', () => {
+        // Only remove transparency if we're at the top of the page
+        if (window.scrollY <= 10) {
+          header.classList.remove('header--transparent');
+        }
+      });
+
+      // Restore transparency when mouse leaves (only if at top)
+      header.addEventListener('mouseleave', () => {
+        if (window.scrollY <= 10) {
+          header.classList.add('header--transparent');
+        }
+      });
+
+      // Attach scroll listener
+      window.addEventListener('scroll', handleScroll, { passive: true });
+
+      // Trigger once on load to set initial state correctly
+      handleScroll();
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "t:section.header.name",
+  "tag": "header",
+  "class": "header-wrapper",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable_transparent_header",
+      "label": "Enable Transparent Header",
+      "default": true,
+      "info": "This will enable only on the homepage. Ensure that you have a Slideshow, Video background, or Image Banner as the first section."
+    },
+    {
+      "type": "checkbox",
+      "id": "header_border",
+      "label": "t:colors.border.label",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_block_desktop",
+      "label": "Padding Block Desktop",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_block_mobile",
+      "label": "Padding Block Mobile",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "t:logo.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "inverse",
+      "label": "t:use_inverse_logo.label",
+      "default": false,
+      "visible_if": "{{ settings.logo_inverse }}"
+    },
+    {
+      "type": "select",
+      "id": "font_family",
+      "label": "t:typography.font_family.label",
+      "options": [
+        {
+          "value": "var(--font-body--family)",
+          "label": "t:typography.font_family.options.body"
+        },
+        {
+          "value": "var(--font-heading--family)",
+          "label": "t:typography.font_family.options.heading"
+        }
+      ],
+      "default": "var(--font-heading--family)",
+      "visible_if": "{{ settings.logo == blank and settings.logo_inverse == blank or section.settings.inverse == false }}"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:edit_logo_in_theme_settings.content"
+    },
+    {
+      "type": "select",
+      "id": "size_type",
+      "label": "t:size_type.label",
+      "options": [
+        {
+          "value": "custom",
+          "label": "t:size_type.options.custom"
+        },
+        {
+          "value": "adapt",
+          "label": "t:size_type.options.adapt"
+        }
+      ],
+      "default": "adapt"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content",
+      "visible_if": "{{ section.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "unit_desktop",
+      "label": "t:unit.label",
+      "options": [
+        {
+          "value": "px",
+          "label": "t:unit.options.px"
+        },
+        {
+          "value": "percent",
+          "label": "t:unit.options.percent"
+        }
+      ],
+      "default": "px",
+      "visible_if": "{{ section.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "percent_width_desktop",
+      "label": "t:size.width.label",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100,
+      "visible_if": "{{ section.settings.unit_desktop == 'percent' and section.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "pixel_height_desktop",
+      "label": "t:size.height.label",
+      "min": 16,
+      "max": 320,
+      "step": 8,
+      "unit": "px",
+      "default": 32,
+      "visible_if": "{{ section.settings.unit_desktop == 'px' and section.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content",
+      "visible_if": "{{ section.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "unit_mobile",
+      "label": "t:unit.label",
+      "options": [
+        {
+          "value": "px",
+          "label": "t:unit.options.px"
+        },
+        {
+          "value": "percent",
+          "label": "t:unit.options.percent"
+        }
+      ],
+      "default": "px",
+      "visible_if": "{{ section.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "percent_width_mobile",
+      "label": "t:size.width.label",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100,
+      "visible_if": "{{ section.settings.unit_mobile == 'percent' and section.settings.size_type == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "pixel_height_mobile",
+      "label": "t:size.height.label",
+      "min": 16,
+      "max": 320,
+      "step": 8,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.unit_mobile == 'px' and section.settings.size_type == 'custom' }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "logo",
+      "name": "t:block.header.logo.name",
+      "limit": 1
+    },
+    {
+      "type": "menu",
+      "name": "t:block.header.desktop_menu.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "menu_type",
+          "label": "Menu Type",
+          "options": [
+            { "value": "dropdown", "label": "Dropdown" },
+            { "value": "mega_menu", "label": "Mega Menu" }
+          ],
+          "default": "dropdown"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "t:menu.label",
+          "default": "main-menu"
+        },
+        {
+          "type": "select",
+          "id": "mega_menu_sublink_style",
+          "label": "Sublink Style",
+          "options": [
+            { "value": "default", "label": "Default" },
+            { "value": "accordion", "label": "Accordion" }
+          ],
+          "default": "default",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "mega_menu_accordion_menus",
+          "label": "Accordion Menus",
+          "info": "Comma-separated top-level menu names (e.g., 'Brands, Women'). Leave blank to apply to all.",
+          "visible_if": "{{ block.settings.mega_menu_sublink_style == 'accordion' and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "header",
+          "content": "Promotions",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_content_position",
+          "label": "Content Position",
+          "info": "Position of heading and button overlay on all promotions.",
+          "options": [
+            { "value": "top-left", "label": "Top Left" },
+            { "value": "top-center", "label": "Top Center" },
+            { "value": "top-right", "label": "Top Right" },
+            { "value": "center", "label": "Center" },
+            { "value": "bottom-left", "label": "Bottom Left" },
+            { "value": "bottom-center", "label": "Bottom Center" },
+            { "value": "bottom-right", "label": "Bottom Right" }
+          ],
+          "default": "bottom-left",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "color",
+          "id": "promotion_overlay_color",
+          "label": "Overlay Color",
+          "default": "#000000",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "range",
+          "id": "promotion_overlay_opacity",
+          "label": "Overlay Opacity",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "default": 0,
+          "unit": "%",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "header",
+          "content": "Promotion 1",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_1_target_link",
+          "label": "Position",
+          "info": "Enter the exact menu link name (e.g., 'Women', 'New Arrivals')",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "image_picker",
+          "id": "promotion_1_image",
+          "label": "Image",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_1_object_fit",
+          "label": "Object Fit",
+          "options": [
+            { "value": "cover", "label": "Cover" },
+            { "value": "contain", "label": "Contain" },
+            { "value": "fill", "label": "Fill" }
+          ],
+          "default": "cover",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_1_desktop_aspect_ratio",
+          "label": "Aspect Ratio",
+          "options": [
+            { "value": "unset", "label": "t:aspect_ratio.options.unset" },
+            { "value": "auto", "label": "t:aspect_ratio.options.adapt" },
+            { "value": "16 / 9", "label": "16:9" },
+            { "value": "4 / 3", "label": "4:3" },
+            { "value": "1 / 1", "label": "1:1" },
+            { "value": "9 / 16", "label": "9:16" },
+            { "value": "21 / 9", "label": "21:9" }
+          ],
+          "default": "unset",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "promotion_1_desktop_enable_custom_dimension",
+          "label": "Enable Custom Dimension",
+          "default": false,
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_1_desktop_custom_width",
+          "label": "Custom Width",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_1_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_1_desktop_custom_height",
+          "label": "Custom Height",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_1_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_1_heading",
+          "label": "Heading",
+          "default": "Collection",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_1_button_label",
+          "label": "Button Label",
+          "default": "Shop Now",
+          "info": "Leave the label blank to hide the text button.",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "url",
+          "id": "promotion_1_button_link",
+          "label": "Button Link",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "header",
+          "content": "Promotion 2",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_2_target_link",
+          "label": "Position",
+          "info": "Enter the exact menu link name (e.g., 'Women', 'New Arrivals')",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "image_picker",
+          "id": "promotion_2_image",
+          "label": "Image",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_2_object_fit",
+          "label": "Object Fit",
+          "options": [
+            { "value": "cover", "label": "Cover" },
+            { "value": "contain", "label": "Contain" },
+            { "value": "fill", "label": "Fill" }
+          ],
+          "default": "cover",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_2_desktop_aspect_ratio",
+          "label": "Aspect Ratio",
+          "options": [
+            { "value": "unset", "label": "t:aspect_ratio.options.unset" },
+            { "value": "auto", "label": "t:aspect_ratio.options.adapt" },
+            { "value": "16 / 9", "label": "16:9" },
+            { "value": "4 / 3", "label": "4:3" },
+            { "value": "1 / 1", "label": "1:1" },
+            { "value": "9 / 16", "label": "9:16" },
+            { "value": "21 / 9", "label": "21:9" }
+          ],
+          "default": "unset",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "promotion_2_desktop_enable_custom_dimension",
+          "label": "Enable Custom Dimension",
+          "default": false,
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_2_desktop_custom_width",
+          "label": "Custom Width",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_2_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_2_desktop_custom_height",
+          "label": "Custom Height",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_2_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_2_heading",
+          "label": "Heading",
+          "default": "Collection",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_2_button_label",
+          "label": "Button Label",
+          "default": "Shop Now",
+          "info": "Leave the label blank to hide the text button.",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "url",
+          "id": "promotion_2_button_link",
+          "label": "Button Link",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "header",
+          "content": "Promotion 3",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_3_target_link",
+          "label": "Position",
+          "info": "Enter the exact menu link name (e.g., 'Women', 'New Arrivals')",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "image_picker",
+          "id": "promotion_3_image",
+          "label": "Image",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_3_object_fit",
+          "label": "Object Fit",
+          "options": [
+            { "value": "cover", "label": "Cover" },
+            { "value": "contain", "label": "Contain" },
+            { "value": "fill", "label": "Fill" }
+          ],
+          "default": "cover",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_3_desktop_aspect_ratio",
+          "label": "Aspect Ratio",
+          "options": [
+            { "value": "unset", "label": "t:aspect_ratio.options.unset" },
+            { "value": "auto", "label": "t:aspect_ratio.options.adapt" },
+            { "value": "16 / 9", "label": "16:9" },
+            { "value": "4 / 3", "label": "4:3" },
+            { "value": "1 / 1", "label": "1:1" },
+            { "value": "9 / 16", "label": "9:16" },
+            { "value": "21 / 9", "label": "21:9" }
+          ],
+          "default": "unset",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "promotion_3_desktop_enable_custom_dimension",
+          "label": "Enable Custom Dimension",
+          "default": false,
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_3_desktop_custom_width",
+          "label": "Custom Width",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_3_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_3_desktop_custom_height",
+          "label": "Custom Height",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_3_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_3_heading",
+          "label": "Heading",
+          "default": "Collection",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_3_button_label",
+          "label": "Button Label",
+          "default": "Shop Now",
+          "info": "Leave the label blank to hide the text button.",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "url",
+          "id": "promotion_3_button_link",
+          "label": "Button Link",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "header",
+          "content": "Promotion 4",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_4_target_link",
+          "label": "Position",
+          "info": "Enter the exact menu link name (e.g., 'Women', 'New Arrivals')",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "image_picker",
+          "id": "promotion_4_image",
+          "label": "Image",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_4_object_fit",
+          "label": "Object Fit",
+          "options": [
+            { "value": "cover", "label": "Cover" },
+            { "value": "contain", "label": "Contain" },
+            { "value": "fill", "label": "Fill" }
+          ],
+          "default": "cover",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_4_desktop_aspect_ratio",
+          "label": "Aspect Ratio",
+          "options": [
+            { "value": "unset", "label": "t:aspect_ratio.options.unset" },
+            { "value": "auto", "label": "t:aspect_ratio.options.adapt" },
+            { "value": "16 / 9", "label": "16:9" },
+            { "value": "4 / 3", "label": "4:3" },
+            { "value": "1 / 1", "label": "1:1" },
+            { "value": "9 / 16", "label": "9:16" },
+            { "value": "21 / 9", "label": "21:9" }
+          ],
+          "default": "unset",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "promotion_4_desktop_enable_custom_dimension",
+          "label": "Enable Custom Dimension",
+          "default": false,
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_4_desktop_custom_width",
+          "label": "Custom Width",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_4_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_4_desktop_custom_height",
+          "label": "Custom Height",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_4_desktop_enable_custom_dimension and block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_4_heading",
+          "label": "Heading",
+          "default": "Collection",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_4_button_label",
+          "label": "Button Label",
+          "default": "Shop Now",
+          "info": "Leave the label blank to hide the text button.",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        },
+        {
+          "type": "url",
+          "id": "promotion_4_button_link",
+          "label": "Button Link",
+          "visible_if": "{{ block.settings.menu_type == 'mega_menu' }}"
+        }
+      ]
+    },
+    {
+      "type": "mobile_menu",
+      "name": "t:block.header.mobile_menu.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "menu_type",
+          "label": "Menu Type",
+          "options": [
+            { "value": "accordion", "label": "Accordion" },
+            { "value": "panel", "label": "Panel" }
+          ],
+          "default": "accordion"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "t:menu.label",
+          "default": "main-menu"
+        },
+        {
+          "type": "product_list",
+          "id": "product_list",
+          "label": "t:product_list.label",
+          "limit": 4
+        },
+        {
+          "type": "link_list",
+          "id": "secondary_menu",
+          "label": "t:secondary_menu.label",
+          "default": "main-menu"
+        },
+        {
+          "type": "header",
+          "content": "Nav Item Appearance"
+        },
+        {
+          "type": "text",
+          "id": "nav_item_font_size",
+          "label": "Font Size",
+          "default": "1.25rem"
+        },
+        {
+          "type": "text",
+          "id": "nav_item_line_height",
+          "label": "Line Height",
+          "default": "1.75rem"
+        },
+        {
+          "type": "select",
+          "id": "nav_item_font_weight",
+          "label": "Font Weight",
+          "options": [
+            { "value": "100", "label": "100" },
+            { "value": "200", "label": "200" },
+            { "value": "300", "label": "300" },
+            { "value": "400", "label": "400" },
+            { "value": "500", "label": "500" },
+            { "value": "600", "label": "600" },
+            { "value": "700", "label": "700" },
+            { "value": "800", "label": "800" },
+            { "value": "900", "label": "900" }
+          ],
+          "default": "500"
+        },
+        {
+          "type": "range",
+          "id": "nav_item_padding_y",
+          "label": "Padding Y",
+          "min": 0,
+          "max": 48,
+          "step": 2,
+          "default": 12,
+          "unit": "px"
+        },
+        {
+          "type": "range",
+          "id": "nav_item_padding_x",
+          "label": "Padding X",
+          "min": 0,
+          "max": 48,
+          "step": 2,
+          "default": 16,
+          "unit": "px"
+        },
+        {
+          "type": "select",
+          "id": "nav_item_style_mode",
+          "label": "Style Mode",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "Inherit"
+            },
+            {
+              "value": "custom",
+              "label": "Custom"
+            }
+          ],
+          "default": "inherit"
+        },
+        {
+          "type": "color",
+          "id": "nav_item_background_color",
+          "label": "t:colors.background_color.label",
+          "default": "#ffffff",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "nav_item_foreground_color",
+          "label": "t:colors.foreground_color.label",
+          "default": "#000000",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "header",
+          "content": "t:border.content",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "color",
+          "id": "border_color",
+          "default": "#E5E7EB",
+          "label": "t:colors.border.label",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "range",
+          "id": "border_top_thickness",
+          "label": "t:size.border_thickness.top.label",
+          "min": 0,
+          "max": 8,
+          "step": 1,
+          "default": 0,
+          "unit": "px",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "range",
+          "id": "border_bottom_thickness",
+          "label": "t:size.border_thickness.bottom.label",
+          "min": 0,
+          "max": 8,
+          "step": 1,
+          "default": 0,
+          "unit": "px",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "range",
+          "id": "border_left_thickness",
+          "label": "t:size.border_thickness.left.label",
+          "min": 0,
+          "max": 8,
+          "step": 1,
+          "default": 0,
+          "unit": "px",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "range",
+          "id": "border_right_thickness",
+          "label": "t:size.border_thickness.right.label",
+          "min": 0,
+          "max": 8,
+          "step": 1,
+          "default": 0,
+          "unit": "px",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "border_radius",
+          "label": "t:size.border_radius.label",
+          "options": [
+            {
+              "value": "0",
+              "label": "t:size.options.border_radius.0"
+            },
+            {
+              "value": "0.125rem",
+              "label": "t:size.options.border_radius.2"
+            },
+            {
+              "value": "0.25rem",
+              "label": "t:size.options.border_radius.4"
+            },
+            {
+              "value": "0.375rem",
+              "label": "t:size.options.border_radius.6"
+            },
+            {
+              "value": "0.5rem",
+              "label": "t:size.options.border_radius.8"
+            },
+            {
+              "value": "0.75rem",
+              "label": "t:size.options.border_radius.12"
+            },
+            {
+              "value": "1rem",
+              "label": "t:size.options.border_radius.16"
+            },
+            {
+              "value": "1.5rem",
+              "label": "t:size.options.border_radius.24"
+            },
+            {
+              "value": "9999px",
+              "label": "t:size.options.border_radius.9999"
+            }
+          ],
+          "default": "0",
+          "visible_if": "{{ block.settings.nav_item_style_mode == 'custom' }}"
+        },
+        {
+          "type": "header",
+          "content": "Promotion"
+        },
+        {
+          "type": "image_picker",
+          "id": "promotion_image",
+          "label": "Image"
+        },
+        {
+          "type": "select",
+          "id": "promotion_object_fit",
+          "label": "Object Fit",
+          "options": [
+            { "value": "cover", "label": "Cover" },
+            { "value": "contain", "label": "Contain" },
+            { "value": "fill", "label": "Fill" }
+          ],
+          "default": "cover"
+        },
+        {
+          "type": "select",
+          "id": "promotion_mobile_aspect_ratio",
+          "label": "Aspect Ratio",
+          "options": [
+            { "value": "unset", "label": "t:aspect_ratio.options.unset" },
+            { "value": "auto", "label": "t:aspect_ratio.options.adapt" },
+            { "value": "16 / 9", "label": "16:9" },
+            { "value": "4 / 3", "label": "4:3" },
+            { "value": "1 / 1", "label": "1:1" },
+            { "value": "9 / 16", "label": "9:16" },
+            { "value": "21 / 9", "label": "21:9" }
+          ],
+          "default": "1 / 1"
+        },
+        {
+          "type": "checkbox",
+          "id": "promotion_mobile_enable_custom_dimension",
+          "label": "Enable Custom Dimension",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "promotion_mobile_custom_width",
+          "label": "Custom Width",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_mobile_enable_custom_dimension }}"
+        },
+        {
+          "type": "text",
+          "id": "promotion_mobile_custom_height",
+          "label": "Custom Height",
+          "default": "100%",
+          "visible_if": "{{ block.settings.promotion_mobile_enable_custom_dimension }}"
+        },
+        {
+          "type": "select",
+          "id": "promotion_content_position",
+          "label": "Content Position",
+          "info": "Position of heading and button overlay on promotion.",
+          "options": [
+            { "value": "top-left", "label": "Top Left" },
+            { "value": "top-center", "label": "Top Center" },
+            { "value": "top-right", "label": "Top Right" },
+            { "value": "center", "label": "Center" },
+            { "value": "bottom-left", "label": "Bottom Left" },
+            { "value": "bottom-center", "label": "Bottom Center" },
+            { "value": "bottom-right", "label": "Bottom Right" }
+          ],
+          "default": "bottom-left"
+        },
+        {
+          "type": "text",
+          "id": "promotion_heading",
+          "label": "Heading",
+          "default": "Collection"
+        },
+        {
+          "type": "text",
+          "id": "promotion_button_label",
+          "label": "Button Label",
+          "default": "Shop Now",
+          "info": "Leave the label blank to hide the text button."
+        },
+        {
+          "type": "url",
+          "id": "promotion_button_link",
+          "label": "Button Link"
+        },
+        {
+          "type": "color",
+          "id": "promotion_overlay_color",
+          "label": "Overlay Color",
+          "default": "#000000"
+        },
+        {
+          "type": "range",
+          "id": "promotion_overlay_opacity",
+          "label": "Overlay Opacity",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "default": 0,
+          "unit": "%"
+        },
+        {
+          "type": "header",
+          "content": "Mobile Menu Footer"
+        },
+        {
+          "type": "range",
+          "id": "rows",
+          "label": "t:layout.rows.label",
+          "min": 0,
+          "max": 4,
+          "step": 1,
+          "default": 3
+        },
+        {
+          "type": "select",
+          "id": "icon_mode",
+          "label": "t:icon_mode.label",
+          "options": [
+            {
+              "value": "select",
+              "label": "t:icon_mode.options.select"
+            },
+            {
+              "value": "custom",
+              "label": "t:icon_mode.options.custom"
+            }
+          ],
+          "default": "select",
+          "visible_if": "{{ block.settings.rows > 0 }}"
+        },
+        {
+          "type": "header",
+          "content": "Icon With Text 1",
+          "visible_if": "{{ block.settings.rows > 0 }}"
+        },
+        {
+          "type": "select",
+          "id": "icon_select_1",
+          "label": "t:icon.label",
+          "options": [
+            {
+              "value": "arrow-right",
+              "label": "Arrow Right"
+            },
+            {
+              "value": "arrow-down",
+              "label": "Arrow Down"
+            },
+            {
+              "value": "arrow-left-long",
+              "label": "Arrow Left Long"
+            },
+            {
+              "value": "arrow-right-long",
+              "label": "Arrow Right Long"
+            },
+            {
+              "value": "arrow-up-long",
+              "label": "Arrow Up Long"
+            },
+            {
+              "value": "arrow-down-long",
+              "label": "Arrow Down Long"
+            },
+            {
+              "value": "arrow-right-up-long",
+              "label": "Arrow Right Up Long"
+            },
+            {
+              "value": "plus",
+              "label": "Plus"
+            },
+            {
+              "value": "minus",
+              "label": "Minus"
+            },
+            {
+              "value": "check",
+              "label": "Check"
+            },
+            {
+              "value": "close",
+              "label": "Close"
+            },
+            {
+              "value": "menu",
+              "label": "Menu"
+            },
+            {
+              "value": "search",
+              "label": "Search"
+            },
+            {
+              "value": "copy",
+              "label": "Copy"
+            },
+            {
+              "value": "download",
+              "label": "Download"
+            },
+            {
+              "value": "upload",
+              "label": "Upload"
+            },
+            {
+              "value": "share",
+              "label": "Share"
+            },
+            {
+              "value": "gear",
+              "label": "Gear"
+            },
+            {
+              "value": "filter",
+              "label": "Filter"
+            },
+            {
+              "value": "edit",
+              "label": "Edit"
+            },
+            {
+              "value": "trash",
+              "label": "Trash"
+            },
+            {
+              "value": "cart",
+              "label": "Cart"
+            },
+            {
+              "value": "bag",
+              "label": "Bag"
+            },
+            {
+              "value": "lock",
+              "label": "Lock"
+            }
+          ],
+          "visible_if": "{{ block.settings.icon_mode == 'select' and block.settings.rows > 0 }}"
+        },
+        {
+          "type": "html",
+          "id": "icon_svg_1",
+          "label": "t:icon.label",
+          "info": "Paste SVG code here",
+          "visible_if": "{{ block.settings.icon_mode == 'custom' and block.settings.rows > 0 }}"
+        },
+        {
+          "type": "text",
+          "id": "text_1",
+          "label": "t:text.label",
+          "default": "Additional text along the icon.",
+          "visible_if": "{{ block.settings.rows > 0 }}"
+        },
+        {
+          "type": "header",
+          "content": "Icon With Text 2",
+          "visible_if": "{{ block.settings.rows >= 2 }}"
+        },
+        {
+          "type": "select",
+          "id": "icon_select_2",
+          "label": "t:icon.label",
+          "options": [
+            {
+              "value": "arrow-right",
+              "label": "Arrow Right"
+            },
+            {
+              "value": "arrow-down",
+              "label": "Arrow Down"
+            },
+            {
+              "value": "arrow-left-long",
+              "label": "Arrow Left Long"
+            },
+            {
+              "value": "arrow-right-long",
+              "label": "Arrow Right Long"
+            },
+            {
+              "value": "arrow-up-long",
+              "label": "Arrow Up Long"
+            },
+            {
+              "value": "arrow-down-long",
+              "label": "Arrow Down Long"
+            },
+            {
+              "value": "arrow-right-up-long",
+              "label": "Arrow Right Up Long"
+            },
+            {
+              "value": "plus",
+              "label": "Plus"
+            },
+            {
+              "value": "minus",
+              "label": "Minus"
+            },
+            {
+              "value": "check",
+              "label": "Check"
+            },
+            {
+              "value": "close",
+              "label": "Close"
+            },
+            {
+              "value": "menu",
+              "label": "Menu"
+            },
+            {
+              "value": "search",
+              "label": "Search"
+            },
+            {
+              "value": "copy",
+              "label": "Copy"
+            },
+            {
+              "value": "download",
+              "label": "Download"
+            },
+            {
+              "value": "upload",
+              "label": "Upload"
+            },
+            {
+              "value": "share",
+              "label": "Share"
+            },
+            {
+              "value": "gear",
+              "label": "Gear"
+            },
+            {
+              "value": "filter",
+              "label": "Filter"
+            },
+            {
+              "value": "edit",
+              "label": "Edit"
+            },
+            {
+              "value": "trash",
+              "label": "Trash"
+            },
+            {
+              "value": "cart",
+              "label": "Cart"
+            },
+            {
+              "value": "bag",
+              "label": "Bag"
+            },
+            {
+              "value": "lock",
+              "label": "Lock"
+            }
+          ],
+          "visible_if": "{{ block.settings.icon_mode == 'select' and block.settings.rows >= 2 }}"
+        },
+        {
+          "type": "html",
+          "id": "icon_svg_2",
+          "label": "t:icon.label",
+          "info": "Paste SVG code here",
+          "visible_if": "{{ block.settings.icon_mode == 'custom' and block.settings.rows >= 2 }}"
+        },
+        {
+          "type": "text",
+          "id": "text_2",
+          "label": "t:text.label",
+          "default": "Additional text along the icon.",
+          "visible_if": "{{ block.settings.rows >= 2 }}"
+        },
+        {
+          "type": "header",
+          "content": "Icon With Text 3",
+          "visible_if": "{{ block.settings.rows >= 3 }}"
+        },
+        {
+          "type": "select",
+          "id": "icon_select_3",
+          "label": "t:icon.label",
+          "options": [
+            {
+              "value": "arrow-right",
+              "label": "Arrow Right"
+            },
+            {
+              "value": "arrow-down",
+              "label": "Arrow Down"
+            },
+            {
+              "value": "arrow-left-long",
+              "label": "Arrow Left Long"
+            },
+            {
+              "value": "arrow-right-long",
+              "label": "Arrow Right Long"
+            },
+            {
+              "value": "arrow-up-long",
+              "label": "Arrow Up Long"
+            },
+            {
+              "value": "arrow-down-long",
+              "label": "Arrow Down Long"
+            },
+            {
+              "value": "arrow-right-up-long",
+              "label": "Arrow Right Up Long"
+            },
+            {
+              "value": "plus",
+              "label": "Plus"
+            },
+            {
+              "value": "minus",
+              "label": "Minus"
+            },
+            {
+              "value": "check",
+              "label": "Check"
+            },
+            {
+              "value": "close",
+              "label": "Close"
+            },
+            {
+              "value": "menu",
+              "label": "Menu"
+            },
+            {
+              "value": "search",
+              "label": "Search"
+            },
+            {
+              "value": "copy",
+              "label": "Copy"
+            },
+            {
+              "value": "download",
+              "label": "Download"
+            },
+            {
+              "value": "upload",
+              "label": "Upload"
+            },
+            {
+              "value": "share",
+              "label": "Share"
+            },
+            {
+              "value": "gear",
+              "label": "Gear"
+            },
+            {
+              "value": "filter",
+              "label": "Filter"
+            },
+            {
+              "value": "edit",
+              "label": "Edit"
+            },
+            {
+              "value": "trash",
+              "label": "Trash"
+            },
+            {
+              "value": "cart",
+              "label": "Cart"
+            },
+            {
+              "value": "bag",
+              "label": "Bag"
+            },
+            {
+              "value": "lock",
+              "label": "Lock"
+            }
+          ],
+          "visible_if": "{{ block.settings.icon_mode == 'select' and block.settings.rows >= 3 }}"
+        },
+        {
+          "type": "html",
+          "id": "icon_svg_3",
+          "label": "t:icon.label",
+          "info": "Paste SVG code here",
+          "visible_if": "{{ block.settings.icon_mode == 'custom' and block.settings.rows >= 3 }}"
+        },
+        {
+          "type": "text",
+          "id": "text_3",
+          "label": "t:text.label",
+          "default": "Additional text along the icon.",
+          "visible_if": "{{ block.settings.rows >= 3 }}"
+        },
+        {
+          "type": "header",
+          "content": "Icon With Text 4",
+          "visible_if": "{{ block.settings.rows >= 4 }}"
+        },
+        {
+          "type": "select",
+          "id": "icon_select_4",
+          "label": "t:icon.label",
+          "options": [
+            {
+              "value": "arrow-right",
+              "label": "Arrow Right"
+            },
+            {
+              "value": "arrow-down",
+              "label": "Arrow Down"
+            },
+            {
+              "value": "arrow-left-long",
+              "label": "Arrow Left Long"
+            },
+            {
+              "value": "arrow-right-long",
+              "label": "Arrow Right Long"
+            },
+            {
+              "value": "arrow-up-long",
+              "label": "Arrow Up Long"
+            },
+            {
+              "value": "arrow-down-long",
+              "label": "Arrow Down Long"
+            },
+            {
+              "value": "arrow-right-up-long",
+              "label": "Arrow Right Up Long"
+            },
+            {
+              "value": "plus",
+              "label": "Plus"
+            },
+            {
+              "value": "minus",
+              "label": "Minus"
+            },
+            {
+              "value": "check",
+              "label": "Check"
+            },
+            {
+              "value": "close",
+              "label": "Close"
+            },
+            {
+              "value": "menu",
+              "label": "Menu"
+            },
+            {
+              "value": "search",
+              "label": "Search"
+            },
+            {
+              "value": "copy",
+              "label": "Copy"
+            },
+            {
+              "value": "download",
+              "label": "Download"
+            },
+            {
+              "value": "upload",
+              "label": "Upload"
+            },
+            {
+              "value": "share",
+              "label": "Share"
+            },
+            {
+              "value": "gear",
+              "label": "Gear"
+            },
+            {
+              "value": "filter",
+              "label": "Filter"
+            },
+            {
+              "value": "edit",
+              "label": "Edit"
+            },
+            {
+              "value": "trash",
+              "label": "Trash"
+            },
+            {
+              "value": "cart",
+              "label": "Cart"
+            },
+            {
+              "value": "bag",
+              "label": "Bag"
+            },
+            {
+              "value": "lock",
+              "label": "Lock"
+            }
+          ],
+          "visible_if": "{{ block.settings.icon_mode == 'select' and block.settings.rows >= 4 }}"
+        },
+        {
+          "type": "html",
+          "id": "icon_svg_4",
+          "label": "t:icon.label",
+          "info": "Paste SVG code here",
+          "visible_if": "{{ block.settings.icon_mode == 'custom' and block.settings.rows >= 4 }}"
+        },
+        {
+          "type": "text",
+          "id": "text_4",
+          "label": "t:text.label",
+          "default": "Additional text along the icon.",
+          "visible_if": "{{ block.settings.rows >= 4 }}"
+        }
+      ]
+    },
+    {
+      "type": "search",
+      "name": "t:block.header.search.name",
+      "limit": 1
+    },
+    {
+      "type": "account",
+      "name": "t:block.header.account.name",
+      "limit": 1
+    },
+    {
+      "type": "cart",
+      "name": "t:block.header.cart.name",
+      "limit": 1
+    },
+    {
+      "type": "localization",
+      "name": "t:block.header.localization.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_localization",
+          "label": "Show Localization",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_country_flag",
+          "label": "Show Country Flag",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_country_name",
+          "label": "Show Country Name",
+          "default": true
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

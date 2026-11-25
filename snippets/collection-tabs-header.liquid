@@ -1,0 +1,74 @@
+{%- stylesheet -%}
+  .collection-tabs-header {
+    font-family: var(--button-font-family);
+    margin-bottom: 1.5rem;
+  }
+
+  .collection-tabs-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .collection-tabs-link-desktop {
+    display: none;
+  }
+
+  .collection-tabs-heading {
+    font-family: var(--font-heading--family);
+    font-size: var(--heading-font-size);
+    line-height: var(--heading-line-height);
+    font-weight: var(--heading-font-weight);
+  }
+
+  .collection-tabs-header-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .collection-tabs-link-mobile {
+    display: inline-block;
+    margin-top: 2rem;
+  }
+
+  @media (width >= 64rem) {
+    .collection-tabs-link-desktop {
+      display: block;
+    }
+
+    .collection-tabs-link-mobile {
+      display: none;
+    }
+  }
+{%- endstylesheet -%}
+
+<div class="collection-tabs-header">
+  {% comment %} Heading + Collection Tabs Links {% endcomment %}
+  <div class="collection-tabs-header-top">
+    {% comment %} Heading {% endcomment %}
+    {%- if heading != blank -%}
+      <h2 class="collection-tabs-heading">{{- heading -}}</h2>
+    {%- endif -%}
+
+    {% comment %} Collection Tabs Links {% endcomment %}
+    <div class="collection-tabs-link-desktop">
+      {% render 'collection-tabs-link', section_blocks: section_blocks %}
+    </div>
+  </div>
+
+  {% comment %} Collection Tabs + Swiper.js Navigation {% endcomment %}
+  <div class="collection-tabs-header-bottom">
+    {% comment %} Collection Tabs {% endcomment %}
+    {% render 'collection-tabs', section_blocks: section_blocks %}
+
+    {% comment %} Swiper.js Navigation {% endcomment %}
+    {% render 'collection-tabs-swiper-nav' %}
+  </div>
+
+  {% comment %} Collection Tabs Links {% endcomment %}
+  <div class="collection-tabs-link-mobile">
+    {% render 'collection-tabs-link', section_blocks: section_blocks %}
+  </div>
+</div>

@@ -1,0 +1,750 @@
+<title>The Loox Reachability Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #F4F6F7;
+    --surface:    #FFFFFF;
+    --surface-2:  #EDF1F2;
+    --ink:        #16202B;
+    --ink-soft:   #43535F;
+    --muted:      #6B7C87;
+    --rule:       #D8E1E4;
+    --rule-soft:  #E7EDEF;
+
+    --open:       #0F766E;
+    --open-bg:    #E1F0EE;
+    --open-rule:  #A8CFCA;
+
+    --walled:     #9A3B2F;
+    --walled-bg:  #F6E5E2;
+    --walled-rule:#DFB6AE;
+
+    --partial:    #8A6212;
+    --partial-bg: #F6EEDC;
+
+    --font-display: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-prose:   "Newsreader", Georgia, "Times New Roman", serif;
+    --font-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --measure: 68ch;
+    --shell: 1080px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0E1519;
+      --surface:    #161F25;
+      --surface-2:  #1D282F;
+      --ink:        #E4EBEE;
+      --ink-soft:   #B2C0C7;
+      --muted:      #8899A2;
+      --rule:       #2A373F;
+      --rule-soft:  #212C33;
+
+      --open:       #4FD1C5;
+      --open-bg:    #12312F;
+      --open-rule:  #2C5F5A;
+
+      --walled:     #E89383;
+      --walled-bg:  #351C18;
+      --walled-rule:#5F3229;
+
+      --partial:    #E0B457;
+      --partial-bg: #33280F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #0E1519;
+    --surface:    #161F25;
+    --surface-2:  #1D282F;
+    --ink:        #E4EBEE;
+    --ink-soft:   #B2C0C7;
+    --muted:      #8899A2;
+    --rule:       #2A373F;
+    --rule-soft:  #212C33;
+
+    --open:       #4FD1C5;
+    --open-bg:    #12312F;
+    --open-rule:  #2C5F5A;
+
+    --walled:     #E89383;
+    --walled-bg:  #351C18;
+    --walled-rule:#5F3229;
+
+    --partial:    #E0B457;
+    --partial-bg: #33280F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-prose);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: var(--shell);
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 56px 0 32px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+    line-height: 1.06;
+    letter-spacing: -0.021em;
+    text-wrap: balance;
+    margin: 0 0 18px;
+  }
+
+  .standfirst {
+    font-size: 1.14rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: var(--measure);
+    margin: 0;
+  }
+
+  /* ---------- verdict ---------- */
+
+  .verdict {
+    display: grid;
+    gap: 0;
+    grid-template-columns: 1fr;
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--walled);
+    background: var(--surface);
+    margin: 36px 0 8px;
+  }
+
+  .verdict__body { padding: 22px 26px; }
+
+  .verdict h2 {
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    margin: 0 0 8px;
+  }
+
+  .verdict p { margin: 0; color: var(--ink-soft); max-width: var(--measure); }
+  .verdict p + p { margin-top: 10px; }
+
+  /* ---------- sections ---------- */
+
+  section { margin-top: 60px; }
+
+  h2.sec {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.014em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .sec-note {
+    color: var(--muted);
+    font-size: 0.96rem;
+    max-width: var(--measure);
+    margin: 0 0 22px;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.06rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    margin: 30px 0 10px;
+  }
+
+  p { max-width: var(--measure); }
+
+  code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+
+  p code, li code, td code {
+    background: var(--surface-2);
+    border-radius: 3px;
+    padding: 0.1em 0.36em;
+  }
+
+  /* ---------- tables ---------- */
+
+  .tw { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-family: var(--font-display); }
+
+  th {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  td {
+    font-size: 14.5px;
+    line-height: 1.5;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: 0; }
+
+  td.k { font-family: var(--font-mono); font-size: 12.7px; color: var(--ink); }
+
+  /* ---------- status chips ---------- */
+
+  .chip {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .chip--open    { background: var(--open-bg);    color: var(--open);    box-shadow: inset 0 0 0 1px var(--open-rule); }
+  .chip--walled  { background: var(--walled-bg);  color: var(--walled);  box-shadow: inset 0 0 0 1px var(--walled-rule); }
+  .chip--partial { background: var(--partial-bg); color: var(--partial); }
+
+  /* ---------- the wall diagram ---------- */
+
+  .wall {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    margin: 22px 0;
+    overflow: hidden;
+  }
+
+  .wall__side { padding: 22px 24px; }
+
+  .wall__label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+
+  .wall ul { margin: 0; padding-left: 17px; }
+  .wall li { font-family: var(--font-display); font-size: 14px; line-height: 1.75; }
+
+  .wall__bar {
+    width: 4px;
+    background: repeating-linear-gradient(
+      -45deg, var(--walled) 0 5px, transparent 5px 10px
+    );
+    border-left: 1px solid var(--walled-rule);
+    border-right: 1px solid var(--walled-rule);
+  }
+
+  .wall__caption {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--rule);
+    padding: 14px 24px;
+    font-size: 0.93rem;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+  }
+  .wall__caption strong { color: var(--ink); font-family: var(--font-display); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .wall { grid-template-columns: 1fr; }
+    .wall__bar { width: auto; height: 4px; background: repeating-linear-gradient(-45deg, var(--walled) 0 5px, transparent 5px 10px); }
+  }
+
+  /* ---------- routes ---------- */
+
+  .routes { display: grid; gap: 14px; margin-top: 22px; }
+
+  .route {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 16px;
+    align-items: start;
+  }
+
+  .route__n {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    padding-top: 3px;
+  }
+
+  .route__h {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.04rem;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .route__b { grid-column: 2; margin: 6px 0 0; color: var(--ink-soft); font-size: 0.97rem; }
+
+  .route__meta {
+    grid-column: 2;
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    font-family: var(--font-display);
+    font-size: 12.6px;
+    color: var(--muted);
+  }
+  .route__meta b { color: var(--ink); font-weight: 600; }
+
+  .route--pick { border-left: 3px solid var(--open); }
+
+  /* ---------- message blocks ---------- */
+
+  .msg { border: 1px solid var(--rule); background: var(--surface); margin-top: 18px; }
+
+  .msg__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
+
+  .msg__name {
+    font-family: var(--font-display);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .copy {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--open);
+    background: transparent;
+    border: 1px solid var(--open-rule);
+    border-radius: 2px;
+    padding: 5px 11px;
+    cursor: pointer;
+  }
+  .copy:hover { background: var(--open-bg); }
+  .copy:focus-visible { outline: 2px solid var(--open); outline-offset: 2px; }
+  .copy[data-done="1"] { color: var(--open); border-color: var(--open); }
+
+  pre {
+    margin: 0;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 12.9px;
+    line-height: 1.72;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ---------- gotchas ---------- */
+
+  .gotchas { display: grid; gap: 0; border: 1px solid var(--rule); background: var(--surface); margin-top: 22px; }
+
+  .gotcha { padding: 18px 24px; border-bottom: 1px solid var(--rule-soft); }
+  .gotcha:last-child { border-bottom: 0; }
+
+  .gotcha h4 {
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .gotcha p { margin: 0; font-size: 0.95rem; color: var(--ink-soft); }
+  .gotcha p + p { margin-top: 8px; }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    margin-top: 64px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-display);
+    font-size: 12.8px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 26px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <p class="kicker">Studio playbook &middot; Shopify &middot; Third-party reviews</p>
+    <h1>The Loox Reachability Map</h1>
+    <p class="standfirst">What the Loox reviews app will and will not hand to a Shopify theme &mdash; and how to decide, on day one, whether a client&rsquo;s review design is buildable at all.</p>
+  </header>
+
+  <div class="verdict">
+    <div class="verdict__body">
+      <h2>The one thing to know</h2>
+      <p>Loox gives a theme <strong>aggregate numbers</strong> for free, and <strong>individual review content</strong> only through a paid-tier API. Every Loox widget that renders review content does so inside a <strong>cross-origin iframe</strong>, so none of it can be restyled with CSS &mdash; not with <code>!important</code>, not with a scoped override, not at all.</p>
+      <p>So when a client hands you a custom review-card design, the question is never &ldquo;how do we style the widget?&rdquo; It is <em>&ldquo;which Loox plan are they on?&rdquo;</em> &mdash; and that decides whether the design is achievable before you write a line of Liquid.</p>
+    </div>
+  </div>
+
+  <section>
+    <h2 class="sec">What Loox actually exposes</h2>
+    <p class="sec-note">Verified against a live store. &ldquo;Reachable&rdquo; means a theme can read the value in Liquid and render it in its own markup.</p>
+
+    <div class="tw">
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Where it lives</th><th>Reachable</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Store-wide rating &amp; count</td>
+            <td class="k">shop.metafields.loox.global_stats</td>
+            <td><span class="chip chip--open">Free</span></td>
+            <td>String, <code>"4.8,436"</code>. Split on the comma. Updates live.</td>
+          </tr>
+          <tr>
+            <td>Per-product average</td>
+            <td class="k">product.metafields.loox.avg_rating</td>
+            <td><span class="chip chip--open">Free</span></td>
+            <td>App-owned. Also mirrored to Shopify&rsquo;s standard <code>reviews.rating</code>.</td>
+          </tr>
+          <tr>
+            <td>Per-product review count</td>
+            <td class="k">product.metafields.loox.num_reviews</td>
+            <td><span class="chip chip--open">Free</span></td>
+            <td>Mirrored to <code>reviews.rating_count</code>.</td>
+          </tr>
+          <tr>
+            <td>Reviewer name</td>
+            <td class="k">Storefront API &middot; reviewer.name</td>
+            <td><span class="chip chip--partial">Paid tier</span></td>
+            <td rowspan="4">Not in any metafield. Confirmed by Loox support: &ldquo;That data isn&rsquo;t available through Shopify metafields.&rdquo;</td>
+          </tr>
+          <tr><td>Review text</td><td class="k">Storefront API &middot; body</td><td><span class="chip chip--partial">Paid tier</span></td></tr>
+          <tr><td>Per-review rating</td><td class="k">Storefront API &middot; rating</td><td><span class="chip chip--partial">Paid tier</span></td></tr>
+          <tr><td>Product name / URL / image</td><td class="k">Storefront API &middot; product</td><td><span class="chip chip--partial">Paid tier</span></td></tr>
+          <tr>
+            <td>Review photo</td>
+            <td class="k">Storefront API &middot; media[].url</td>
+            <td><span class="chip chip--partial">Paid tier</span></td>
+            <td>Only where the reviewer attached one.</td>
+          </tr>
+          <tr>
+            <td>Anything inside a Loox widget</td>
+            <td class="k">loox.io iframe</td>
+            <td><span class="chip chip--walled">Never</span></td>
+            <td>Cross-origin. No CSS or DOM reach, on any plan.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec">The iframe wall</h2>
+    <p class="sec-note">This is the fact that kills most &ldquo;just restyle the widget&rdquo; plans. Worth checking on day one of any Loox project.</p>
+
+    <div class="wall">
+      <div class="wall__side">
+        <p class="wall__label">Renders in your DOM &mdash; styleable</p>
+        <ul>
+          <li>Star rating widget &middot; <code>.loox-rating</code></li>
+          <li>Trust badge &middot; <code>.loox-trust-badge-widget</code></li>
+        </ul>
+      </div>
+      <div class="wall__bar" aria-hidden="true"></div>
+      <div class="wall__side">
+        <p class="wall__label">Renders in an iframe &mdash; sealed</p>
+        <ul>
+          <li>Reviews widget &middot; <code>#looxReviews</code></li>
+          <li>Cards carousel</li>
+          <li>Testimonial carousel</li>
+          <li>Gallery carousel</li>
+        </ul>
+      </div>
+      <p class="wall__caption"><strong>How to check in ten seconds.</strong> Open the client&rsquo;s live product page, inspect the reviews block, and look for an <code>&lt;iframe&gt;</code>. If the review content sits inside one, its appearance is fixed and no amount of theme CSS will change it.</p>
+    </div>
+
+    <h3>The carousel&rsquo;s entire styling surface</h3>
+    <p>The v2 carousels are configured by <code>data-*</code> attributes on a <code>.loox-v2-carousel-container</code> div, which the Loox script turns into iframe query parameters. This list is exhaustive &mdash; if a design needs anything not on it, the widget cannot deliver it:</p>
+    <p class="mono" style="color:var(--ink-soft);font-size:12.6px;line-height:1.9;max-width:none;">slideType &middot; maxWidth &middot; borderRadius &middot; itemsPerView &middot; mobileItemsPerView &middot; imageRatio &middot; maxNumberOfCharacters &middot; desktopFontSize &middot; mobileFontSize &middot; reviewerNameColor &middot; textColor &middot; itemBackgroundColor &middot; starsColor &middot; starsBackgroundColor &middot; arrows[backgroundColor] &middot; arrows[iconColor] &middot; arrows[hideOnMobile] &middot; shadow &middot; border[active] &middot; border[width] &middot; border[color] &middot; pagination[active] &middot; pagination[dotColor] &middot; pagination[selectedDotColor] &middot; autoplay[active] &middot; autoplay[duration] &middot; quoteMarkIcon &middot; quotesIconColor &middot; productIds</p>
+    <p>Colours and sizes only. <strong>No control over card layout, element order, or which fields appear.</strong> Two further limits worth knowing: the Cards and Gallery carousels hide text-only reviews entirely, and they show the <em>customer&rsquo;s</em> photo, never the product image &mdash; which is what most custom designs actually ask for.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">Three routes, and how to choose</h2>
+    <p class="sec-note">Once you know the plan, the choice makes itself.</p>
+
+    <div class="routes">
+      <div class="route route--pick">
+        <div class="route__n">01</div>
+        <div>
+          <p class="route__h">Storefront API into your own markup <span class="chip chip--open">Best result</span></p>
+        </div>
+        <p class="route__b">Fetch reviews client-side and render them in the design&rsquo;s real HTML. Automatic <em>and</em> pixel-accurate &mdash; the only route that is both. The API returns the product&rsquo;s name, URL and image, so cards showing a product photo work exactly as drawn.</p>
+        <div class="route__meta"><span>Needs <b>Convert or Unlimited</b></span><span>Design fidelity <b>full</b></span><span>Updates <b>automatic</b></span></div>
+      </div>
+
+      <div class="route">
+        <div class="route__n">02</div>
+        <div><p class="route__h">Drop in the Loox widget</p></div>
+        <p class="route__b">Use the app block as-is. Reviews stay current with no plan change, but you inherit Loox&rsquo;s card layout and only its colour settings. Sound choice when the client has no strong design, or as an interim.</p>
+        <div class="route__meta"><span>Needs <b>any plan</b></span><span>Design fidelity <b>low</b></span><span>Updates <b>automatic</b></span></div>
+      </div>
+
+      <div class="route">
+        <div class="route__n">03</div>
+        <div><p class="route__h">Curated cards in the theme editor</p></div>
+        <p class="route__b">Build the section properly and let the merchant pick which reviews to feature. Matches the design exactly and costs nothing, but someone maintains it by hand. Pair it with the live aggregate badge so at least the headline number stays true.</p>
+        <div class="route__meta"><span>Needs <b>any plan</b></span><span>Design fidelity <b>full</b></span><span>Updates <b>manual</b></span></div>
+      </div>
+    </div>
+
+    <p style="margin-top:20px;"><strong>Build routes 1 and 3 as the same section.</strong> Identical markup, identical CSS &mdash; only the data source differs. That way a plan upgrade is a change of data source, not a rebuild, and shipping route 3 first costs nothing if the client later upgrades.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">Message templates for Loox support</h2>
+    <p class="sec-note">Both written to survive a first-line agent who will otherwise answer about widget colour settings. Lead with the goal, name the API, and refuse the aggregates answer up front.</p>
+
+    <div class="msg">
+      <div class="msg__bar">
+        <span class="msg__name">V1 &mdash; plan unknown, or on a legacy plan</span>
+        <button class="copy" type="button" data-target="m1">Copy</button>
+      </div>
+<pre id="m1">Hi Loox team,
+
+We're building a custom reviews section on a Shopify theme. We want to render
+individual review content in our own markup so it matches the client's design,
+while staying up to date automatically.
+
+To be clear up front: we are NOT trying to restyle the Loox widget, and we
+already read the aggregates (reviews.rating, reviews.rating_count and
+shop.metafields.loox.global_stats). Those work well. What we need is the
+content of individual reviews:
+
+  - reviewer name
+  - review text
+  - that review's own star rating
+  - which product it belongs to
+  - the review photo, where one exists
+
+Our questions:
+
+1. Is that individual review data available through any Shopify metafield? If
+   so, please send the exact namespace and key.
+
+2. If not, we understand the Storefront API is the route. Is it available on
+   our current plan? If not, what is the minimum plan required?
+
+3. Please send our publicStoreId and tell us how to enable API access. We are
+   currently getting HTTP 401 on:
+   https://storefront-api.loox.io/storefront/v1/store/{publicStoreId}/product-reviews
+
+4. Do we need to allowlist our domains for the Storefront API's CORS, and if
+   so, where is that configured?
+
+Store: {myshopify-domain}
+Current plan: {plan}
+
+Thanks!</pre>
+    </div>
+
+    <div class="msg">
+      <div class="msg__bar">
+        <span class="msg__name">V2 &mdash; client already on Convert or Unlimited</span>
+        <button class="copy" type="button" data-target="m2">Copy</button>
+      </div>
+<pre id="m2">Hi Loox team,
+
+We're on the {Convert / Unlimited} plan and want to start using the Storefront
+API to render reviews in our own markup on the client's Shopify theme. Since
+the API is included on our plan, we just need the setup details.
+
+1. What is our publicStoreId? We tried the client id from our widget script
+   and get HTTP 401 on:
+   https://storefront-api.loox.io/storefront/v1/store/{publicStoreId}/product-reviews
+
+2. Does API access need switching on anywhere in the Loox admin, or is it
+   active by default on our plan?
+
+3. The Storefront API is documented as using domain-based CORS. Which domains
+   do we need to allowlist, and where? Ours are:
+       {store}.myshopify.com
+       {live-domain}
+   We'd also like the theme preview domains to work during development.
+
+4. Please send the API reference. Specifically we need:
+       - the endpoint that returns store-wide reviews (not per-product)
+       - how to filter by rating, and to photo-only reviews
+       - pagination parameters
+       - the full review object schema
+
+5. Rate limits and caching: this will be called from a storefront theme on a
+   high-traffic page. Is there a per-minute limit, and do you recommend
+   caching responses rather than calling on every page load?
+
+6. Do you have a Merchant API key for us as well? We may want to sync reviews
+   server-side later, and we understand that key must never appear in theme
+   code.
+
+Store: {myshopify-domain}
+Plan: {Convert / Unlimited}
+
+Thanks!</pre>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec">When the API is on: field mapping</h2>
+    <p class="sec-note">The shape Loox support confirmed. Maps cleanly onto a typical review card.</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Card element</th><th>API field</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Reviewer name</td><td class="k">reviewer.name</td><td>Storefront API abbreviates it &mdash; &ldquo;John D.&rdquo; &mdash; as it strips personal data.</td></tr>
+          <tr><td>Review text</td><td class="k">body</td><td>Clamp in CSS; reviews vary wildly in length.</td></tr>
+          <tr><td>Star rating</td><td class="k">rating</td><td>Integer 1&ndash;5.</td></tr>
+          <tr><td>Product name, link, photo</td><td class="k">product</td><td>Carries name, URL <em>and</em> image &mdash; the product shot, not the review photo.</td></tr>
+          <tr><td>Customer photo</td><td class="k">media[].url</td><td>Absent on text-only reviews. Always design a fallback.</td></tr>
+          <tr><td>Date, verified badge</td><td class="k">date, verified</td><td>Also returned.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Two things to settle with the client before building</h3>
+    <p><strong>Which reviews surface.</strong> A store with hundreds of reviews and a design showing four needs a rule: newest first, 5-star only, photo-only, or per-product. The design will not tell you &mdash; ask.</p>
+    <p><strong>What renders before the fetch resolves.</strong> A client-side fetch means the cards are empty on first paint. Decide between a skeleton, a small set of server-rendered fallback cards, or reserving the height &mdash; and remember review text fetched client-side is invisible to search engines.</p>
+  </section>
+
+  <section>
+    <h2 class="sec">Gotchas worth carrying forward</h2>
+    <p class="sec-note">Each of these cost real time once. None are Loox-specific except the first.</p>
+
+    <div class="gotchas">
+      <div class="gotcha">
+        <h4>Loox&rsquo;s own reply will describe aggregates as &ldquo;reviews&rdquo;</h4>
+        <p>First-line support answers &ldquo;can we render review content?&rdquo; with &ldquo;yes &mdash; Loox stores a copy of each product&rsquo;s reviews in metafields&rdquo;, then lists <code>reviews.rating</code> and <code>reviews.rating_count</code>. Those are a score and a count. Quote the specific fields you need back at them; the second reply is usually accurate.</p>
+      </div>
+      <div class="gotcha">
+        <h4>A 401 that ignores the store id means entitlement, not a typo</h4>
+        <p>Send a deliberately invalid store id. If it returns the same 401 as your real one, the request is being rejected before the id is read &mdash; so the problem is plan access, not the identifier. Worth doing before asking support, because it turns a vague question into a specific one.</p>
+      </div>
+      <div class="gotcha">
+        <h4>Figma star icons often export upside-down</h4>
+        <p>Figma applies <code>scaleY(-1)</code> at the node, which the exported path does not carry. Paste it verbatim and the star renders with two points up. Check the geometry: a correct five-point star has one vertex at the top. Wrap the path in <code>transform="matrix(1 0 0 -1 0 H)"</code>.</p>
+      </div>
+      <div class="gotcha">
+        <h4>Swiper&rsquo;s auto margins cancel flex stretching</h4>
+        <p>The <code>.swiper</code> class sets <code>margin-left: auto; margin-right: auto</code>. Inside a flex column, an auto cross-axis margin stops the item stretching, so it collapses to its content width and overflows the page. Pin <code>margin-inline-start: 0</code> when using a negative end margin for a full-bleed rail.</p>
+      </div>
+      <div class="gotcha">
+        <h4>Shopify range settings cap at 101 steps</h4>
+        <p><code>(max - min) / step</code> must be 101 or fewer, or the theme fails to upload. Theme Check does not catch it &mdash; only the upload does. Also confirm the default is divisible by the step, or it silently snaps.</p>
+      </div>
+      <div class="gotcha">
+        <h4>Shopify JSON files carry a comment banner</h4>
+        <p>Every <code>templates/*.json</code> and <code>locales/*.json</code> opens with a <code>/* ... */</code> block, so a plain JSON parser fails. Strip it to read, re-attach it to write. Round-trip the untouched file first to confirm your serializer matches the existing formatting &mdash; otherwise a one-line edit reformats thousands.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Verified against a live Loox install, Shopify Online Store 2.0</span>
+    <span>Endpoints and plan gating current as of the Loox Reviews API and webhooks documentation</span>
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var el = document.getElementById(btn.getAttribute('data-target'));
+      if (!el) return;
+      var text = el.textContent;
+      var done = function () {
+        var prev = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.setAttribute('data-done', '1');
+        setTimeout(function () {
+          btn.textContent = prev;
+          btn.removeAttribute('data-done');
+        }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () {});
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+</script>

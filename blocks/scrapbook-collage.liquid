@@ -1,0 +1,188 @@
+{%- liquid
+  assign block_id = block.id
+  assign collage_id = 'scrapbook-collage-' | append: block_id
+
+  assign overflow_mode = block.settings.overflow_mode | default: 'visible'
+  assign default_border_width = block.settings.default_border_width | default: 12
+  assign mobile_min_height = block.settings.mobile_min_height | default: '400px'
+  assign desktop_min_height = block.settings.desktop_min_height | default: '500px'
+-%}
+
+{%- style -%}
+  #{{ collage_id }} {
+    --default-border-width: {{ default_border_width }}px;
+    --min-height: {{ mobile_min_height }};
+
+    position: relative;
+    width: 100%;
+    min-height: var(--min-height);
+    overflow: {{ overflow_mode }};
+  }
+
+  /* Scrapbook image base styles */
+  #{{ collage_id }} .scrapbook-image-wrapper {
+    position: absolute;
+    transform-origin: center center;
+    transition: transform 0.3s ease, z-index 0s;
+  }
+
+  #{{ collage_id }} .scrapbook-image-wrapper:hover {
+    z-index: 999 !important;
+  }
+
+  #{{ collage_id }} .scrapbook-image-frame {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: var(--default-border-width);
+    overflow: hidden;
+  }
+
+  /* Focus states for accessibility */
+  #{{ collage_id }} .scrapbook-image-link:focus {
+    outline: 2px solid var(--color-focus, #0066cc);
+    outline-offset: 4px;
+  }
+
+  #{{ collage_id }} .scrapbook-image-link:focus-visible {
+    outline: 2px solid var(--color-focus, #0066cc);
+    outline-offset: 4px;
+  }
+
+  @media (width >= 64rem) {
+    #{{ collage_id }} {
+      --min-height: {{ desktop_min_height }};
+
+      min-height: var(--min-height);
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    #{{ collage_id }} .scrapbook-image-wrapper {
+      transition: none;
+    }
+
+    #{{ collage_id }} .scrapbook-image-frame img.lazyload,
+    #{{ collage_id }} .scrapbook-image-frame img.lazyloading,
+    #{{ collage_id }} .scrapbook-image-frame img.lazyloaded {
+      filter: none;
+      transform: none;
+      transition: none;
+    }
+  }
+{%- endstyle -%}
+
+<div
+  id="{{ collage_id }}"
+  class="scrapbook-collage"
+  role="img"
+  aria-label="Scrapbook Collage"
+  {{ block.shopify_attributes }}
+>
+  {% content_for 'blocks' %}
+</div>
+
+{%- schema -%}
+{
+  "name": "t:block.scrapbook_collage.name",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "scrapbook-image"
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Container Settings"
+    },
+    {
+      "type": "select",
+      "id": "overflow_mode",
+      "label": "Overflow",
+      "info": "Allow images to extend beyond container edges",
+      "options": [
+        {
+          "value": "visible",
+          "label": "Allow Overflow"
+        },
+        {
+          "value": "hidden",
+          "label": "Clip at Edges"
+        }
+      ],
+      "default": "visible"
+    },
+    {
+      "type": "range",
+      "id": "default_border_width",
+      "label": "Default Border Width",
+      "info": "White polaroid-style border thickness",
+      "min": 4,
+      "max": 40,
+      "step": 2,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Container Height"
+    },
+    {
+      "type": "text",
+      "id": "desktop_min_height",
+      "label": "Desktop Min Height",
+      "placeholder": "px, rem, vh, etc.",
+      "default": "500px"
+    },
+    {
+      "type": "text",
+      "id": "mobile_min_height",
+      "label": "Mobile Min Height",
+      "placeholder": "px, rem, vh, etc.",
+      "default": "400px"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.scrapbook_collage.name",
+      "category": "t:block.scrapbook_collage.category",
+      "blocks": [
+        {
+          "type": "scrapbook-image",
+          "settings": {
+            "mobile_top": "5%",
+            "mobile_left": "10%",
+            "mobile_rotation": -5,
+            "desktop_top": "10%",
+            "desktop_left": "8%",
+            "desktop_rotation": -8
+          }
+        },
+        {
+          "type": "scrapbook-image",
+          "settings": {
+            "mobile_top": "28%",
+            "mobile_left": "55%",
+            "mobile_rotation": 4,
+            "desktop_top": "5%",
+            "desktop_left": "45%",
+            "desktop_rotation": 4
+          }
+        },
+        {
+          "type": "scrapbook-image",
+          "settings": {
+            "mobile_top": "52%",
+            "mobile_left": "8%",
+            "mobile_rotation": -3,
+            "desktop_top": "25%",
+            "desktop_left": "75%",
+            "desktop_rotation": -3
+          }
+        }
+      ]
+    }
+  ]
+}
+{%- endschema -%}

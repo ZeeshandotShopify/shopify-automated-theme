@@ -1,0 +1,9 @@
+{% if settings.cart_type == 'drawer' and template.name != 'cart' %}
+  {% render 'cart-drawer', show_icon_labels: show_icon_labels, custom_cart_icon: custom_cart_icon %}
+{% else %}
+  <a
+    href="{{ routes.cart_url }}"
+  >
+    {% render 'cart-icon', show_icon_labels: show_icon_labels, custom_cart_icon: custom_cart_icon %}
+  </a>
+{% endif %}

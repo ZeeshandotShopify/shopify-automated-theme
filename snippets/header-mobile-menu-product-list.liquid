@@ -1,0 +1,72 @@
+{%- style -%}
+  .mobile-menu-product-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-block: 1.5rem;
+    padding-inline: 1rem;
+  }
+
+  .mobile-menu-product-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    {%- if block.settings.nav_item_style_mode == 'inherit' -%}
+      background-color: var(--color-accordion-background);
+      color: var(--color-accordion-foreground);
+      border: var(--accordion-border-thickness) solid var(--color-border, #e5e5e5);
+      border-radius: var(--accordion-border-radius);
+    {%- else -%}
+      background-color: {{ block.settings.nav_item_background_color }};
+      color: {{ block.settings.nav_item_foreground_color }};
+      border-top: {{ block.settings.border_top_thickness }}px solid {{ block.settings.border_color }};
+      border-bottom: {{ block.settings.border_bottom_thickness }}px solid {{ block.settings.border_color }};
+      border-left: {{ block.settings.border_left_thickness }}px solid {{ block.settings.border_color }};
+      border-right: {{ block.settings.border_right_thickness }}px solid {{ block.settings.border_color }};
+      border-radius: {{ block.settings.border_radius }};
+    {%- endif -%}
+
+    padding: {{ block.settings.nav_item_padding_y }}px {{ block.settings.nav_item_padding_x }}px;
+  }
+
+  .mobile-menu-product-image {
+    flex-shrink: 0;
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .mobile-menu-product-item h3 {
+    font-size: {{ block.settings.nav_item_font_size }};
+    line-height: {{ block.settings.nav_item_line_height }};
+    font-weight: {{ block.settings.nav_item_font_weight }};
+  }
+{%- endstyle -%}
+
+<ul class="mobile-menu-product-list">
+  {% for product in block.settings.product_list %}
+    <a href="{{ product.url }}">
+      <div class="mobile-menu-product-item">
+        {% comment %} 1. GET THE IMAGE {% endcomment %}
+        {% if product.featured_image != blank %}
+          <div class="mobile-menu-product-image">
+            {% render 'responsive-image',
+              image: product.featured_image,
+              desktop_enable_custom_dimension: true,
+              desktop_custom_width: '4rem',
+              desktop_custom_height: '4rem'
+            %}
+          </div>
+        {% else %}
+          {% comment %} Fallback if product has no image {% endcomment %}
+          <div class="mobile-menu-product-image">
+            {{ 'product-1' | placeholder_svg_tag }}
+          </div>
+        {% endif %}
+
+        {% comment %} 2. GET THE TITLE {% endcomment %}
+        <h3>{{ product.title }}</h3>
+      </div>
+    </a>
+  {% endfor %}
+</ul>

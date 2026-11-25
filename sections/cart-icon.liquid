@@ -1,0 +1,10 @@
+{% comment %}
+  This section serves as a placeholder that renders the 'cart-icon' snippet.
+  It is necessary to have this as a section to enable re-rendering of the cart icon
+  via AJAX in assets/cart.js for dynamic updates without full page reloads.
+{% endcomment %}
+
+{% render 'cart-icon',
+  show_icon_labels: settings.show_header_icon_labels,
+  custom_cart_icon: settings.custom_cart_icon
+%}

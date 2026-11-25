@@ -1,0 +1,733 @@
+{%- comment -%}
+  "You May Also Like" — related articles under an article body.
+
+  A centred heading over a full-width hairline rule, then two related-article
+  cards: image left / text right on desktop, image above / text below on
+  mobile.
+
+  Shopify has NO native related-articles API — the `recommendations` object is
+  products-only (intent related or complementary) and `article` exposes no
+  equivalent — so relatedness is resolved here, in two passes over
+  `blog.articles`: articles sharing a tag with the current one first, then the
+  blog's remaining articles to top the row up to `articles_to_show`.
+  `blog.next_article` / `blog.previous_article` are deliberately not used: they
+  are position in the blog, not relevance.
+
+  THE SPLIT — the requirement is AT LEAST ONE RESOLVED RELATED ARTICLE and
+  nothing else. A blank heading skips the heading group, rule included, and
+  closes its 48px gap with it. No related article at all means the theme editor
+  gets a placeholder and preview and live get no markup.
+
+  The card is `snippets/article.liquid`, shared with `sections/blog.liquid`.
+  That snippet is MARKUP ONLY — it is rendered in a loop, so a scoped
+  stylesheet inside it would be emitted once per article — which is why every
+  `.blog-card` rule below lives here, scoped to this section's id.
+
+  NOTE FOR FUTURE RUNS: keep Shopify tag delimiters out of comments that sit
+  inside a `liquid` tag. A closing delimiter in the comment text ends the tag
+  early, the upload is rejected, and a running `shopify theme dev` restores the
+  remote copy over the local file.
+{%- endcomment -%}
+
+{%- liquid
+  assign section_id = section.id
+  assign articles_limit = section.settings.articles_to_show | default: 2
+  assign rendered_article_ids = '|' | append: article.id | append: '|'
+  assign related_articles_count = 0
+  assign heading = section.settings.heading | strip
+
+  comment
+    Colour resolves through a mode select rather than a schema default, because
+    a `color` setting cannot default to a CSS variable. `inherit` hands back the
+    theme token; `custom` hands back the merchant's swatch. Same shape as
+    snippets/pdp-testimonial.liquid.
+  endcomment
+  if section.settings.color_mode == 'custom'
+    assign ra_heading_color = section.settings.heading_color
+    assign ra_divider_color = section.settings.divider_color
+    assign ra_date_color = section.settings.date_color
+    assign ra_title_color = section.settings.title_color
+    assign ra_excerpt_color = section.settings.excerpt_color
+    assign ra_image_placeholder_color = section.settings.image_placeholder_color
+  else
+    assign ra_heading_color = 'var(--color-foreground)'
+    assign ra_divider_color = 'var(--color-border)'
+    assign ra_date_color = 'var(--color-muted-foreground)'
+    assign ra_title_color = 'var(--color-foreground)'
+    assign ra_excerpt_color = 'var(--color-muted-foreground)'
+    assign ra_image_placeholder_color = 'var(--color-muted-background)'
+  endif
+-%}
+
+{%- capture related_article_cards -%}
+  {%- for candidate_article in blog.articles -%}
+    {%- if related_articles_count >= articles_limit -%}
+      {%- break -%}
+    {%- endif -%}
+
+    {%- if candidate_article.id != article.id -%}
+      {%- assign candidate_token = '|' | append: candidate_article.id | append: '|' -%}
+      {%- assign has_shared_tag = false -%}
+
+      {%- if article.tags.size > 0 and candidate_article.tags.size > 0 -%}
+        {%- for current_tag in article.tags -%}
+          {%- if candidate_article.tags contains current_tag -%}
+            {%- assign has_shared_tag = true -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      {%- if has_shared_tag -%}
+        {%- unless rendered_article_ids contains candidate_token -%}
+          <li class="related-articles__item">
+            {%- render 'article',
+              article: candidate_article,
+              show_image: section.settings.show_image,
+              show_date: section.settings.show_date,
+              show_author: section.settings.show_author
+            -%}
+          </li>
+          {%- assign rendered_article_ids = rendered_article_ids | append: candidate_article.id | append: '|' -%}
+          {%- assign related_articles_count = related_articles_count | plus: 1 -%}
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- comment -%}
+    Second pass — top the row up so it always fills to `articles_to_show`
+    rather than disappearing on an article with no tag siblings.
+  {%- endcomment -%}
+  {%- if related_articles_count < articles_limit -%}
+    {%- for candidate_article in blog.articles -%}
+      {%- if related_articles_count >= articles_limit -%}
+        {%- break -%}
+      {%- endif -%}
+
+      {%- if candidate_article.id != article.id -%}
+        {%- assign candidate_token = '|' | append: candidate_article.id | append: '|' -%}
+
+        {%- unless rendered_article_ids contains candidate_token -%}
+          <li class="related-articles__item">
+            {%- render 'article',
+              article: candidate_article,
+              show_image: section.settings.show_image,
+              show_date: section.settings.show_date,
+              show_author: section.settings.show_author
+            -%}
+          </li>
+          {%- assign rendered_article_ids = rendered_article_ids | append: candidate_article.id | append: '|' -%}
+          {%- assign related_articles_count = related_articles_count | plus: 1 -%}
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- liquid
+  assign show_section = false
+  assign show_placeholder = false
+  if related_articles_count > 0
+    assign show_section = true
+  elsif request.design_mode
+    assign show_placeholder = true
+  endif
+-%}
+
+{%- if show_section or show_placeholder -%}
+  {%- style -%}
+    #related-articles-{{ section_id }} {
+      /* Gated by the `bg_color_mode` attribute selector below, so `inherit`
+         leaves the section on the page ground. */
+      --ra-bg-color: {{ section.settings.bg_color }};
+
+      --ra-heading-color: {{ ra_heading_color }};
+      --ra-heading-font-size: {{ section.settings.mobile_heading_font_size }};
+      --ra-heading-white-space: normal;
+      --ra-divider-color: {{ ra_divider_color }};
+
+      --ra-card-gap: {{ section.settings.card_gap }}px;
+      --ra-row-gap: {{ section.settings.card_row_gap }}px;
+      --ra-column-gap: {{ section.settings.desktop_column_gap }}px;
+
+      --ra-image-radius: {{ section.settings.image_border_radius }};
+      --ra-image-width: 100%;
+      --ra-image-height: {{ section.settings.mobile_image_height }};
+      --ra-image-placeholder-color: {{ ra_image_placeholder_color }};
+
+      --ra-date-color: {{ ra_date_color }};
+      --ra-title-color: {{ ra_title_color }};
+      --ra-excerpt-color: {{ ra_excerpt_color }};
+      --ra-title-line-clamp: {{ section.settings.title_line_clamp }};
+      --ra-excerpt-line-clamp: {{ section.settings.mobile_excerpt_line_clamp }};
+
+      --ra-padding-top: {{ section.settings.mobile_padding_top }}px;
+      --ra-padding-bottom: {{ section.settings.mobile_padding_bottom }}px;
+      --ra-padding-left: {{ section.settings.mobile_padding_left }}px;
+      --ra-padding-right: {{ section.settings.mobile_padding_right }}px;
+
+      position: relative;
+    }
+
+    #related-articles-{{ section_id }}[data-bg-mode='custom'] {
+      background: var(--ra-bg-color);
+    }
+
+    /* gap 48 between the heading group and the card row.
+       `gap` rather than a margin so a blank heading takes its own air with it. */
+    #related-articles-{{ section_id }} .related-articles__inner {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 48px;
+      padding-top: var(--ra-padding-top);
+      padding-bottom: var(--ra-padding-bottom);
+      padding-left: var(--ra-padding-left);
+      padding-right: var(--ra-padding-right);
+    }
+
+    #related-articles-{{ section_id }} .related-articles__placeholder {
+      margin: 0;
+    }
+
+    /* ---------- 1. Header ---------- */
+
+    /* The divider is a ZERO-height line sitting at the
+       72px mark and drawn with an inset of -1px, so it costs no layout there.
+       In CSS it has to be a real 1px, which makes this box 73px against the
+       frame's 72 — the declared 16px auto-layout gap is kept rather than shaved
+       to 15px to absorb the stroke, matching sections/blog.liquid. */
+    #related-articles-{{ section_id }} .related-articles__header {
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ra-divider-color);
+    }
+
+    #related-articles-{{ section_id }} .related-articles__heading {
+      margin: 0;
+      width: 100%;
+      font-family: var(--font-heading--family);
+      font-size: var(--ra-heading-font-size);
+      font-weight: 400;
+      line-height: 1.4;
+      letter-spacing: 0;
+      text-align: center;
+      text-transform: capitalize;
+      white-space: var(--ra-heading-white-space);
+      color: var(--ra-heading-color);
+    }
+
+    /* ---------- 2. Grid ---------- */
+
+    #related-articles-{{ section_id }} .related-articles__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+      row-gap: var(--ra-row-gap);
+      column-gap: var(--ra-column-gap);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    #related-articles-{{ section_id }} .related-articles__item {
+      min-width: 0;
+    }
+
+    /* ---------- 3. Card ---------- */
+
+    /* `snippets/article.liquid`'s markup, styled here. Same treatment as
+       sections/blog.liquid so the two article cards in the theme stay one
+       shape; the values that differ are this design's row gap (80 against 48)
+       and its divider colour. */
+    #related-articles-{{ section_id }} .blog-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--ra-card-gap);
+      min-width: 0;
+    }
+
+    #related-articles-{{ section_id }} .blog-card__media {
+      position: relative;
+      flex: 0 0 auto;
+      width: var(--ra-image-width);
+      height: var(--ra-image-height);
+      overflow: hidden;
+      border-radius: var(--ra-image-radius);
+    }
+
+    #related-articles-{{ section_id }} .blog-card__media-placeholder {
+      width: 100%;
+      height: 100%;
+      background-color: var(--ra-image-placeholder-color);
+    }
+
+    /* No flex shorthand on the mobile (column) axis — a `flex-basis: 0` there
+       sizes the HEIGHT, not the width. The row behaviour is set at >= 64rem. */
+    #related-articles-{{ section_id }} .blog-card__body {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--ra-card-gap);
+      width: 100%;
+      min-width: 0;
+    }
+
+    #related-articles-{{ section_id }} .blog-card__head {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    #related-articles-{{ section_id }} .blog-card__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0;
+      font-family: var(--font-body--family);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.4;
+      letter-spacing: 0;
+      white-space: nowrap;
+      color: var(--ra-date-color);
+    }
+
+    #related-articles-{{ section_id }} .blog-card__meta-item::after {
+      content: '•';
+      margin-left: 0.5rem;
+    }
+
+    #related-articles-{{ section_id }} .blog-card__meta-item:last-child::after {
+      content: '';
+      margin: 0;
+    }
+
+    #related-articles-{{ section_id }} .blog-card__title {
+      margin: 0;
+      font-family: var(--font-heading--family);
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--ra-title-color);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: var(--ra-title-line-clamp);
+    }
+
+    /* The anchor carries the accessible name AND, through this pseudo-element,
+       the whole card's hit area — so there is no empty overlay link. */
+    #related-articles-{{ section_id }} .blog-card__title a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    #related-articles-{{ section_id }} .blog-card__title a::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    #related-articles-{{ section_id }} .blog-card__excerpt {
+      margin: 0;
+      font-family: var(--font-body--family);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--ra-excerpt-color);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: var(--ra-excerpt-line-clamp);
+    }
+
+    /* ---------- 4. Desktop ---------- */
+
+    @media (width >= 64rem) {
+      #related-articles-{{ section_id }} {
+        --ra-heading-font-size: {{ section.settings.heading_font_size }};
+        {%- if section.settings.heading_nowrap -%}
+          --ra-heading-white-space: nowrap;
+        {%- endif -%}
+
+        --ra-image-width: {{ section.settings.desktop_image_size }};
+        --ra-image-height: {{ section.settings.desktop_image_size }};
+
+        --ra-excerpt-line-clamp: {{ section.settings.desktop_excerpt_line_clamp }};
+
+        --ra-padding-top: {{ section.settings.desktop_padding_top }}px;
+        --ra-padding-bottom: {{ section.settings.desktop_padding_bottom }}px;
+        --ra-padding-left: {{ section.settings.desktop_padding_left }}px;
+        --ra-padding-right: {{ section.settings.desktop_padding_right }}px;
+      }
+
+      /* 592 + 80 + 592 = 1264 — two equal columns filling the content measure. */
+      #related-articles-{{ section_id }} .related-articles__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #related-articles-{{ section_id }} .blog-card {
+        flex-direction: row;
+      }
+
+      #related-articles-{{ section_id }} .blog-card__body {
+        flex: 1 1 auto;
+      }
+    }
+  {%- endstyle -%}
+
+  <div
+    id="related-articles-{{ section_id }}"
+    class="related-articles"
+    data-bg-mode="{{ section.settings.bg_color_mode }}"
+  >
+    <div class="shopify-page-width shopify-page-padding">
+      <div class="related-articles__inner">
+        {%- if show_placeholder -%}
+          <p class="related-articles__placeholder">Related Articles — add articles to this blog to show this section</p>
+        {%- else -%}
+          {%- if heading != blank -%}
+            <div class="related-articles__header">
+              <h2 class="related-articles__heading">{{ heading }}</h2>
+            </div>
+          {%- endif -%}
+
+          <ul class="related-articles__grid">
+            {{ related_article_cards }}
+          </ul>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:section.related_articles.name",
+  "tag": "section",
+  "enabled_on": {
+    "templates": ["article"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:heading.label",
+      "default": "You May Also Like"
+    },
+    {
+      "type": "range",
+      "id": "articles_to_show",
+      "label": "t:section.related_articles.articles_to_show.label",
+      "info": "t:section.related_articles.articles_to_show.info",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "header",
+      "content": "t:article.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "label": "t:image.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "t:date.label",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "t:author.label",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "title_line_clamp",
+      "label": "t:blog.title_line_clamp.label",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "desktop_excerpt_line_clamp",
+      "label": "t:blog.desktop_excerpt_line_clamp.label",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "mobile_excerpt_line_clamp",
+      "label": "t:blog.mobile_excerpt_line_clamp.label",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "header",
+      "content": "t:image.name"
+    },
+    {
+      "type": "text",
+      "id": "desktop_image_size",
+      "label": "t:blog.desktop_image_size.label",
+      "default": "208px"
+    },
+    {
+      "type": "text",
+      "id": "mobile_image_height",
+      "label": "t:blog.mobile_image_height.label",
+      "default": "208px"
+    },
+    {
+      "type": "text",
+      "id": "image_border_radius",
+      "label": "t:size.border_radius.label",
+      "default": "20px"
+    },
+    {
+      "type": "header",
+      "content": "t:typography.name"
+    },
+    {
+      "type": "text",
+      "id": "heading_font_size",
+      "label": "t:typography.font_size.desktop.label",
+      "default": "2.5rem"
+    },
+    {
+      "type": "text",
+      "id": "mobile_heading_font_size",
+      "label": "t:typography.font_size.mobile.label",
+      "default": "2.5rem"
+    },
+    {
+      "type": "checkbox",
+      "id": "heading_nowrap",
+      "label": "t:section.related_articles.heading_nowrap.label",
+      "info": "t:section.related_articles.heading_nowrap.info",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:colors.name"
+    },
+    {
+      "type": "select",
+      "id": "color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "t:heading.label",
+      "default": "#111111",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "divider_color",
+      "label": "t:colors.border.label",
+      "default": "#E5E7EB",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "date_color",
+      "label": "t:date.label",
+      "default": "#737373",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "t:title.label",
+      "default": "#111111",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "excerpt_color",
+      "label": "t:blog.excerpt.label",
+      "default": "#737373",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "image_placeholder_color",
+      "label": "t:blog.image_placeholder_color.label",
+      "default": "#f5f5f5",
+      "visible_if": "{{ section.settings.color_mode == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:appearance.content"
+    },
+    {
+      "type": "select",
+      "id": "bg_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        {
+          "value": "inherit",
+          "label": "t:color_mode.options.inherit"
+        },
+        {
+          "value": "custom",
+          "label": "t:color_mode.options.custom"
+        }
+      ],
+      "default": "custom"
+    },
+    {
+      "type": "color_background",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "t:layout.desktop.content"
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "label": "t:size.gap.label",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "card_row_gap",
+      "label": "t:blog.row_gap.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "desktop_column_gap",
+      "label": "t:blog.column_gap.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 88
+    },
+    {
+      "type": "range",
+      "id": "desktop_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 88
+    },
+    {
+      "type": "header",
+      "content": "t:layout.mobile.content"
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_top",
+      "label": "t:size.padding.top.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_bottom",
+      "label": "t:size.padding.bottom.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 64
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_left",
+      "label": "t:size.padding.left.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "mobile_padding_right",
+      "label": "t:size.padding.right.label",
+      "min": 0,
+      "max": 128,
+      "step": 2,
+      "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:section.related_articles.name"
+    }
+  ]
+}
+{% endschema %}

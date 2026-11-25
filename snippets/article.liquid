@@ -1,0 +1,105 @@
+{% doc %}
+  Renders one article card for the blog listing grid.
+
+  Image left / text right on desktop, image above / text below on mobile.
+  This snippet is MARKUP ONLY — every rule that styles it lives in
+  `sections/blog.liquid`, scoped to `#blog-<section.id>`, because the card is
+  rendered in a loop and a `{% style %}` block here would be emitted once per
+  article.
+
+  @param {object} article - The article to render
+  @param {boolean} [show_image] - Render the media slot. Defaults to true
+  @param {boolean} [show_date] - Render the published date. Defaults to true
+  @param {boolean} [show_author] - Render the author. Defaults to false
+
+  @example
+  {% render 'article', article: article, show_image: true, show_date: true %}
+{% enddoc %}
+
+{%- liquid
+  if show_image == null
+    assign show_image = true
+  endif
+  if show_date == null
+    assign show_date = true
+  endif
+  if show_author == null
+    assign show_author = false
+  endif
+
+  comment
+    `strip_html` removes tags without putting anything in their place, so an
+    article with no excerpt set — where `excerpt_or_content` falls back to the
+    body — runs the last word of one block straight into the first word of the
+    next ("...actually takeMost people..."). Turn every block close into a
+    space first. Runs of spaces collapse when the text is rendered.
+  endcomment
+  assign block_breaks = '</p>,</h1>,</h2>,</h3>,</h4>,</h5>,</h6>,</li>,</blockquote>,<br>,<br/>,<br />' | split: ','
+  assign excerpt = article.excerpt_or_content
+  for block_break in block_breaks
+    assign excerpt = excerpt | replace: block_break, ' '
+  endfor
+  assign excerpt = excerpt | strip_html | strip
+-%}
+
+<article class="blog-card">
+  {%- if show_image -%}
+    <div class="blog-card__media">
+      {%- if article.image != blank -%}
+        {%- render 'responsive-image',
+          image: article.image,
+          sizes: '208,416,624,832',
+          desktop_enable_custom_dimension: true,
+          desktop_custom_width: '100%',
+          desktop_custom_height: '100%',
+          enable_mobile_size: true,
+          mobile_enable_custom_dimension: true,
+          mobile_custom_width: '100%',
+          mobile_custom_height: '100%',
+          border_mode: 'custom',
+          desktop_border_top_left_radius: '0',
+          desktop_border_top_right_radius: '0',
+          desktop_border_bottom_left_radius: '0',
+          desktop_border_bottom_right_radius: '0',
+          mobile_border_top_left_radius: '0',
+          mobile_border_top_right_radius: '0',
+          mobile_border_bottom_left_radius: '0',
+          mobile_border_bottom_right_radius: '0'
+        -%}
+      {%- else -%}
+        {%- comment -%}
+          An article with no image gets a flat tinted rectangle so the row stays
+          aligned instead of collapsing. The theme's own `.image-placeholder` is
+          not reused here: it carries min-width/min-height 150px and paints
+          `--color-primary-background`, which is a CTA colour, not a slot tint.
+        {%- endcomment -%}
+        <div class="blog-card__media-placeholder"></div>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+
+  <div class="blog-card__body">
+    <div class="blog-card__head">
+      {%- if show_date or show_author -%}
+        <p class="blog-card__meta">
+          {%- if show_date -%}
+            <span class="blog-card__meta-item">
+              {{- article.published_at | date: '%b %d, %Y' -}}
+            </span>
+          {%- endif -%}
+          {%- if show_author -%}
+            <span class="blog-card__meta-item">{{ article.author }}</span>
+          {%- endif -%}
+        </p>
+      {%- endif -%}
+
+      <h2 class="blog-card__title">
+        <a href="{{ article.url }}">{{- article.title -}}</a>
+      </h2>
+    </div>
+
+    {%- if excerpt != blank -%}
+      <p class="blog-card__excerpt">{{ excerpt | truncatewords: 30 }}</p>
+    {%- endif -%}
+  </div>
+</article>

@@ -1,0 +1,699 @@
+{%- liquid
+  assign section_id = section.id
+
+  assign logo = section.settings.logo | default: settings.logo
+  assign tagline = section.settings.tagline
+  assign copyright_text = section.settings.copyright_text
+  assign current_year = 'now' | date: '%Y'
+  assign logo_sizes = section.settings.logo_width | append: 'px'
+
+  comment
+    Socials come from the GLOBAL social settings, the same source
+    blocks/social-accounts.liquid reads, so the URLs stay merchant-editable in
+    one place and this section never owns a second copy of them.
+  endcomment
+  assign has_social = false
+  if settings.social_facebook_link != blank or settings.social_pinterest_link != blank
+    assign has_social = true
+  endif
+  if settings.social_youtube_link != blank or settings.social_instagram_link != blank
+    assign has_social = true
+  endif
+  if settings.social_tiktok_link != blank
+    assign has_social = true
+  endif
+
+  assign show_payment = false
+  if section.settings.show_payment_icons and shop.enabled_payment_types.size > 0
+    assign show_payment = true
+  endif
+
+  comment
+    THE SPLIT — cascades at COLUMN level first rather than gating the whole
+    section. A menu column needs BOTH a heading and a menu holding links; a
+    socials column needs a heading. A column missing its required settings
+    takes the split on its own and the rest of the footer stands.
+  endcomment
+  assign surviving_columns = 0
+  for block in section.blocks
+    case block.type
+      when 'menu_column'
+        assign column_menu = linklists[block.settings.menu]
+        if block.settings.heading != blank and column_menu.links.size > 0
+          assign surviving_columns = surviving_columns | plus: 1
+        endif
+      when 'socials_column'
+        if block.settings.heading != blank
+          assign surviving_columns = surviving_columns | plus: 1
+        endif
+    endcase
+  endfor
+
+  comment
+    A footer is structural, so only a WHOLLY empty one takes the whole-section
+    split: no logo, no tagline, no surviving column and no copyright. Gating on
+    any single field would let one cleared setting erase the whole footer.
+  endcomment
+  assign show_section = false
+  assign show_placeholder = false
+  if logo != blank or tagline != blank or surviving_columns > 0 or copyright_text != blank
+    assign show_section = true
+  elsif request.design_mode
+    assign show_placeholder = true
+  endif
+-%}
+
+{%- if show_section or show_placeholder -%}
+  {%- style -%}
+    #footer-{{ section_id }} {
+      /* Bound to the theme palette, not to literals, so a client theme
+         re-skins the footer by moving its globals. */
+      --footer-text-color: var(--color-muted-foreground);
+      --footer-heading-color: var(--color-foreground);
+
+      /* Mobile first — the desktop block below re-points every one of these. */
+      --footer-root-gap: 80px;
+      --footer-pad-block-start: 48px;
+      --footer-pad-block-end: 24px;
+      --footer-pad-inline: 16px;
+      --footer-content-gap: 80px;
+      --footer-links-gap: 32px;
+      --footer-heading-size: 18px;
+      --footer-badge-size: 32px;
+      --footer-logo-width: {{ section.settings.logo_width }}px;
+
+      /* Read by the script below. A media query is the ONLY thing allowed to
+         set it, so JS and CSS can never disagree about the breakpoint. */
+      --footer-is-desktop: 0;
+
+      background: {{ section.settings.bg_color }};
+    }
+
+    #footer-{{ section_id }} .footer__inner {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--footer-root-gap);
+      padding-block: var(--footer-pad-block-start) var(--footer-pad-block-end);
+      padding-inline: var(--footer-pad-inline);
+    }
+
+    /* ── Content band ───────────────────────────────────────────────
+       Mobile stacks brand over links at the root rhythm; desktop turns the
+       same two children into one row. */
+    #footer-{{ section_id }} .footer__content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--footer-content-gap);
+      width: 100%;
+    }
+
+    #footer-{{ section_id }} .footer__brand {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
+      width: 100%;
+    }
+
+    #footer-{{ section_id }} .footer__logo {
+      display: block;
+      width: var(--footer-logo-width);
+      height: auto;
+    }
+
+    #footer-{{ section_id }} .footer__tagline {
+      margin: 0;
+      font-family: var(--font-body--family);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--footer-text-color);
+    }
+
+    /* ── Link columns ───────────────────────────────────────────────── */
+    #footer-{{ section_id }} .footer__links {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--footer-links-gap);
+      width: 100%;
+    }
+
+    #footer-{{ section_id }} .footer__col {
+      width: 100%;
+    }
+
+    #footer-{{ section_id }} accordion-trigger {
+      padding: 0;
+      color: var(--footer-heading-color);
+    }
+
+    #footer-{{ section_id }} .footer__heading {
+      margin: 0;
+      font-family: var(--font-heading--family);
+      font-weight: 700;
+      font-size: var(--footer-heading-size);
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--footer-heading-color);
+      white-space: nowrap;
+    }
+
+    /* accordion.css sizes its appended chevron at 1rem; this one is 24. */
+    #footer-{{ section_id }} .accordion-icon {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Open panel reuses the closed layout's rhythm: 24 heading-to-body,
+       16 link-to-link. */
+    #footer-{{ section_id }} .accordion-content-inner {
+      padding-block: 24px 0;
+    }
+
+    #footer-{{ section_id }} .footer__menu {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    /* Block-level, so the anchor's own 1.4 line box sets the row height. Left
+       inline, the <li> keeps the body's inherited line-height and the link
+       pitch drifts several px taller. */
+    #footer-{{ section_id }} .footer__menu a {
+      display: block;
+      width: fit-content;
+      font-family: var(--font-body--family);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--footer-text-color);
+      text-decoration: none;
+    }
+
+    #footer-{{ section_id }} .footer__menu a:hover,
+    #footer-{{ section_id }} .footer__menu a:focus-visible {
+      text-decoration: underline;
+    }
+
+    #footer-{{ section_id }} .footer__socials {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    #footer-{{ section_id }} .footer__socials a {
+      display: block;
+      width: 24px;
+      height: 24px;
+      color: var(--footer-heading-color);
+    }
+
+    #footer-{{ section_id }} .footer__socials svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Bottom band ────────────────────────────────────────────────── */
+    #footer-{{ section_id }} .footer__bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
+      width: 100%;
+    }
+
+    #footer-{{ section_id }} .footer__copyright {
+      margin: 0;
+      font-family: var(--font-body--family);
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.4;
+      letter-spacing: 0;
+      color: var(--footer-text-color);
+      white-space: nowrap;
+    }
+
+    #footer-{{ section_id }} .footer__payment {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    #footer-{{ section_id }} .footer__payment li {
+      display: flex;
+      align-items: center;
+      width: var(--footer-badge-size);
+    }
+
+    #footer-{{ section_id }} .footer__payment svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    #footer-{{ section_id }} .footer__placeholder {
+      margin: 0;
+      font-family: var(--font-body--family);
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--footer-text-color);
+    }
+
+    /* ── Desktop ─────────────────────────────────────────────────────
+       One DOM serves both breakpoints: the accordion markup ships at every
+       width and desktop forces every panel open, drops the chevron and turns
+       the stack back into a row. */
+    @media screen and (min-width: 768px) {
+      #footer-{{ section_id }} {
+        --footer-root-gap: 128px;
+        --footer-pad-block-start: 64px;
+        --footer-pad-inline: 48px;
+        --footer-content-gap: 168px;
+        --footer-links-gap: 48px;
+        --footer-heading-size: 20px;
+        --footer-badge-size: 40px;
+        --footer-is-desktop: 1;
+      }
+
+      #footer-{{ section_id }} .footer__content {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+
+      #footer-{{ section_id }} .footer__brand {
+        flex: 1 0 0;
+        min-width: 0;
+        width: auto;
+      }
+
+      #footer-{{ section_id }} .footer__links {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: flex-end;
+        width: auto;
+      }
+
+      #footer-{{ section_id }} .footer__col {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 24px;
+      }
+
+      #footer-{{ section_id }} .footer__col--menu {
+        width: 208px;
+      }
+
+      #footer-{{ section_id }} .footer__col--socials {
+        width: auto;
+      }
+
+      #footer-{{ section_id }} accordion-trigger {
+        cursor: default;
+      }
+
+      #footer-{{ section_id }} .accordion-icon {
+        display: none;
+      }
+
+      /* !important beats the inline height accordion.js writes while
+         animating, so a panel opened at mobile width stays open here. */
+      #footer-{{ section_id }} accordion-content {
+        height: auto !important;
+        overflow: visible !important;
+        transition: none;
+      }
+
+      #footer-{{ section_id }} .accordion-content-inner {
+        padding-block: 0;
+      }
+
+      #footer-{{ section_id }} .footer__bottom {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      #footer-{{ section_id }} .footer__payment {
+        justify-content: flex-end;
+      }
+    }
+  {%- endstyle -%}
+
+  <div id="footer-{{ section_id }}" class="footer">
+    <div class="footer__inner shopify-page-width">
+      {%- if show_placeholder -%}
+        <p class="footer__placeholder">Footer — add Logo, Tagline, Menu, Copyright text to show this section</p>
+      {%- else -%}
+        <div class="footer__content">
+          {%- if logo != blank or tagline != blank -%}
+            <div class="footer__brand">
+              {%- if logo != blank -%}
+                {{
+                  logo
+                  | image_url: width: 432
+                  | image_tag: class: 'footer__logo', widths: '108,216,324,432', sizes: logo_sizes, alt: shop.name
+                }}
+              {%- endif -%}
+              {%- if tagline != blank -%}
+                <p class="footer__tagline">{{ tagline }}</p>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+
+          {%- if surviving_columns > 0 or request.design_mode -%}
+            <div class="footer__links">
+              {%- for block in section.blocks -%}
+                {%- liquid
+                  assign column_ok = false
+                  assign missing = ''
+
+                  case block.type
+                    when 'menu_column'
+                      assign column_menu = linklists[block.settings.menu]
+                      if block.settings.heading != blank and column_menu.links.size > 0
+                        assign column_ok = true
+                      else
+                        if block.settings.heading == blank
+                          assign missing = 'Heading'
+                        endif
+                        if column_menu.links.size == 0
+                          if missing == blank
+                            assign missing = 'Menu'
+                          else
+                            assign missing = missing | append: ', Menu'
+                          endif
+                        endif
+                      endif
+                    when 'socials_column'
+                      if block.settings.heading != blank
+                        assign column_ok = true
+                      else
+                        assign missing = 'Heading'
+                      endif
+                  endcase
+                -%}
+
+                {%- if column_ok -%}
+                  <accordion-item
+                    class="footer__col footer__col--{% if block.type == 'socials_column' %}socials{% else %}menu{% endif %}"
+                    {{ block.shopify_attributes }}
+                  >
+                    <accordion-trigger>
+                      <h2 class="footer__heading">{{ block.settings.heading }}</h2>
+                    </accordion-trigger>
+                    <accordion-content>
+                      <div class="accordion-content-inner">
+                        {%- if block.type == 'socials_column' -%}
+                          {%- if has_social -%}
+                            <div class="footer__socials">
+                              {%- if settings.social_facebook_link != blank -%}
+                                <a
+                                  href="{{ settings.social_facebook_link }}"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="Facebook"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                  </svg>
+                                </a>
+                              {%- endif -%}
+                              {%- if settings.social_pinterest_link != blank -%}
+                                <a
+                                  href="{{ settings.social_pinterest_link }}"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="Pinterest"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+                                  </svg>
+                                </a>
+                              {%- endif -%}
+                              {%- if settings.social_youtube_link != blank -%}
+                                <a
+                                  href="{{ settings.social_youtube_link }}"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="YouTube"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                  </svg>
+                                </a>
+                              {%- endif -%}
+                              {%- if settings.social_instagram_link != blank -%}
+                                <a
+                                  href="{{ settings.social_instagram_link }}"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="Instagram"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                  </svg>
+                                </a>
+                              {%- endif -%}
+                              {%- if settings.social_tiktok_link != blank -%}
+                                <a
+                                  href="{{ settings.social_tiktok_link }}"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label="TikTok"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                                  </svg>
+                                </a>
+                              {%- endif -%}
+                            </div>
+                          {%- endif -%}
+                        {%- else -%}
+                          <ul class="footer__menu" role="list">
+                            {%- for link in column_menu.links -%}
+                              <li>
+                                <a href="{{ link.url }}">{{ link.title }}</a>
+                              </li>
+                            {%- endfor -%}
+                          </ul>
+                        {%- endif -%}
+                      </div>
+                    </accordion-content>
+                  </accordion-item>
+                {%- elsif request.design_mode -%}
+                  <div class="footer__col" {{ block.shopify_attributes }}>
+                    <p class="footer__placeholder">Footer — add {{ missing }} to show this block</p>
+                  </div>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        </div>
+
+        {%- if copyright_text != blank or show_payment -%}
+          <div class="footer__bottom">
+            {%- if copyright_text != blank -%}
+              <p class="footer__copyright">&copy; {{ current_year }}, {{ copyright_text }}</p>
+            {%- endif -%}
+            {%- if show_payment -%}
+              <div>
+                <span class="sr-only">{{ 'payment_type' | t }}</span>
+                <ul class="footer__payment" role="list">
+                  {%- for type in shop.enabled_payment_types -%}
+                    <li>{{ type | payment_type_svg_tag: class: 'icon icon--full-color' }}</li>
+                  {%- endfor -%}
+                </ul>
+              </div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+  </div>
+
+  <script>
+    /* accordion.js gives every trigger a button role at connect time. Above the
+       breakpoint the panels are forced open by CSS and the trigger is inert, so
+       announcing "collapsed button" there would be a lie — this re-syncs the
+       interactive attributes to whichever breakpoint is live. */
+    (function () {
+      var root = document.getElementById('footer-{{ section_id }}');
+      if (!root) return;
+
+      /* The breakpoint is read back OUT of CSS rather than re-declared here as
+         a matchMedia string, so the two can never drift apart. */
+      function isDesktop() {
+        return getComputedStyle(root).getPropertyValue('--footer-is-desktop').trim() === '1';
+      }
+
+      function sync() {
+        var desktop = isDesktop();
+        root.querySelectorAll('accordion-item').forEach(function (item) {
+          var trigger = item.querySelector('accordion-trigger');
+          var content = item.querySelector('accordion-content');
+          if (!trigger || !content) return;
+
+          if (desktop) {
+            trigger.removeAttribute('role');
+            trigger.removeAttribute('tabindex');
+            trigger.removeAttribute('aria-expanded');
+            trigger.removeAttribute('aria-controls');
+            content.removeAttribute('role');
+            content.removeAttribute('aria-labelledby');
+          } else {
+            trigger.setAttribute('role', 'button');
+            trigger.setAttribute('tabindex', '0');
+            trigger.setAttribute('aria-expanded', item.getAttribute('data-state') === 'open' ? 'true' : 'false');
+            trigger.setAttribute('aria-controls', content.id);
+            content.setAttribute('role', 'region');
+            content.setAttribute('aria-labelledby', trigger.id);
+          }
+        });
+      }
+
+      /* accordion.js is deferred, so its elements upgrade before `load`. */
+      if (document.readyState === 'complete') {
+        sync();
+      } else {
+        window.addEventListener('load', sync);
+      }
+      /* A ResizeObserver on the element itself, not a window `resize` listener:
+         it fires for every box change whatever caused it, including the
+         viewport overrides devtools-driven emulation applies without ever
+         dispatching `resize`. */
+      if (typeof ResizeObserver === 'function') {
+        new ResizeObserver(function () {
+          clearTimeout(root._footerSyncTimer);
+          root._footerSyncTimer = setTimeout(sync, 100);
+        }).observe(root);
+      } else {
+        window.addEventListener('resize', function () {
+          clearTimeout(root._footerSyncTimer);
+          root._footerSyncTimer = setTimeout(sync, 100);
+        });
+      }
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:section.footer.name",
+  "tag": "footer",
+  "blocks": [
+    {
+      "type": "menu_column",
+      "name": "t:block.menu.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:heading.label",
+          "info": "Required. A column with no heading is skipped.",
+          "default": "More info"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "t:menu.label",
+          "info": "Required. A column with no menu, or an empty menu, is skipped."
+        }
+      ]
+    },
+    {
+      "type": "socials_column",
+      "name": "t:block.social_accounts.name",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:heading.label",
+          "info": "Required. A column with no heading is skipped.",
+          "default": "Socials"
+        },
+        {
+          "type": "paragraph",
+          "content": "Icons and links come from Theme settings → Social. A platform with no link is skipped."
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "t:colors.background_color.label",
+      "default": "#F5F5F5"
+    },
+    {
+      "type": "header",
+      "content": "Brand"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "t:image.label",
+      "info": "Falls back to the logo in Theme settings when empty."
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "t:size.width.label",
+      "min": 40,
+      "max": 240,
+      "step": 4,
+      "unit": "px",
+      "default": 108
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "t:text.label",
+      "default": "A short line about your brand."
+    },
+    {
+      "type": "header",
+      "content": "Bottom bar"
+    },
+    {
+      "type": "text",
+      "id": "copyright_text",
+      "label": "Copyright Text",
+      "info": "The year is added automatically.",
+      "default": "Company Name. All rights reserved."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "label": "Show payment icons",
+      "info": "Shows the payment methods enabled on this store.",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:section.footer.name",
+      "blocks": [
+        { "type": "menu_column", "settings": { "heading": "More info" } },
+        { "type": "menu_column", "settings": { "heading": "Policies" } },
+        { "type": "socials_column", "settings": { "heading": "Socials" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

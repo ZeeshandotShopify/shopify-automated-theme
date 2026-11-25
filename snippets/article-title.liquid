@@ -1,0 +1,273 @@
+{% doc %}
+  Renders the article hero.
+
+  Two edge-to-edge panels: a tinted text panel holding the breadcrumb, the
+  article title and the byline, beside a panel carrying the article's featured
+  image. Desktop puts the text left and the image right at 1fr each; mobile
+  stacks them with the IMAGE FIRST.
+
+  Full-bleed by design — the panels have no gutter between them and the split
+  runs to both edges of the frame — so this snippet is rendered OUTSIDE the
+  theme's `.shopify-page-width` wrapper and applies the page's 88/16 gutter as
+  the text panel's own inline padding.
+
+  No required settings: `article.title` always exists on an article template,
+  so this block never withholds itself and carries no `request.design_mode`
+  placeholder branch. The image is the one conditional — an article with no
+  featured image renders a flat colour block in its place, which keeps the
+  split intact rather than collapsing the row.
+
+  The panel image is `article.image`, which is what the design calls for. The
+  block's own `image` setting overrides it, for an article whose hero art is
+  not its featured image — `templates/article.about-us.json` is the existing
+  case.
+
+  @param {object} block - The `title` block of `sections/article.liquid`
+
+  @example
+  {% render 'article-title', block: block %}
+{% enddoc %}
+
+{%- liquid
+  assign hero_id = 'article-hero-' | append: block.id
+
+  assign show_meta = false
+  if block.settings.show_author or block.settings.show_date
+    assign show_meta = true
+  endif
+
+  assign published_date = article.published_at | date: '%b %d, %Y'
+
+  assign hero_image = block.settings.image
+  if hero_image == blank
+    assign hero_image = article.image
+  endif
+
+  comment
+    Colour resolves through a mode select rather than a schema default, because
+    a `color` setting cannot default to a CSS variable. `inherit` hands back the
+    theme token; `custom` hands back the merchant's swatch. Same shape as
+    snippets/pdp-testimonial.liquid.
+  endcomment
+  if block.settings.color_mode == 'custom'
+    assign ah_panel_background = block.settings.panel_background
+    assign ah_text_color = block.settings.text_color
+    assign ah_image_placeholder_color = block.settings.image_placeholder_color
+  else
+    assign ah_panel_background = 'var(--color-muted-background)'
+    assign ah_text_color = 'var(--color-article-foreground)'
+    comment
+      NOT --color-muted-background: that is the text panel beside it, and two
+      halves painted the same token read as one flat band instead of a split.
+    endcomment
+    assign ah_image_placeholder_color = 'var(--color-border)'
+  endif
+-%}
+
+{%- style -%}
+  #{{ hero_id }} {
+    /* Both type families map to theme globals and are read from them below;
+       the two panel fills resolve through the block's own `color_mode`. */
+    --ah-panel-background: {{ ah_panel_background }};
+    --ah-image-placeholder-color: {{ ah_image_placeholder_color }};
+
+    --ah-text-color: {{ ah_text_color }};
+    --ah-content-gap: {{ block.settings.content_gap }}px;
+
+    --ah-title-font-size: {{ block.settings.mobile_title_font_size }};
+    --ah-title-text-transform: none;
+
+    --ah-image-height: {{ block.settings.mobile_image_height }};
+
+    --ah-padding-block: {{ block.settings.mobile_padding_block }}px;
+    --ah-padding-inline: {{ block.settings.mobile_padding_inline }}px;
+
+    {%- if block.settings.title_capitalize -%}
+      --ah-title-text-transform: capitalize;
+    {%- endif -%}
+  }
+
+  /* mobile is a column with the image FIRST. Desktop turns
+     it into a gapless 1fr/1fr row and swaps the order back. */
+  #{{ hero_id }} .article-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  #{{ hero_id }} .article-hero__media {
+    order: 1;
+    position: relative;
+    width: 100%;
+    height: var(--ah-image-height);
+    overflow: hidden;
+    /* border-radius 0 on both breakpoints. */
+    border-radius: 0;
+    background-color: var(--ah-image-placeholder-color);
+  }
+
+  #{{ hero_id }} .article-hero__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  #{{ hero_id }} .article-hero__panel {
+    order: 2;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-block: var(--ah-padding-block);
+    padding-inline: var(--ah-padding-inline);
+    background-color: var(--ah-panel-background);
+    color: var(--ah-text-color);
+  }
+
+  /* one stack, gap 16, top-aligned within a panel that
+     centres it vertically. */
+  #{{ hero_id }} .article-hero__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ah-content-gap);
+    width: 100%;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  /* The shared breadcrumb snippet paints itself from the GLOBAL Breadcrumbs
+     settings, which underline the links, weight the current page at 600 and
+     leave 28px under the trail. The hero sits the trail tight above the title
+     in one regular weight, so all of that is restated here — SCOPED, so the
+     global trail on every other template is untouched. */
+  #{{ hero_id }} .article-hero__breadcrumbs.breadcrumbs {
+    margin-bottom: 0;
+  }
+
+  #{{ hero_id }} .article-hero__breadcrumbs.breadcrumbs,
+  #{{ hero_id }} .article-hero__breadcrumbs .breadcrumbs__link,
+  #{{ hero_id }} .article-hero__breadcrumbs .breadcrumbs__link[aria-current='page'] {
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-decoration: none;
+    color: var(--ah-text-color);
+  }
+
+  #{{ hero_id }} .article-hero__breadcrumbs .breadcrumbs__separator {
+    margin-inline: 0.28rem;
+  }
+
+  #{{ hero_id }} .article-hero__breadcrumbs .breadcrumbs__list {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  #{{ hero_id }} .article-hero__title {
+    margin: 0;
+    width: 100%;
+    font-family: var(--font-heading--family);
+    font-size: var(--ah-title-font-size);
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-transform: var(--ah-title-text-transform);
+    color: var(--ah-text-color);
+  }
+
+  #{{ hero_id }} .article-hero__byline {
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+    white-space: nowrap;
+    color: var(--ah-text-color);
+  }
+
+  @media (width >= 64rem) {
+    #{{ hero_id }} {
+      --ah-title-font-size: {{ block.settings.title_font_size }};
+      --ah-padding-block: {{ block.settings.desktop_padding_block }}px;
+      --ah-padding-inline: {{ block.settings.desktop_padding_inline }}px;
+    }
+
+    /* A row, items stretched, NO gap, both halves 1fr.
+
+       The basis is 50% and NOT 0: the panel carries the page gutter as its own
+       inline padding, and with a 0 basis that padding sits OUTSIDE the share
+       the panel is granted — the two halves then come out 803 / 627 on a 1440
+       frame instead of 715 / 715. A 50% basis on border-box puts the gutter
+       inside the half, which is the split the design draws. */
+    #{{ hero_id }} .article-hero {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    #{{ hero_id }} .article-hero__panel {
+      order: 1;
+      flex: 1 1 50%;
+      min-width: 0;
+    }
+
+    #{{ hero_id }} .article-hero__media {
+      order: 2;
+      flex: 1 1 50%;
+      min-width: 0;
+      height: auto;
+      align-self: stretch;
+    }
+  }
+{%- endstyle -%}
+
+<div
+  id="{{ hero_id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="article-hero">
+    <div class="article-hero__media">
+      {%- if hero_image != blank -%}
+        {{
+          hero_image
+          | image_url: width: 1600
+          | image_tag:
+            class: 'article-hero__image',
+            widths: '390, 720, 1080, 1440, 1600',
+            sizes: '(min-width: 64rem) 50vw, 100vw',
+            loading: 'eager',
+            fetchpriority: 'high',
+            alt: hero_image.alt
+          | default: article.title
+        }}
+      {%- endif -%}
+    </div>
+
+    <div class="article-hero__panel">
+      <div class="article-hero__content">
+        {%- if block.settings.show_breadcrumb -%}
+          {%- render 'breadcrumbs', class: 'article-hero__breadcrumbs', omit_current: true -%}
+        {%- endif -%}
+
+        <h1 class="article-hero__title">{{- article.title -}}</h1>
+
+        {%- if show_meta -%}
+          <p class="article-hero__byline">
+            {%- if block.settings.show_author and block.settings.show_date -%}
+              {{- 'blog.article_byline_html' | t: author: article.author, date: published_date -}}
+            {%- elsif block.settings.show_author -%}
+              {{- article.author -}}
+            {%- else -%}
+              {{- published_date -}}
+            {%- endif -%}
+          </p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>

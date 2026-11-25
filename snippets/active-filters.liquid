@@ -1,0 +1,138 @@
+{%- liquid
+  assign has_active_filter = false
+
+  for filter in filters
+    if filter.type == 'list'
+      if filter.active_values.size > 0
+        assign has_active_filter = true
+        break
+      endif
+    elsif filter.type == 'price_range'
+      if filter.min_value.value or filter.max_value.value
+        assign has_active_filter = true
+        break
+      endif
+    endif
+  endfor
+-%}
+
+{%- if has_active_filter -%}
+  {%- style -%}
+    .active-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      padding-top: 0.75rem;
+      font-family: var(--font-body--family);
+    }
+
+    .active-filters-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      background-color: transparent;
+      color: var(--color-outline-foreground, hsl(222.2 84% 4.9%));
+      border: 1px solid var(--color-muted-foreground, hsl(214.3 31.8% 91.4%));
+      border-radius: calc(infinity * 1px);
+      font-size: 0.75rem;
+      line-height: 1.25rem;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .active-filters-chip:hover {
+      background: var(--color-outline-hover-background, hsl(210 40% 96%));
+      color: var(--color-outline-hover-foreground, hsl(222.2 84% 4.9%));
+    }
+
+    .active-filters-chip-remove {
+      display: inline-flex;
+      font-size: 0.875rem;
+      line-height: 1;
+    }
+
+    .active-filters-remove-all {
+      position: relative;
+      font-size: 0.75rem;
+      line-height: 1.25rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .active-filters-remove-all::before,
+    .active-filters-remove-all::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      bottom: 0;
+      pointer-events: none;
+    }
+
+    /* animated fill — hidden by default, slides in on hover */
+    .active-filters-remove-all::before {
+      background: currentColor;
+      transform-origin: left center;
+      transform: scaleX(0);
+      transition: transform 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
+      z-index: 2;
+      will-change: transform;
+    }
+
+    /* faint baseline — always visible */
+    .active-filters-remove-all::after {
+      background: currentColor;
+      opacity: 0.25;
+      z-index: 1;
+    }
+
+    /* trigger on hover / keyboard focus */
+    .active-filters-remove-all:hover::before,
+    .active-filters-remove-all:focus::before {
+      transform: scaleX(1);
+    }
+  {%- endstyle -%}
+
+  <div class="active-filters">
+    {%- for filter in filters -%}
+      {%- if filter.type == 'list' -%}
+        {%- for filter_value in filter.active_values -%}
+          <a
+            class="active-filters-chip"
+            href="{{ filter_value.url_to_remove }}"
+            data-active-filter-remove
+          >
+            <span>{{ filter.label }}: {{ filter_value.label }}</span>
+            <span class="active-filters-chip-remove" aria-hidden="true">&times;</span>
+          </a>
+        {%- endfor -%}
+      {%- elsif filter.type == 'price_range' -%}
+        {%- if filter.min_value.value or filter.max_value.value -%}
+          <a
+            class="active-filters-chip"
+            href="{{ filter.url_to_remove }}"
+            data-active-filter-remove
+          >
+            <span>
+              {%- if filter.min_value.value and filter.max_value.value -%}
+                {{ filter.min_value.value | money }} - {{ filter.max_value.value | money }}
+              {%- elsif filter.min_value.value -%}
+                {{ filter.min_value.value | money }}+
+              {%- elsif filter.max_value.value -%}
+                Up to {{ filter.max_value.value | money }}
+              {%- endif -%}
+            </span>
+            <span class="active-filters-chip-remove" aria-hidden="true">&times;</span>
+          </a>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    <a class="active-filters-remove-all" href="{{ collection.url }}" data-active-filter-remove> Remove all </a>
+  </div>
+{%- endif -%}

@@ -1,0 +1,229 @@
+{%- liquid
+  assign heading = block.settings.heading
+  assign icon_1 = block.settings.icon_1
+  assign feature_1 = block.settings.feature_1
+  assign icon_2 = block.settings.icon_2
+  assign feature_2 = block.settings.feature_2
+  assign icon_3 = block.settings.icon_3
+  assign feature_3 = block.settings.feature_3
+
+  assign show_block = true
+
+  if block.settings.content_source == 'metafield_features_highlight'
+    assign mf = product.metafields.custom.features_highlight.value
+
+    if mf == blank
+      assign show_block = false
+    else
+      if mf.heading.value != blank
+        assign heading = mf.heading.value
+      endif
+
+      assign mf_features = mf.features.value
+
+      if mf_features != blank
+        for feat in mf_features limit: 3
+          if forloop.index0 == 0
+            assign f1 = feat
+          elsif forloop.index0 == 1
+            assign f2 = feat
+          elsif forloop.index0 == 2
+            assign f3 = feat
+          endif
+        endfor
+
+        if f1 != blank
+          if f1.icon.value != blank
+            assign icon_1 = f1.icon.value
+          endif
+          if f1.title.value != blank
+            assign feature_1 = f1.title.value
+          endif
+        endif
+
+        if f2 != blank
+          if f2.icon.value != blank
+            assign icon_2 = f2.icon.value
+          endif
+          if f2.title.value != blank
+            assign feature_2 = f2.title.value
+          endif
+        endif
+
+        if f3 != blank
+          if f3.icon.value != blank
+            assign icon_3 = f3.icon.value
+          endif
+          if f3.title.value != blank
+            assign feature_3 = f3.title.value
+          endif
+        endif
+      endif
+    endif
+  endif
+-%}
+
+{%- if show_block -%}
+{%- style -%}
+  .pdp-features-highlight-wrapper {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+
+    color: {{ block.settings.foreground_color }}
+  }
+
+  .pdp-features-highlight {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .pdp-features-highlight-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: {{ block.settings.background_color }};
+    border-top-right-radius: {{ block.settings.border_radius }};
+    border-top-left-radius: {{ block.settings.border_radius }};
+    padding: 1rem;
+  }
+
+  .pdp-features-highlight-header h2 {
+    font-family: var(--font-body--family);
+    font-size: 1rem;
+    line-height: 140%;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .pdp-features-highlight-features {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .pdp-features-highlight-feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background: {{ block.settings.background_color }};
+    padding: 1rem;
+  }
+
+  .pdp-features-highlight-feature-item p {
+    font-family: var(--font-body--family);
+    font-size: 0.875rem;
+    line-height: 140%;
+    text-align: center;
+  }
+
+  .pdp-features-highlight-feature-item.left {
+    border-bottom-left-radius: {{ block.settings.border_radius }};
+  }
+
+  .pdp-features-highlight-feature-item.right {
+    border-bottom-right-radius: {{ block.settings.border_radius }};
+  }
+{%- endstyle -%}
+
+{%- comment -%}
+  =============================================================================
+  Metafield diagnostic panel (DISABLED - wrapped in a Liquid comment block)
+  =============================================================================
+  To re-enable: delete the opening Liquid comment tag on the line above and the
+  matching closing Liquid comment tag at the end of this block (just before the
+  main wrapper div). Do NOT write a literal closing-comment tag anywhere inside
+  these notes — Liquid's parser would treat it as the real closing tag and end
+  the comment block prematurely, causing all the debug markup below to render.
+
+  This panel renders ONLY when: Content source = Metafield AND request.design_mode
+  (i.e. only inside the theme editor, never on the live storefront).
+
+  Useful when rendering goes wrong for metafield-backed blocks. It dumps:
+    - Whether the top-level metaobject resolved at all (and its handle)
+    - The raw JSON of the metaobject (shows actual field keys Shopify stored)
+    - Direct field lookups (so you can compare expected vs. actual values)
+    - The nested list field's type + size
+    - Each child metaobject via for-loop iteration, with per-entry raw JSON
+    - A probe of whether bracket indexing (`[0]`) resolves each child
+
+  Common metafield gotchas this panel surfaces:
+    1. Nested `list.metaobject_reference` fields don't dereference with `[index]`
+       notation — use `for feat in mf.features.value` iteration instead.
+    2. Field keys are auto-generated from field names, but if a field was renamed
+       the key may not match the new name. The raw JSON dump reveals actual keys.
+    3. Metaobject entries default to Draft status. Drafts don't reach storefront.
+    4. Referencing a metaobject on a product requires creating a metaobject ENTRY
+       first (Content > Metaobjects), then referencing it from the product.
+
+  Adapt variable names (mf, mf_features, f1..3) and field keys (heading, title,
+  icon) for other metafield-driven snippets.
+
+  {%- if block.settings.content_source == 'metafield_features_highlight' and request.design_mode -%}
+    <div style="margin:0 0 1rem;padding:0.75rem 1rem;background:#fff9e5;border:1px dashed #d4a017;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:0.75rem;color:#3a2e00;line-height:1.5;white-space:normal;word-break:break-word;">
+      <strong>Features Highlight metafield debug (visible in theme editor only)</strong><br>
+      Metaobject resolved: {% if mf == blank %}<span style="color:#b00">NO</span>{% else %}yes ({{ mf.system.handle | default: mf.handle | default: '(no handle)' }}){% endif %}<br>
+      {%- if mf != blank -%}
+        <br><strong>--- Raw metaobject JSON (shows actual field keys) ---</strong><br>
+        <code style="display:block;white-space:pre-wrap;background:#fff;padding:0.5rem;border:1px solid #e5d798;max-height:260px;overflow:auto;">{{ mf | json }}</code>
+        <br><strong>--- Direct field lookups ---</strong><br>
+        mf.heading.value: {% if mf.heading.value != blank %}"{{ mf.heading.value | escape }}"{% else %}<span style="color:#b00">(blank)</span>{% endif %}<br>
+        mf.label.value: {% if mf.label.value != blank %}"{{ mf.label.value | escape }}"{% else %}<span style="color:#b00">(blank)</span>{% endif %}<br>
+        mf.features type: {{ mf.features.type | default: '(no type)' }}, value-is-array: {% if mf.features.value.size %}yes (size {{ mf.features.value.size }}){% else %}no{% endif %}<br>
+        <br><strong>--- Features via for-loop iteration (preferred pattern) ---</strong><br>
+        {%- for feat in mf.features.value -%}
+          <div style="margin-left:1rem;padding:0.25rem 0;border-bottom:1px dotted #d4a017;">
+            [{{ forloop.index0 }}] handle: {{ feat.system.handle | default: feat.handle | default: '(none)' }}<br>
+            &nbsp;&nbsp;raw JSON: <code>{{ feat | json }}</code><br>
+            &nbsp;&nbsp;feat.title.value: {% if feat.title.value != blank %}"{{ feat.title.value | escape }}"{% else %}<span style="color:#b00">(blank)</span>{% endif %}<br>
+            &nbsp;&nbsp;feat.icon.value size: {{ feat.icon.value.size | default: 0 }}<br>
+            &nbsp;&nbsp;feat.display_name: {{ feat.display_name | default: '(none)' }}
+          </div>
+        {%- else -%}
+          <span style="color:#b00">(features iteration produced no items)</span>
+        {%- endfor -%}
+        <br><strong>--- Indexed lookups (probe whether f1 hydrated) ---</strong><br>
+        f1 resolves: {% if f1 == blank %}<span style="color:#b00">NO (bracket indexing broken or for-loop skipped)</span>{% else %}yes{% endif %}<br>
+      {%- endif -%}
+      <em style="display:block;margin-top:0.5rem;">If any value above is blank or unexpected: compare the raw JSON keys to the ones the snippet reads. Confirm the metaobject entry is Active (not Draft). Prefer for-loop iteration over bracket indexing when accessing nested list.metaobject_reference fields.</em>
+    </div>
+  {%- endif -%}
+{%- endcomment -%}
+
+<div class="pdp-features-highlight-wrapper" {{ block.shopify_attributes }}>
+  <div class="pdp-features-highlight">
+    <div class="pdp-features-highlight-header">
+      <h2>
+        {{- heading -}}
+      </h2>
+    </div>
+
+    <div class="pdp-features-highlight-features">
+      <div class="pdp-features-highlight-feature-item left">
+        {% render 'icon', id: block.id, icon_size: 40, icon_mode: 'custom', icon_custom: icon_1 %}
+
+        <p>
+          {{- feature_1 -}}
+        </p>
+      </div>
+
+      <div class="pdp-features-highlight-feature-item center">
+        {% render 'icon', id: block.id, icon_size: 40, icon_mode: 'custom', icon_custom: icon_2 %}
+
+        <p>
+          {{- feature_2 -}}
+        </p>
+      </div>
+
+      <div class="pdp-features-highlight-feature-item right">
+        {% render 'icon', id: block.id, icon_size: 40, icon_mode: 'custom', icon_custom: icon_3 %}
+
+        <p>
+          {{- feature_3 -}}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{%- endif -%}

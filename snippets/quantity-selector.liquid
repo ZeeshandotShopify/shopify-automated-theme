@@ -1,0 +1,112 @@
+{% style %}
+  .quantity-container {
+    display: flex;
+    align-items: center;
+    background-color: var(--color-quantity-selector-background);
+    color: var(--color-quantity-selector-foreground);
+    border: var(--input-border-thickness, 1px) solid var(--color-border, #e5e5e5);
+    border-radius: var(--input-border-radius);
+  }
+
+  .quantity-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: 1rem;
+    height: 1rem;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    white-space: nowrap;
+    border-radius: var(--button-border-radius);
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .quantity-button svg {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  .quantity-button:hover {
+    opacity: 0.8;
+  }
+
+  .quantity-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.75rem; /* 12px */
+    line-height: 1rem; /* 16px */
+    width: 2rem;
+  }
+
+  .quantity-input:focus {
+    outline: none;
+    border: var(--input-border-thickness, 1px) solid var(--color-input, #e5e5e5);
+  }
+
+  .quantity-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Chrome, Safari, Edge, Opera */
+  .quantity-input::-webkit-outer-spin-button,
+  .quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  .quantity-input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  /* Quantity selector loading states */
+  .quantity-container.loading {
+    opacity: 0.6;
+  }
+
+  .quantity-container.loading .quantity-button {
+    opacity: 0.5;
+  }
+
+  .quantity-container.loading .quantity-input {
+    opacity: 0.7;
+  }
+{% endstyle %}
+
+<cart-actions data-line="{{ line }}" class="quantity-container">
+  <button
+    type="button"
+    data-quantity="{{ item.quantity | minus: 1 }}"
+    data-decrease-quantity
+    aria-label="Decrease quantity"
+    class="quantity-button"
+  >
+    {{ 'subtract.svg' | inline_asset_content }}
+  </button>
+
+  <input
+    name="quantity"
+    type="number"
+    min="1"
+    value="{{ item.quantity }}"
+    aria-label="Quantity"
+    class="quantity-input"
+  >
+  <button
+    type="button"
+    data-quantity="{{ item.quantity | plus: 1 }}"
+    data-increase-quantity
+    aria-label="Increase quantity"
+    class="quantity-button"
+  >
+    {{ 'add.svg' | inline_asset_content }}
+  </button>
+</cart-actions>

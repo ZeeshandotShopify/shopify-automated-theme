@@ -1,0 +1,87 @@
+{% style %}
+  #pdp-icon-with-text-{{ block.id }} {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+  }
+
+  #pdp-icon-with-text-{{ block.id }} .pdp-icon-with-text {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-block: 1rem;
+
+    {% if block.settings.border_top_thickness > 0 %}
+      padding-top: 1rem;
+      border-top: {{ block.settings.border_top_thickness }}px solid var(--color-border);
+    {% endif %}
+
+    {% if block.settings.border_bottom_thickness > 0 %}
+      padding-bottom: 1rem;
+      border-bottom: {{ block.settings.border_bottom_thickness }}px solid var(--color-border);
+    {% endif %}
+  }
+
+  #pdp-icon-with-text-{{ block.id }} .pdp-icon-with-text > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: {{ block.settings.gap }}px;
+    padding-inline: 0.5rem;
+
+    font-family: var(--font-body--family);
+    font-size: {{ block.settings.font_size }}px;
+    line-height: 1.4;
+    font-weight: {{ block.settings.font_weight }};
+    text-align: center;
+  }
+
+  #pdp-icon-with-text-{{ block.id }} .pdp-icon-with-text > div p {
+    margin: 0;
+  }
+{% endstyle %}
+
+{%- liquid
+  assign icon_id_1 = block.id | append: '-1'
+  assign icon_id_2 = block.id | append: '-2'
+  assign icon_id_3 = block.id | append: '-3'
+-%}
+
+<div id="pdp-icon-with-text-{{ block.id }}" class="pdp-icon-with-text-container" {{ block.shopify_attributes }}>
+  <div class="pdp-icon-with-text">
+    <div>
+      {% render 'icon',
+        id: icon_id_1,
+        icon_size: block.settings.icon_size,
+        icon_mode: block.settings.icon_mode,
+        icon_select: block.settings.icon_select_1,
+        icon_custom: block.settings.icon_1
+      %}
+
+      <p>{{ block.settings.text_1 }}</p>
+    </div>
+
+    <div>
+      {% render 'icon',
+        id: icon_id_2,
+        icon_size: block.settings.icon_size,
+        icon_mode: block.settings.icon_mode,
+        icon_select: block.settings.icon_select_2,
+        icon_custom: block.settings.icon_2
+      %}
+
+      <p>{{ block.settings.text_2 }}</p>
+    </div>
+
+    <div>
+      {% render 'icon',
+        id: icon_id_3,
+        icon_size: block.settings.icon_size,
+        icon_mode: block.settings.icon_mode,
+        icon_select: block.settings.icon_select_3,
+        icon_custom: block.settings.icon_3
+      %}
+
+      <p>{{ block.settings.text_3 }}</p>
+    </div>
+  </div>
+</div>

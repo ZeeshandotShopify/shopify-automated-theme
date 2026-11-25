@@ -1,0 +1,316 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "page",
+      "disabled": true,
+      "custom_css": [],
+      "settings": {
+        "width": "full",
+        "color_mode": "inherit",
+        "bg_color": "#ffffff",
+        "fg_color": "#111111",
+        "desktop_padding_top": 96,
+        "desktop_padding_bottom": 96,
+        "mobile_padding_top": 64,
+        "mobile_padding_bottom": 64
+      }
+    },
+    "section_zxGekb": {
+      "type": "section",
+      "blocks": {
+        "text_Wftn6P": {
+          "type": "text",
+          "settings": {
+            "text_style": "default",
+            "text": "Got a Question?",
+            "text_tag": "h2",
+            "richtext": "<p>This is an example text. You can edit or replace it with your own content.</p>",
+            "text_color_mode": "inherit",
+            "text_color": "#111111",
+            "font_family": "var(--font-heading--family)",
+            "font_weight": "600",
+            "text_transform": "none",
+            "desktop_font_size": "2rem",
+            "desktop_line_height": "140%",
+            "desktop_width": "100%",
+            "desktop_max_width": "42rem",
+            "desktop_text_align": "left",
+            "mobile_font_size": "2rem",
+            "mobile_line_height": "140%",
+            "mobile_width": "100%",
+            "mobile_max_width": "42rem",
+            "mobile_text_align": "left"
+          },
+          "blocks": {}
+        },
+        "accordion_Bp6wP9": {
+          "type": "accordion",
+          "settings": {
+            "icon": "chevron",
+            "desktop_gap": "1rem",
+            "mobile_gap": "1rem",
+            "trigger_font_size": "14px",
+            "trigger_line_height": "140%",
+            "trigger_font_weight": "400",
+            "trigger_padding_y": 24,
+            "trigger_padding_x": 24,
+            "trigger_style_mode": "inherit",
+            "trigger_background_color": "transparent",
+            "trigger_foreground_color": "#0a0a0b",
+            "border_color": "#f1f3f5",
+            "border_top_thickness": 0,
+            "border_bottom_thickness": 1,
+            "border_left_thickness": 0,
+            "border_right_thickness": 0,
+            "border_radius": "0"
+          },
+          "blocks": {
+            "accordion_item_gJcQy4": {
+              "type": "accordion-item",
+              "settings": {
+                "heading": "Here goes the FAQ",
+                "open_by_default": false
+              },
+              "blocks": {
+                "text_GFW3Ui": {
+                  "type": "text",
+                  "settings": {
+                    "text_style": "richtext",
+                    "text": "Yes! We offer Free Shipping on all orders within the USA — no minimum purchase required.",
+                    "text_tag": "p",
+                    "richtext": "<p>Here goes the FAQ</p>",
+                    "text_color_mode": "inherit",
+                    "text_color": "#111111",
+                    "font_family": "var(--font-body--family)",
+                    "font_weight": "400",
+                    "text_transform": "none",
+                    "desktop_font_size": "1rem",
+                    "desktop_line_height": "140%",
+                    "desktop_width": "100%",
+                    "desktop_max_width": "none",
+                    "desktop_text_align": "left",
+                    "mobile_font_size": "1rem",
+                    "mobile_line_height": "140%",
+                    "mobile_width": "100%",
+                    "mobile_max_width": "none",
+                    "mobile_text_align": "left"
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "text_GFW3Ui"
+              ]
+            },
+            "accordion_item_4ixH3L": {
+              "type": "accordion-item",
+              "settings": {
+                "heading": "Here goes the FAQ",
+                "open_by_default": false
+              },
+              "blocks": {
+                "text_6EhGyP": {
+                  "type": "text",
+                  "settings": {
+                    "text_style": "richtext",
+                    "text": "Yes — we ship internationally to many locations. If your country is available, it will show as an option at checkout.",
+                    "text_tag": "p",
+                    "richtext": "<p>Here goes the FAQ</p>",
+                    "text_color_mode": "inherit",
+                    "text_color": "#111111",
+                    "font_family": "var(--font-body--family)",
+                    "font_weight": "400",
+                    "text_transform": "none",
+                    "desktop_font_size": "1rem",
+                    "desktop_line_height": "140%",
+                    "desktop_width": "100%",
+                    "desktop_max_width": "none",
+                    "desktop_text_align": "left",
+                    "mobile_font_size": "1rem",
+                    "mobile_line_height": "140%",
+                    "mobile_width": "100%",
+                    "mobile_max_width": "none",
+                    "mobile_text_align": "left"
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "text_6EhGyP"
+              ]
+            },
+            "accordion_item_CY93bF": {
+              "type": "accordion-item",
+              "settings": {
+                "heading": "Here goes the FAQ",
+                "open_by_default": false
+              },
+              "blocks": {
+                "text_8RkHPT": {
+                  "type": "text",
+                  "settings": {
+                    "text_style": "default",
+                    "text": "Here goes the FAQ",
+                    "text_tag": "p",
+                    "richtext": "<p>This is an example text. You can edit or replace it with your own content.</p>",
+                    "text_color_mode": "inherit",
+                    "text_color": "#111111",
+                    "font_family": "var(--font-body--family)",
+                    "font_weight": "400",
+                    "text_transform": "none",
+                    "desktop_font_size": "1rem",
+                    "desktop_line_height": "140%",
+                    "desktop_width": "100%",
+                    "desktop_max_width": "none",
+                    "desktop_text_align": "left",
+                    "mobile_font_size": "1rem",
+                    "mobile_line_height": "140%",
+                    "mobile_width": "100%",
+                    "mobile_max_width": "none",
+                    "mobile_text_align": "left"
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "text_8RkHPT"
+              ]
+            },
+            "accordion_item_J6XcNp": {
+              "type": "accordion-item",
+              "settings": {
+                "heading": "Here goes the FAQ",
+                "open_by_default": false
+              },
+              "blocks": {
+                "text_b6iGgL": {
+                  "type": "text",
+                  "settings": {
+                    "text_style": "richtext",
+                    "text": "Please contact us within 12 hours if you need to update your delivery address.Once your order is shipped, we cannot change the address.",
+                    "text_tag": "p",
+                    "richtext": "<p>If you notice an incorrect address, contact us immediately. If your order hasn’t shipped yet, we can update it. Once shipped, we’re unable to change the address, but we’ll do our best to help resolve the issue.</p>",
+                    "text_color_mode": "inherit",
+                    "text_color": "#111111",
+                    "font_family": "var(--font-body--family)",
+                    "font_weight": "400",
+                    "text_transform": "none",
+                    "desktop_font_size": "1rem",
+                    "desktop_line_height": "140%",
+                    "desktop_width": "100%",
+                    "desktop_max_width": "none",
+                    "desktop_text_align": "left",
+                    "mobile_font_size": "1rem",
+                    "mobile_line_height": "140%",
+                    "mobile_width": "100%",
+                    "mobile_max_width": "none",
+                    "mobile_text_align": "left"
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "text_b6iGgL"
+              ]
+            },
+            "accordion_item_DQcPBx": {
+              "type": "accordion-item",
+              "settings": {
+                "heading": "Here goes the FAQ",
+                "open_by_default": false
+              },
+              "blocks": {
+                "text_QWMmpW": {
+                  "type": "text",
+                  "settings": {
+                    "text_style": "richtext",
+                    "text": "Since all items are made-to-order, we cannot accept size exchanges or returns.However, we offer free replacements for damaged, misprinted, or incorrect items.",
+                    "text_tag": "p",
+                    "richtext": "<p>Yes! We accept returns and exchanges within 30 days of delivery. Items must be unworn, unwashed, and in original condition. To start a return, contact our support team with your order number.</p>",
+                    "text_color_mode": "inherit",
+                    "text_color": "#111111",
+                    "font_family": "var(--font-body--family)",
+                    "font_weight": "400",
+                    "text_transform": "none",
+                    "desktop_font_size": "1rem",
+                    "desktop_line_height": "140%",
+                    "desktop_width": "100%",
+                    "desktop_max_width": "none",
+                    "desktop_text_align": "left",
+                    "mobile_font_size": "1rem",
+                    "mobile_line_height": "140%",
+                    "mobile_width": "100%",
+                    "mobile_max_width": "none",
+                    "mobile_text_align": "left"
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "text_QWMmpW"
+              ]
+            }
+          },
+          "block_order": [
+            "accordion_item_gJcQy4",
+            "accordion_item_4ixH3L",
+            "accordion_item_CY93bF",
+            "accordion_item_J6XcNp",
+            "accordion_item_DQcPBx"
+          ]
+        }
+      },
+      "block_order": [
+        "text_Wftn6P",
+        "accordion_Bp6wP9"
+      ],
+      "name": "FAQs",
+      "settings": {
+        "width": "default",
+        "bg_color_mode": "inherit",
+        "bg_type": "color",
+        "bg_color": "#ffffff",
+        "overlay_color": "#000000",
+        "overlay_opacity": 50,
+        "enabled_noise": false,
+        "noise_size": 8,
+        "noise_density": 90,
+        "noise_opacity": 5,
+        "noise_color": "#000000",
+        "desktop_grid_columns": 1,
+        "desktop_gap": "2rem",
+        "desktop_width": "auto",
+        "desktop_custom_width": "",
+        "desktop_height": "auto",
+        "desktop_custom_height": "",
+        "desktop_padding_top": 80,
+        "desktop_padding_bottom": 80,
+        "desktop_padding_left": 64,
+        "desktop_padding_right": 64,
+        "mobile_grid_columns": 1,
+        "mobile_gap": "2rem",
+        "mobile_width": "auto",
+        "mobile_custom_width": "",
+        "mobile_height": "auto",
+        "mobile_custom_height": "",
+        "mobile_padding_top": 64,
+        "mobile_padding_bottom": 64,
+        "mobile_padding_left": 16,
+        "mobile_padding_right": 16
+      }
+    }
+  },
+  "order": [
+    "main",
+    "section_zxGekb"
+  ]
+}

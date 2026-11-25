@@ -1,0 +1,159 @@
+{%- if image != blank or heading != blank -%}
+  {%- liquid
+    assign content_position = content_position | default: 'bottom-left'
+    assign object_fit = object_fit | default: 'cover'
+    assign enable_mobile_size = enable_mobile_size | default: false
+    assign overlay_color = overlay_color | default: '#000000'
+    assign overlay_opacity = overlay_opacity | default: 0
+  -%}
+
+  {%- style -%}
+    .header-menu-promotion {
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-menu-promotion img {
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 0.5s;
+      will-change: transform;
+    }
+
+    .header-menu-promotion:hover img {
+      transform: scale(1.1);
+    }
+
+    .header-menu-promotion__overlay {
+      position: absolute;
+      inset: 0;
+      background-color: {{ overlay_color }};
+      opacity: {{ overlay_opacity | divided_by: 100.0 }};
+      pointer-events: none;
+      z-index: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    .header-menu-promotion-content {
+      position: absolute;
+      color: #ffffff;
+      white-space: normal;
+      padding: 1.5rem;
+      z-index: 2;
+    }
+
+    /* Position modifier classes */
+    .header-menu-promotion-content--top-left {
+      top: 0;
+      left: 0;
+    }
+
+    .header-menu-promotion-content--top-center {
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+    }
+
+    .header-menu-promotion-content--top-right {
+      top: 0;
+      right: 0;
+      text-align: right;
+    }
+
+    .header-menu-promotion-content--center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .header-menu-promotion-content--bottom-left {
+      bottom: 0;
+      left: 0;
+    }
+
+    .header-menu-promotion-content--bottom-center {
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+    }
+
+    .header-menu-promotion-content--bottom-right {
+      bottom: 0;
+      right: 0;
+      text-align: right;
+    }
+
+    .header-menu-promotion-heading {
+      font-family: var(--font-heading--family);
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .header-menu-promotion-button-label {
+      position: relative;
+    }
+
+    .header-menu-promotion-button-label::before,
+    .header-menu-promotion-button-label::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      bottom: 0;
+      pointer-events: none;
+    }
+
+    .header-menu-promotion-button-label::before {
+      background: #ffffff;
+      transform-origin: left center;
+      transform: scaleX(0);
+      transition: transform 360ms cubic-bezier(.2,.9,.2,1);
+      z-index: 2;
+      will-change: transform;
+    }
+
+    .header-menu-promotion-button-label::after {
+      background: #ffffff;
+      opacity: 0.25;
+      z-index: 1;
+    }
+
+    .header-menu-promotion:hover .header-menu-promotion-button-label::before {
+      transform: scaleX(1);
+    }
+  {%- endstyle -%}
+
+  <a href="{{ button_link }}" class="header-menu-promotion">
+    {% render 'responsive-image',
+      image: image,
+      object_fit: object_fit,
+      desktop_aspect_ratio: desktop_aspect_ratio,
+      desktop_enable_custom_dimension: desktop_enable_custom_dimension,
+      desktop_custom_width: desktop_custom_width,
+      desktop_custom_height: desktop_custom_height,
+      enable_mobile_size: enable_mobile_size,
+      mobile_aspect_ratio: mobile_aspect_ratio,
+      mobile_enable_custom_dimension: mobile_enable_custom_dimension,
+      mobile_custom_width: mobile_custom_width,
+      mobile_custom_height: mobile_custom_height
+    %}
+
+    {%- if overlay_opacity > 0 -%}
+      <div class="header-menu-promotion__overlay"></div>
+    {%- endif -%}
+
+    <div class="header-menu-promotion-content header-menu-promotion-content--{{ content_position }}">
+      {%- if heading != blank -%}
+        <h3 class="header-menu-promotion-heading">{{- heading -}}</h3>
+      {%- endif -%}
+      {%- if button_label != blank -%}
+        <span class="header-menu-promotion-button-label">{{- button_label -}}</span>
+      {%- endif -%}
+    </div>
+  </a>
+{%- endif -%}

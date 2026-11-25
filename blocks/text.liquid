@@ -1,0 +1,273 @@
+{% render 'text',
+  id: block.id,
+  text_style: block.settings.text_style,
+  text: block.settings.text,
+  text_tag: block.settings.text_tag,
+  richtext: block.settings.richtext,
+  text_color_mode: block.settings.text_color_mode,
+  text_color: block.settings.text_color,
+  font_family: block.settings.font_family,
+  font_weight: block.settings.font_weight,
+  mobile_font_size: block.settings.mobile_font_size,
+  mobile_line_height: block.settings.mobile_line_height,
+  desktop_font_size: block.settings.desktop_font_size,
+  desktop_line_height: block.settings.desktop_line_height,
+  text_transform: block.settings.text_transform,
+  mobile_width: block.settings.mobile_width,
+  desktop_width: block.settings.desktop_width,
+  mobile_max_width: block.settings.mobile_max_width,
+  desktop_max_width: block.settings.desktop_max_width,
+  mobile_text_align: block.settings.mobile_text_align,
+  desktop_text_align: block.settings.desktop_text_align,
+  mobile_letter_spacing: block.settings.mobile_letter_spacing,
+  desktop_letter_spacing: block.settings.desktop_letter_spacing,
+  shopify_attributes: block.shopify_attributes
+%}
+
+{% schema %}
+{
+  "name": "t:block.text.name",
+  // This will prevent add extra div element wrapper
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "text_style",
+      "label": "t:text_style.label",
+      "options": [
+        { "value": "default", "label": "t:text_style.options.default" },
+        { "value": "richtext", "label": "t:text_style.options.richtext" }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "t:text.label",
+      "default": "This is an example text. You can edit or replace it with your own content.",
+      "visible_if": "{{ block.settings.text_style == 'default' }}"
+    },
+    {
+      "type": "select",
+      "id": "text_tag",
+      "label": "t:text_tag.label",
+      "options": [
+        { "value": "p", "label": "t:text_tag.options.p" },
+        { "value": "h1", "label": "t:text_tag.options.h1" },
+        { "value": "h2", "label": "t:text_tag.options.h2" },
+        { "value": "h3", "label": "t:text_tag.options.h3" },
+        { "value": "h4", "label": "t:text_tag.options.h4" },
+        { "value": "h5", "label": "t:text_tag.options.h5" },
+        { "value": "h6", "label": "t:text_tag.options.h6" }
+      ],
+      "default": "p",
+      "visible_if": "{{ block.settings.text_style == 'default' }}"
+    },
+    {
+      "type": "richtext",
+      "id": "richtext",
+      "label": "t:text.label",
+      "default": "<p>This is an example text. You can edit or replace it with your own content.</p>",
+      "visible_if": "{{ block.settings.text_style == 'richtext' }}"
+    },
+    {
+      "type": "select",
+      "id": "text_color_mode",
+      "label": "t:color_mode.label",
+      "options": [
+        { "value": "inherit", "label": "t:color_mode.options.inherit" },
+        { "value": "custom", "label": "t:color_mode.options.custom" }
+      ],
+      "default": "inherit"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:colors.foreground_color.label",
+      "default": "#111111",
+      "visible_if": "{{ block.settings.text_color_mode == 'custom' }}"
+    },
+    {
+      "type": "select",
+      "id": "font_family",
+      "label": "t:typography.font_family.label",
+      "options": [
+        { "value": "var(--font-body--family)", "label": "t:typography.font_family.options.body" },
+        { "value": "var(--font-heading--family)", "label": "t:typography.font_family.options.heading" }
+      ],
+      "default": "var(--font-body--family)"
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "t:typography.font_weight.label",
+      "options": [
+        { "value": "100", "label": "t:typography.font_weight.options.thin" },
+        { "value": "200", "label": "t:typography.font_weight.options.extra_light" },
+        { "value": "300", "label": "t:typography.font_weight.options.light" },
+        { "value": "400", "label": "t:typography.font_weight.options.regular" },
+        { "value": "500", "label": "t:typography.font_weight.options.medium" },
+        { "value": "600", "label": "t:typography.font_weight.options.semibold" },
+        { "value": "700", "label": "t:typography.font_weight.options.bold" },
+        { "value": "800", "label": "t:typography.font_weight.options.extra_bold" },
+        { "value": "900", "label": "t:typography.font_weight.options.black" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "t:typography.text_transform.label",
+      "options": [
+        { "value": "none", "label": "t:typography.text_transform.options.normal" },
+        { "value": "lowercase", "label": "t:typography.text_transform.options.lowercase" },
+        { "value": "uppercase", "label": "t:typography.text_transform.options.uppercase" },
+        { "value": "capitalize", "label": "t:typography.text_transform.options.capitalize" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "header",
+      "content": "t:size.desktop.content"
+    },
+    {
+      "type": "text",
+      "id": "desktop_font_size",
+      "label": "t:typography.font_size.desktop.label",
+      "placeholder": "px, rem, etc.",
+      "default": "1rem"
+    },
+    {
+      "type": "text",
+      "id": "desktop_line_height",
+      "label": "t:typography.line_height.desktop.label",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "140%"
+    },
+    {
+      "type": "text",
+      "id": "desktop_letter_spacing",
+      "label": "t:typography.letter_spacing.desktop.label",
+      "placeholder": "px, em, normal, etc.",
+      "default": "normal"
+    },
+    {
+      "type": "select",
+      "id": "desktop_width",
+      "label": "t:size.width.label",
+      "options": [
+        { "value": "fit-content", "label": "t:size.options.fit" },
+        { "value": "100%", "label": "t:size.options.fill" }
+      ],
+      "default": "100%"
+    },
+    {
+      "type": "select",
+      "id": "desktop_max_width",
+      "label": "t:size.max_width.label",
+      "options": [
+        {
+          "value": "32rem",
+          "label": "t:size.options.narrow"
+        },
+        {
+          "value": "42rem",
+          "label": "t:size.options.normal"
+        },
+        {
+          "value": "none",
+          "label": "t:size.options.none"
+        }
+      ],
+      "default": "42rem",
+      "visible_if": "{{ block.settings.desktop_width == '100%' }}"
+    },
+    {
+      "type": "select",
+      "id": "desktop_text_align",
+      "label": "t:layout.alignment.label",
+      "options": [
+        { "value": "left", "label": "t:layout.alignment.options.left" },
+        { "value": "center", "label": "t:layout.alignment.options.center" },
+        { "value": "right", "label": "t:layout.alignment.options.right" }
+      ],
+      "default": "left",
+      "visible_if": "{{ block.settings.desktop_width == '100%' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:size.mobile.content"
+    },
+    {
+      "type": "text",
+      "id": "mobile_font_size",
+      "label": "t:typography.font_size.mobile.label",
+      "placeholder": "px, rem, etc.",
+      "default": "1rem"
+    },
+    {
+      "type": "text",
+      "id": "mobile_line_height",
+      "label": "t:typography.line_height.mobile.label",
+      "placeholder": "px, rem, %, calc, etc.",
+      "default": "140%"
+    },
+    {
+      "type": "text",
+      "id": "mobile_letter_spacing",
+      "label": "t:typography.letter_spacing.mobile.label",
+      "placeholder": "px, em, normal, etc.",
+      "default": "normal"
+    },
+    {
+      "type": "select",
+      "id": "mobile_width",
+      "label": "t:size.width.label",
+      "options": [
+        { "value": "fit-content", "label": "t:size.options.fit" },
+        { "value": "100%", "label": "t:size.options.fill" }
+      ],
+      "default": "100%"
+    },
+    {
+      "type": "select",
+      "id": "mobile_max_width",
+      "label": "t:size.max_width.label",
+      "options": [
+        {
+          "value": "32rem",
+          "label": "t:size.options.narrow"
+        },
+        {
+          "value": "42rem",
+          "label": "t:size.options.normal"
+        },
+        {
+          "value": "none",
+          "label": "t:size.options.none"
+        }
+      ],
+      "default": "42rem",
+      "visible_if": "{{ block.settings.mobile_width == '100%' }}"
+    },
+    {
+      "type": "select",
+      "id": "mobile_text_align",
+      "label": "t:layout.alignment.label",
+      "options": [
+        { "value": "left", "label": "t:layout.alignment.options.left" },
+        { "value": "center", "label": "t:layout.alignment.options.center" },
+        { "value": "right", "label": "t:layout.alignment.options.right" }
+      ],
+      "default": "left",
+      "visible_if": "{{ block.settings.mobile_width == '100%' }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:block.text.name",
+      "category": "t:block.text.category"
+    }
+  ]
+}
+{% endschema %}

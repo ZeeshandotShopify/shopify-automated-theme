@@ -1,0 +1,66 @@
+{% comment %}
+  Custom Media Block
+  - Supports Image and Video
+  - Custom Aspect Ratios or Fixed Dimensions
+  - Custom Video Player Interface (Play/Pause, Dbl-Click Fullscreen)
+{% endcomment %}
+
+<style>
+  .pdp-media-wrapper {
+    padding-top: {{ block.settings.padding_top }}px;
+    padding-bottom: {{ block.settings.padding_bottom }}px;
+  }
+</style>
+
+<div class="pdp-media-wrapper" {{ block.shopify_attributes }}>
+  {%- if block.settings.media_type == 'image' -%}
+    {% render 'responsive-image',
+      image: block.settings.image,
+      enable_mobile_size: block.settings.enable_mobile_size,
+      mobile_aspect_ratio: block.settings.mobile_aspect_ratio,
+      mobile_enable_custom_dimension: block.settings.mobile_enable_custom_dimension,
+      mobile_custom_width: block.settings.mobile_custom_width,
+      mobile_custom_height: block.settings.mobile_custom_height,
+      desktop_aspect_ratio: block.settings.desktop_aspect_ratio,
+      desktop_enable_custom_dimension: block.settings.desktop_enable_custom_dimension,
+      desktop_custom_width: block.settings.desktop_custom_width,
+      desktop_custom_height: block.settings.desktop_custom_height,
+      border_mode: block.settings.border_mode,
+      mobile_border_top_left_radius: block.settings.mobile_border_top_left_radius,
+      mobile_border_top_right_radius: block.settings.mobile_border_top_right_radius,
+      mobile_border_bottom_left_radius: block.settings.mobile_border_bottom_left_radius,
+      mobile_border_bottom_right_radius: block.settings.mobile_border_bottom_left_radius,
+      desktop_border_top_left_radius: block.settings.desktop_border_top_left_radius,
+      desktop_border_top_right_radius: block.settings.desktop_border_top_right_radius,
+      desktop_border_bottom_left_radius: block.settings.desktop_border_bottom_left_radius,
+      desktop_border_bottom_right_radius: block.settings.desktop_border_bottom_left_radius,
+      shopify_attributes: block.shopify_attributes
+    %}
+  {%- else -%}
+    {% render 'responsive-video',
+      video: block.settings.video,
+      autoplay: block.settings.video_autoplay,
+      loop: block.settings.video_loop,
+      muted: block.settings.video_mute,
+      enable_mobile_size: block.settings.enable_mobile_size,
+      mobile_aspect_ratio: block.settings.mobile_aspect_ratio,
+      mobile_enable_custom_dimension: block.settings.mobile_enable_custom_dimension,
+      mobile_custom_width: block.settings.mobile_custom_width,
+      mobile_custom_height: block.settings.mobile_custom_height,
+      desktop_aspect_ratio: block.settings.desktop_aspect_ratio,
+      desktop_enable_custom_dimension: block.settings.desktop_enable_custom_dimension,
+      desktop_custom_width: block.settings.desktop_custom_width,
+      desktop_custom_height: block.settings.desktop_custom_height,
+      border_mode: block.settings.border_mode,
+      mobile_border_top_left_radius: block.settings.mobile_border_top_left_radius,
+      mobile_border_top_right_radius: block.settings.mobile_border_top_right_radius,
+      mobile_border_bottom_left_radius: block.settings.mobile_border_bottom_left_radius,
+      mobile_border_bottom_right_radius: block.settings.mobile_border_bottom_left_radius,
+      desktop_border_top_left_radius: block.settings.desktop_border_top_left_radius,
+      desktop_border_top_right_radius: block.settings.desktop_border_top_right_radius,
+      desktop_border_bottom_left_radius: block.settings.desktop_border_bottom_left_radius,
+      desktop_border_bottom_right_radius: block.settings.desktop_border_bottom_left_radius,
+      shopify_attributes: block.shopify_attributes
+    %}
+  {%- endif -%}
+</div>
